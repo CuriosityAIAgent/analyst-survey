@@ -20,13 +20,16 @@ export default function L5() {
           const cur = t[tr.id]
           const br = cur?.answer === 'yes' ? tr.yes : cur?.answer === 'no' ? tr.no : null
           return (
-            <div key={tr.id} className="rounded-2xl border border-ink2/20 bg-[rgba(10,18,40,0.5)] p-4">
+            <div key={tr.id} role="group" aria-label={tr.card}
+              className="rounded-2xl border border-ink2/20 bg-[rgba(10,18,40,0.5)] p-4">
               <div className="text-[16px] leading-snug text-snow">{tr.card}</div>
               <div className="mt-1 text-[13px] italic text-ink2/70">{tr.aside}</div>
               <div className="mt-3 flex gap-2">
                 <button type="button" className="chip flex-1" data-on={cur?.answer === 'yes'}
+                  aria-pressed={cur?.answer === 'yes'} aria-label={`Yes — ${tr.card}`}
                   onClick={() => answer(tr.id, 'yes')}>Yes</button>
                 <button type="button" className="chip flex-1" data-on={cur?.answer === 'no'}
+                  aria-pressed={cur?.answer === 'no'} aria-label={`No — ${tr.card}`}
                   onClick={() => answer(tr.id, 'no')}>No</button>
               </div>
               {br && (
@@ -35,6 +38,7 @@ export default function L5() {
                   <div className="flex flex-wrap gap-2">
                     {br.opts.map((o) => (
                       <button key={o} type="button" className="chip" data-on={cur!.followUp.includes(o)}
+                        aria-pressed={cur!.followUp.includes(o)} aria-label={`${o} — ${br.q}`}
                         onClick={() => follow(tr.id, o, br.multi)}>{o}</button>
                     ))}
                   </div>
