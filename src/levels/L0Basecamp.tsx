@@ -29,10 +29,16 @@ export default function L0() {
           {AI.map((a) => <Chip key={a} on={s.aiUse === a} onClick={() => set('segment', { aiUse: a })}>{a}</Chip>)}
         </Field>
         <Field label="What can you already do alone?" note="Pick any.">
-          {ALONE.map((a) => <Chip key={a} on={s.canAlone.includes(a)} onClick={() => toggle('canAlone', a)}>{a}</Chip>)}
+          {ALONE.map((a) => (
+            <Chip key={a} on={s.canAlone.includes(a)} onClick={() => toggle('canAlone', a)}
+              label={`Can already do alone: ${a}`}>{a}</Chip>
+          ))}
         </Field>
         <Field label="And what do you not trust yourself on yet?" note="Be honest, nobody sees your name.">
-          {ALONE.map((a) => <Chip key={a} on={s.notTrusted.includes(a)} onClick={() => toggle('notTrusted', a)}>{a}</Chip>)}
+          {ALONE.map((a) => (
+            <Chip key={a} on={s.notTrusted.includes(a)} onClick={() => toggle('notTrusted', a)}
+              label={`Do not trust myself on: ${a}`}>{a}</Chip>
+          ))}
         </Field>
       </div>
     </Level>
@@ -41,7 +47,7 @@ export default function L0() {
 
 function Field({ label, note, children }: { label: string; note?: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div role="group" aria-label={label}>
       <div className="mb-2 text-[14px] font-medium text-snow">{label}</div>
       {note && <div className="mb-2 text-[13px] text-ink2/80">{note}</div>}
       <div className="flex flex-wrap gap-2">{children}</div>

@@ -2,10 +2,11 @@
 import { ReactNode } from 'react'
 
 export function Chip({
-  on, onClick, children, disabled,
-}: { on: boolean; onClick: () => void; children: ReactNode; disabled?: boolean }) {
+  on, onClick, children, disabled, label,
+}: { on: boolean; onClick: () => void; children: ReactNode; disabled?: boolean; label?: string }) {
   return (
-    <button type="button" className="chip" aria-pressed={on} onClick={onClick} disabled={disabled}>
+    <button type="button" className="chip" aria-pressed={on} aria-label={label}
+      onClick={onClick} disabled={disabled}>
       {children}
     </button>
   )
