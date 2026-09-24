@@ -33,13 +33,13 @@ export default function L6() {
         {years.map((col, y) => (
           <button key={y} type="button" onClick={() => drop(y)}
             aria-label={`Year ${y + 1}, ${used(col)} of ${YEAR_CAPACITY} units used${sel ? `. Place ${brick(sel).label} here` : ''}`}
-            className="min-h-[160px] rounded-2xl border p-2 text-left transition"
+            className="min-h-[160px] rounded-[2px] border p-2 text-left transition"
             style={{
               borderColor: sel && used(col) + (sel ? brick(sel).units : 0) <= YEAR_CAPACITY
-                ? 'var(--color-ice)' : 'rgba(185,198,224,0.2)',
+                ? 'var(--color-forest)' : 'var(--color-rule-soft)',
               background: 'rgba(10,18,40,0.5)',
             }}>
-            <div className="mb-2 flex items-center justify-between text-[12px] text-ink2">
+            <div className="mb-2 flex items-center justify-between text-[12px] text-muted">
               <span>Year {y + 1}</span><span>{used(col)}/{YEAR_CAPACITY}</span>
             </div>
             <div className="space-y-1">
@@ -52,7 +52,7 @@ export default function L6() {
                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); remove(y, idx) }
                   }}
                   className="block cursor-pointer rounded-lg px-2 py-1 text-[11px] leading-tight"
-                  style={{ background: 'rgba(233,185,91,0.18)', border: '1px solid rgba(233,185,91,0.5)', minHeight: 22 * brick(id).units }}>
+                  style={{ background: 'rgba(13,12,11,0.06)', border: '1px solid rgba(13,12,11,0.35)', minHeight: 22 * brick(id).units }}>
                   {brick(id).label}
                 </span>
               ))}
@@ -62,13 +62,13 @@ export default function L6() {
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         {BRICKS.filter((b) => !placedAll.includes(b.id)).map((b) => (
-          <button key={b.id} type="button" className="chip" data-on={sel === b.id}
+          <button key={b.id} type="button" className="choice" data-on={sel === b.id}
             onClick={() => setSel(sel === b.id ? null : b.id)}>
-            {b.label} <span className="ml-1 text-ink2/60">{b.units}</span>
+            {b.label} <span className="ml-1 text-muted">{b.units}</span>
           </button>
         ))}
       </div>
-      <p className="mt-3 text-[13px] text-ink2/75">
+      <p className="mt-3 text-[13px] text-muted">
         {placedAll.length ? `${BRICKS.length - placedAll.length} left out.` : 'Nothing placed yet.'}
         {years[2].length === 0 && placedAll.length > 0 && ' Year three is empty.'}
       </p>

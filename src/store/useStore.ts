@@ -70,7 +70,16 @@ export const useStore = create<State>()(
         const lvl = typeof p.level === 'number' && Number.isInteger(p.level)
           ? Math.min(LEVELS.length - 1, Math.max(0, p.level))
           : 0
-        return { ...current, ...p, started: p.started === true, level: lvl, answers: validateAnswers(p.answers) }
+        const answers = validateAnswers(p.answers)
+        // An older build persisted started:true with nothing behind it. That is
+        // a stale flag, not a climb in progress, so send them to the title.
+        const hasProgress =
+          lvl > 0 ||
+          !!answers.segment.business ||
+          !!answers.segment.aiUse ||
+          answers.segment.canAlone.length > 0 ||
+          answers.segment.notTrusted.length > 0
+        return { ...current, ...p, started: p.started === true && hasProgress, level: lvl, answers }
       },
     },
   ),

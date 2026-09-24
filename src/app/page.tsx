@@ -98,11 +98,11 @@ export default function Page() {
         <div className="mx-auto w-full max-w-[720px] px-4 pt-5">
           <div className="flex items-center gap-1.5" aria-hidden>
             {LEVELS.map((_, i) => (
-              <span key={i} className="h-1.5 flex-1 rounded-full transition-colors duration-500"
-                style={{ background: i <= level ? 'var(--color-gold)' : 'rgba(185,198,224,0.18)' }} />
+              <span key={i} className="h-1.5 flex-1 rounded-[2px] transition-colors duration-500"
+                style={{ background: i <= level ? 'var(--color-ink)' : 'var(--color-rule-soft)' }} />
             ))}
           </div>
-          <div className="mt-2 text-[12px] uppercase tracking-widest text-ink2/60">
+          <div data-level-name className="eyebrow mt-3">
             {LEVELS[level].title}
           </div>
         </div>

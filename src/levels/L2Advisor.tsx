@@ -25,14 +25,14 @@ export default function L2() {
           const i = a.top3.indexOf(t.id)
           return (
             <Chip key={t.id} on={i >= 0} onClick={() => pick(t.id)}>
-              {i >= 0 && <span className="mr-2 font-semibold text-gold">{i + 1}</span>}{t.label}
+              {i >= 0 && <span className="mr-2 font-semibold text-ink">{i + 1}</span>}{t.label}
             </Chip>
           )
         })}
       </div>
 
-      <div className="mt-8 border-t border-ink2/15 pt-6">
-        <div className="text-[15px] text-snow">
+      <div className="mt-8 border-t border-rule-soft pt-6">
+        <div className="text-[15px] text-ink">
           If you'd been put with a different Advisor on day one, where would you be now?
         </div>
         <input
@@ -40,12 +40,12 @@ export default function L2() {
           onChange={(e) => set('advisor', { dependence: Number(e.target.value) })}
           aria-label="If you had been put with a different Advisor on day one, where would you be now?"
           aria-valuetext={phrase}
-          className="mt-4 w-full accent-[var(--color-gold)]"
+          className="mt-4 w-full accent-[var(--color-ink)]"
         />
-        <div className="mt-2 flex justify-between text-[12px] text-ink2/70">
+        <div className="mt-2 flex justify-between text-[12px] text-muted">
           <span>Nowhere near here</span><span>Exactly here</span>
         </div>
-        <div className="mt-3 display text-[22px] text-goldlight">{phrase}</div>
+        <div className="mt-3 display text-[22px] text-ink">{phrase}</div>
       </div>
     </Level>
   )

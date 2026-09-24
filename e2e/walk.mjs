@@ -50,7 +50,7 @@ const nextLevel = async (label = 'Next') => {
   if (after !== before + 1) throw new Error(`"${label}" did not advance: level ${before} -> ${after}`)
 }
 const heading = () => p.evaluate(() => document.querySelector('h1')?.textContent?.trim() ?? '')
-const levelName = () => p.evaluate(() => document.querySelector('.uppercase')?.textContent?.trim() ?? '')
+const levelName = () => p.evaluate(() => document.querySelector('[data-level-name]')?.textContent?.trim() ?? '')
 
 await p.goto(BASE, { waitUntil: 'networkidle2' })
 await p.evaluate(() => localStorage.clear())
@@ -113,7 +113,7 @@ for (let i = 0; i < 13; i++) {
 await new Promise(r=>setTimeout(r,250))
 await shot('3-handover-clips')
 // five clips, then check the cap holds
-const chips = await p.$$('button.chip')
+const chips = await p.$$('button.choice')
 let clipped = 0
 for (const c of chips) {
   if (clipped >= 6) break
@@ -199,7 +199,7 @@ if (await footerEnabled() !== false) errors.push('L5: Next enabled before answer
 // click by live text each time — the card re-renders and invalidates handles
 const clickChipByText = async (txt) => {
   const ok = await p.evaluate((t) => {
-    const b = [...document.querySelectorAll('button.chip')].find(x => x.textContent.trim() === t)
+    const b = [...document.querySelectorAll('button.choice')].find(x => x.textContent.trim() === t)
     if (!b) return false
     b.click(); return true
   }, txt)
@@ -209,7 +209,7 @@ const clickChipByText = async (txt) => {
 // answer both trials Yes (two separate cards, so do it twice by index)
 for (let i = 0; i < 2; i++) {
   const ok = await p.evaluate((idx) => {
-    const yes = [...document.querySelectorAll('button.chip')].filter(x => x.textContent.trim() === 'Yes')
+    const yes = [...document.querySelectorAll('button.choice')].filter(x => x.textContent.trim() === 'Yes')
     if (!yes[idx]) return false
     yes[idx].click(); return true
   }, i)
@@ -231,7 +231,7 @@ log('L6', await levelName())
 // element takes the click silently and the placement is lost
 const place = async (brickText, year) => {
   const gotChip = await p.evaluate((t) => {
-    const b = [...document.querySelectorAll('button.chip')].find(x => x.textContent.trim().startsWith(t))
+    const b = [...document.querySelectorAll('button.choice')].find(x => x.textContent.trim().startsWith(t))
     if (!b) return false
     b.scrollIntoView({ block: 'center' }); b.click(); return true
   }, brickText)

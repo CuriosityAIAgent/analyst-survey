@@ -7,43 +7,36 @@ export default function Title({ onBegin }: { onBegin: () => void }) {
     reduce
       ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3, delay: delay * 0.4 } }
       : {
-          initial: { opacity: 0, y: 18 },
+          initial: { opacity: 0, y: 14 },
           animate: { opacity: 1, y: 0 },
           transition: { duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] as const },
         }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
-      <motion.p {...rise(0.15)} className="text-[12px] uppercase tracking-[0.3em] text-ink2/70">
-        J.P. Morgan Private Bank
-      </motion.p>
+    <div className="flex min-h-dvh items-end justify-center px-4 pb-4 sm:items-center sm:pb-0">
+      <motion.div {...rise(0.1)} className="panel w-full max-w-[680px] px-6 py-10 sm:px-12 sm:py-14">
+        <motion.p {...rise(0.2)} className="eyebrow">J.P. Morgan Private Bank</motion.p>
 
-      <motion.h1 {...rise(0.3)} className="display mt-5 text-[64px] leading-[0.95] text-snow sm:text-[88px]">
-        The Ascent
-      </motion.h1>
+        <motion.h1 {...rise(0.32)} className="display mt-6 text-[52px] text-ink sm:text-[72px]">
+          The Ascent
+        </motion.h1>
 
-      <motion.p {...rise(0.5)} className="mt-5 max-w-[30ch] text-[17px] leading-relaxed text-ink2">
-        You made it through. Someone starts the same climb in September.
-      </motion.p>
+        <motion.p {...rise(0.48)} className="mt-5 max-w-[34ch] text-[19px] leading-[1.45] text-ink-2">
+          You made it through. Someone starts the same climb in September.
+        </motion.p>
 
-      <motion.button
-        {...rise(0.75)}
-        type="button"
-        onClick={onBegin}
-        whileTap={reduce ? undefined : { scale: 0.97 }}
-        className="mt-10 min-h-[56px] rounded-full px-9 text-[16px] font-semibold"
-        style={{ background: 'var(--color-gold)', color: '#0A1430' }}
-      >
-        Begin the climb
-      </motion.button>
+        <motion.div {...rise(0.66)} className="mt-9 flex flex-wrap items-center gap-5">
+          <button type="button" onClick={onBegin} className="btn">Begin the climb</button>
+          <span className="font-[family-name:var(--font-ui)] text-[14px] text-muted">
+            Twelve minutes. Mostly tapping.
+          </span>
+        </motion.div>
 
-      <motion.p {...rise(0.95)} className="mt-5 text-[13px] text-ink2/60">
-        Twelve minutes. Mostly tapping.
-      </motion.p>
-
-      <motion.p {...rise(1.15)} className="mt-10 max-w-[34ch] text-[12px] leading-relaxed text-ink2/45">
-        A prototype. Nothing is sent anywhere yet — your answers stay in this browser.
-      </motion.p>
+        <motion.p {...rise(0.84)}
+          className="mt-10 max-w-[52ch] border-t border-rule-soft pt-5 text-[13px] leading-relaxed text-muted">
+          A prototype. Nothing is sent anywhere yet, and your answers stay in this browser.
+        </motion.p>
+      </motion.div>
     </div>
   )
 }

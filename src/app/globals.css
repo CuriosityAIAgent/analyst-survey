@@ -1,63 +1,151 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   The Ascent — design tokens.
+
+   Measured off privatebank.jpmorgan.com, not guessed: their display face is a
+   high-contrast transitional serif at weight 400 with negative tracking, their
+   buttons are solid warm-near-black at 2px radius, and their grounds are white
+   and a warm off-white. Not a pill or a gradient anywhere on the site.
+
+   The governing rule, which also fixes the contrast failure in the first build:
+   INTERFACE TEXT NEVER SITS ON THE SKY. The scene is a full-bleed dark field;
+   everything readable sits on an opaque paper panel. The old white-glass card
+   measured 1.00:1 for secondary text over the dawn sky. This removes the whole
+   class of problem rather than tuning it.
+--------------------------------------------------------------------------- */
+
 @theme {
-  --color-snow: #F3F6FC;
-  --color-ink2: #B9C6E0;
-  --color-gold: #E9B95B;
-  --color-goldlight: #F6D68A;
-  --color-ice: #7FD4E0;
-  --color-rope: #E56A5E;
-  --color-moss: #7CCB8F;
-  --font-display: "Fraunces", Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  /* grounds */
+  --color-ground: #FFFFFF;
+  --color-paper: #F8F7F4;
+
+  /* ink — warm near-black, never pure #000 */
+  --color-ink: #0D0C0B;
+  --color-ink-2: #262320;
+  --color-muted: #494540;
+
+  /* 3.41:1 on paper, so a rule may delimit a control and still clear 1.4.11 */
+  --color-rule: #8C857A;
+  --color-rule-soft: #DDD9D2;
+
+  /* accents: identify a chapter, never decorate */
+  --color-navy: #14233B;
+  --color-bronze: #7A3E12;
+  --color-forest: #1F4B3A;
+
+  /* the scene, which the panel sits on */
+  --color-night: #0B1424;
+  --color-dawn: #E9D5BB;
+
+  --color-disabled-bg: #E5E2DC;
+  --color-disabled-ink: #6B6761;
+
+  --font-display: "Bodoni Moda", "Iowan Old Style", Georgia, serif;
+  --font-text: "Source Serif 4", Georgia, serif;
+  --font-ui: "Archivo", Arial, sans-serif;
 }
 
 html, body { height: 100%; }
 body {
-  background: #0A1430;
-  color: var(--color-snow);
-  font-family: var(--font-sans);
+  background: var(--color-night);
+  color: var(--color-ink);
+  font-family: var(--font-text);
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
 
-/* A dark scrim, not the spec's white glass: white-on-dawn failed AA badly
-   (ink.2 on the dawn sky measured 1.0:1). This holds contrast at every t. */
-.glass {
-  background: rgba(7, 13, 31, 0.74);
-  border: 1px solid rgba(185, 198, 224, 0.20);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-radius: 24px;
+/* The editorial panel. Opaque, square, one hairline. No blur, no translucency. */
+.panel {
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-soft);
+  border-radius: 2px;
 }
-.chip {
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+}
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* A choice is a rectangle with a rule, not a pill with a glow. Selected state
+   is an opaque ink fill — no gold, no tint, no shadow. */
+.choice {
+  font-family: var(--font-ui);
   min-height: 44px;
-  border-radius: 999px;
-  border: 1px solid rgba(185, 198, 224, 0.28);
-  background: rgba(10, 18, 40, 0.55);
-  color: var(--color-snow);
-  padding: 0 16px;
+  padding: 10px 16px;
   font-size: 15px;
-  transition: background .15s, border-color .15s, transform .08s;
+  border-radius: 2px;
+  border: 1px solid var(--color-rule);
+  background: var(--color-ground);
+  color: var(--color-ink);
+  text-align: left;
+  transition: background-color .12s ease, border-color .12s ease, color .12s ease;
 }
-.chip:hover { border-color: rgba(185, 198, 224, 0.5); }
-.chip:active { transform: scale(.985); }
-.chip[aria-pressed="true"], .chip[data-on="true"] {
-  background: rgba(233, 185, 91, 0.16);
-  border-color: var(--color-gold);
-  color: var(--color-goldlight);
+.choice:hover { border-color: var(--color-ink); }
+.choice[aria-pressed="true"], .choice[data-on="true"] {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-ground);
 }
+
+.btn {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  min-height: 44px;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 2px;
+  background: var(--color-ink);
+  color: var(--color-ground);
+}
+.btn:disabled {
+  background: var(--color-disabled-bg);
+  color: var(--color-disabled-ink);
+  cursor: not-allowed;
+}
+.btn-quiet {
+  font-family: var(--font-ui);
+  min-height: 44px;
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: 2px;
+  border: 1px solid var(--color-rule);
+  background: transparent;
+  color: var(--color-ink);
+}
+
 :where(button, a, input, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-ice);
+  outline: 2px solid var(--color-forest);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: 2px;
 }
-.display { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.015em; line-height: 1.12; }
+
+.field {
+  font-family: var(--font-text);
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 2px;
+  border: 1px solid var(--color-rule);
+  background: var(--color-ground);
+  color: var(--color-ink);
+}
+.field::placeholder { color: var(--color-disabled-ink); }
+
 .hide-scroll::-webkit-scrollbar { display: none; }
 .hide-scroll { scrollbar-width: none; }
-/* Scope the reduced-motion kill to movement. A blanket 0.01ms rule silently
-   deletes opacity crossfades too, which removes the only cue that the screen
-   changed at all. */
+
+/* Scoped to movement: a blanket 0.01ms rule would silently delete the opacity
+   crossfades that are the only cue the screen changed. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
