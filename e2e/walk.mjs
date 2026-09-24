@@ -57,6 +57,14 @@ await p.evaluate(() => localStorage.clear())
 await p.goto(BASE, { waitUntil: 'networkidle2' })
 await new Promise(r=>setTimeout(r,600))
 
+// ---- Title
+const title = await heading()
+if (title !== 'The Ascent') errors.push(`title: expected "The Ascent", saw "${title}"`)
+await shot('title')
+await clickText('Begin the climb')
+await new Promise(r=>setTimeout(r,900))   // entrance + camera move
+log('title ->', await heading())
+
 // ---- L0 Base camp
 log('L0', await levelName(), '|', (await heading()).slice(0,40))
 if (await footerEnabled() !== false) errors.push('L0: Next was enabled before answering')

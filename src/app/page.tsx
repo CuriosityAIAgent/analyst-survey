@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useStore } from '@/store/useStore'
 import { FooterBar } from '@/components/ui'
 import { LEVELS, TURN_INDEX } from '@/content/content'
@@ -17,11 +18,13 @@ import L5, { l5Ready } from '@/levels/L5Trials'
 import L6, { l6Ready } from '@/levels/L6Route'
 import L7, { l7Ready } from '@/levels/L7Mark'
 import L8 from '@/levels/L8Summit'
+import Title from '@/levels/Title'
 
 const Scene = dynamic(() => import('@/scene/Scene'), { ssr: false })
 
 export default function Page() {
-  const { level, answers, next, back } = useStore()
+  const { started, level, answers, next, back, begin } = useStore()
+  const reduce = useReducedMotion()
   const [mounted, setMounted] = useState(false)
   const [fuelDone, setFuelDone] = useState(false)
   const [beat, setBeat] = useState(0)
@@ -32,10 +35,10 @@ export default function Page() {
     const demoAllowed =
       process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ALLOW_DEMO === '1'
     const demo = demoAllowed && q.get('demo') === '1'
-    if (demo) useStore.setState({ answers: seed() })
+    if (demo) useStore.setState({ answers: seed(), started: true })
     if (demoAllowed) {
       const lvl = safeLevel(q.get('level'), LEVELS.length)
-      if (lvl !== null) useStore.setState({ level: lvl })
+      if (lvl !== null) useStore.setState({ level: lvl, started: true })
     }
     if (demo) { setFuelDone(true); setBeat(3) }
     setMounted(true)
@@ -45,6 +48,17 @@ export default function Page() {
   const onFuel = useCallback((d: boolean) => setFuelDone(d), [])
 
   if (!mounted) return <main className="min-h-dvh" />
+
+  if (!started) {
+    return (
+      <main className="relative min-h-dvh">
+        <Scene t={0} successor={0} />
+        <div className="relative z-10">
+          <Title onBegin={begin} />
+        </div>
+      </main>
+    )
+  }
 
   const t = tForLevel(level, LEVELS.length)
   // The turn: the successor appears on leaving the Handover, never during its
@@ -84,6 +98,14 @@ export default function Page() {
         </div>
 
         <div className="flex-1 px-4 pt-5 pb-2">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={level}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 26 }}
+              animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -18 }}
+              transition={{ duration: reduce ? 0.2 : 0.42, ease: [0.16, 1, 0.3, 1] }}
+            >
           {level === 0 && <L0 />}
           {level === 1 && <L1 onDone={onFuel} />}
           {level === 2 && <L2 />}
@@ -93,6 +115,8 @@ export default function Page() {
           {level === 6 && <L6 />}
           {level === 7 && <L7 />}
           {level === 8 && <L8 />}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {level < 8 && (
