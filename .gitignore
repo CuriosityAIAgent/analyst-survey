@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+.env*.local
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Next.js generated agent docs
+AGENTS.md
+CLAUDE.md
+.agents/
