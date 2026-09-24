@@ -38,6 +38,7 @@ export default function L2() {
         <input
           type="range" min={0} max={100} value={a.dependence}
           onChange={(e) => set('advisor', { dependence: Number(e.target.value) })}
+          aria-label="If you had been put with a different Advisor on day one, where would you be now?"
           aria-valuetext={phrase}
           className="mt-4 w-full accent-[var(--color-gold)]"
         />

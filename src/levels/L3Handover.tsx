@@ -148,6 +148,7 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
       </div>
       <textarea
         value={h.reckoningText ?? ''} maxLength={140}
+        aria-label="How should the next analyst learn that, in your words?"
         onChange={(e) => set('handover', { reckoningText: e.target.value })}
         placeholder="In your words, if you have them."
         className="mt-4 w-full rounded-2xl border border-ink2/25 bg-[rgba(10,18,40,0.55)] p-3 text-[15px] text-snow placeholder:text-ink2/50"

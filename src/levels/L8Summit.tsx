@@ -44,6 +44,7 @@ export default function L8() {
         </p>
         <textarea
           maxLength={140} rows={2}
+          aria-label="One line to the analyst starting in September"
           value={answers.summit.message ?? ''}
           onChange={(e) => useStore.getState().set('summit', { message: e.target.value })}
           className="mt-3 w-full rounded-2xl border border-ink2/25 bg-[rgba(10,18,40,0.55)] p-3 text-[15px] text-snow placeholder:text-ink2/50"
