@@ -7,7 +7,7 @@ import { emptyAnswers, validateAnswers } from './validate'
 export type Lane = 'agent' | 'both' | 'human'
 
 export type Answers = {
-  segment: { business?: string; months?: string; aiUse?: string; canAlone: string[]; notTrusted: string[] }
+  segment: { business?: string; aiUse?: string; canAlone: string[]; notTrusted: string[] }
   fuel: { round: number; shown: string[]; best?: string; worst?: string; ms: number }[]
   advisor: { top3: string[]; dependence: number; changeTop2: string[] }
   handover: { lanes: Record<string, Lane>; notDone: string[]; clips: string[]; reckoning?: string; reckoningText?: string }
@@ -53,12 +53,8 @@ export const useStore = create<State>()(
           enteredAt: now,
           timing: [...timing, { level: LEVELS[level].id, ms: now - enteredAt }],
         })
-        if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
       },
-      back: () => {
-        set({ level: Math.max(get().level - 1, 0), enteredAt: Date.now() })
-        if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
-      },
+      back: () => set({ level: Math.max(get().level - 1, 0), enteredAt: Date.now() }),
       goto: (i) => set({ level: i, enteredAt: Date.now() }),
       begin: () => set({ started: true, enteredAt: Date.now() }),
       reset: () =>

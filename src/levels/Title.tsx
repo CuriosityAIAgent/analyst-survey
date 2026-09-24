@@ -23,7 +23,7 @@ export default function Title({ onBegin }: { onBegin: () => void }) {
       </motion.h1>
 
       <motion.p {...rise(0.5)} className="mt-5 max-w-[30ch] text-[17px] leading-relaxed text-ink2">
-        You&apos;re part way up. Someone starts the same climb in September.
+        You made it through. Someone starts the same climb in September.
       </motion.p>
 
       <motion.button

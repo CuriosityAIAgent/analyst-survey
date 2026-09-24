@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useStore } from '@/store/useStore'
@@ -28,6 +28,8 @@ export default function Page() {
   const [mounted, setMounted] = useState(false)
   const [fuelDone, setFuelDone] = useState(false)
   const [beat, setBeat] = useState(0)
+  useLayoutEffect(() => { window.scrollTo({ top: 0 }) }, [level])
+
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     // Demo mode seeds a full response and skips every gate, so it must not be
@@ -45,6 +47,14 @@ export default function Page() {
   }, [])
 
   const onBeat = useCallback((b: number) => setBeat(b), [])
+  // one advance per press: a double tap must not skip a screen
+  const advancing = useRef(false)
+  const guardedNext = useCallback(() => {
+    if (advancing.current) return
+    advancing.current = true
+    next()
+    window.setTimeout(() => { advancing.current = false }, 400)
+  }, [next])
   const onFuel = useCallback((d: boolean) => setFuelDone(d), [])
 
   if (!mounted) return <main className="min-h-dvh" />
@@ -121,7 +131,8 @@ export default function Page() {
 
         {level < 8 && (
           <FooterBar
-            label={label} canProceed={ready} onNext={next} onBack={back}
+            key={level}
+            label={label} canProceed={ready} onNext={guardedNext} onBack={back}
             showBack={level > 0}
             hint={ready ? '' : hintFor(level, beat)}
           />
@@ -133,7 +144,7 @@ export default function Page() {
 
 function hintFor(level: number, beat: number) {
   switch (level) {
-    case 0: return 'Business, tenure and AI use first'
+    case 0: return 'Business and AI use first'
     case 1: return 'Finish the nine rounds'
     case 2: return 'Pick three traits'
     case 3: return beat < 3 ? 'Work through the thirteen' : ''

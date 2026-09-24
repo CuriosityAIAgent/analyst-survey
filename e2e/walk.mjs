@@ -68,7 +68,7 @@ log('title ->', await heading())
 // ---- L0 Base camp
 log('L0', await levelName(), '|', (await heading()).slice(0,40))
 if (await footerEnabled() !== false) errors.push('L0: Next was enabled before answering')
-for (const t of ['USPB', '13–24', 'Most weeks']) await clickText(t, true)
+for (const t of ['USPB', 'Most weeks']) await clickText(t, true)
 await clickText('Run a client review')
 if (await footerEnabled() !== true) errors.push('L0: Next still disabled after required fields')
 await shot('0-basecamp')

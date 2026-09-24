@@ -55,6 +55,14 @@ body {
 .display { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.015em; line-height: 1.12; }
 .hide-scroll::-webkit-scrollbar { display: none; }
 .hide-scroll { scrollbar-width: none; }
+/* Scope the reduced-motion kill to movement. A blanket 0.01ms rule silently
+   deletes opacity crossfades too, which removes the only cue that the screen
+   changed at all. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-property: opacity, background-color, border-color, color, fill, stroke !important;
+    transition-duration: .15s !important;
+  }
 }

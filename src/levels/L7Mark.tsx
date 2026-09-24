@@ -14,11 +14,11 @@ export default function L7() {
   return (
     <Level title="Mark to market." sub="Two things, then you're at the top.">
       <div>
-        <div className="text-[15px] text-snow">The programme as it stands today, out of ten.</div>
+        <div className="text-[15px] text-snow">The programme you went through, out of ten.</div>
         <div className="mt-3 display text-[48px] text-goldlight">{m.score ?? '–'}</div>
         <input type="range" min={1} max={10} value={m.score ?? 5}
           onChange={(e) => set('mark', { score: Number(e.target.value) })}
-          aria-label="The programme as it stands today, out of ten"
+          aria-label="The programme you went through, out of ten"
           aria-valuetext={`${m.score ?? 5} out of 10`}
           className="mt-1 w-full accent-[var(--color-gold)]" />
         <div className="mt-1 flex justify-between text-[12px] text-ink2/70">
