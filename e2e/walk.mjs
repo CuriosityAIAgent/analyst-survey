@@ -22,14 +22,18 @@ p.on('requestfailed', (r) => errors.push(`request failed: ${r.url().slice(0, 120
 
 const shot = (n) => p.screenshot({ path: `${OUT}/${TAG}-${n}.png` })
 const clickText = async (txt, exact = false) => {
-  const h = await p.evaluateHandle((t, ex) => {
+  // scroll first: an element below the fold on a 390px viewport swallows the
+  // click without erroring, which makes the test lie
+  const ok = await p.evaluate((t, ex) => {
     const els = [...document.querySelectorAll('button,[role=button]')]
-    return els.find((e) => ex ? e.textContent.trim() === t : e.textContent.includes(t)) || null
+    const el = els.find((e) => ex ? e.textContent.trim() === t : e.textContent.includes(t))
+    if (!el) return false
+    el.scrollIntoView({ block: 'center' })
+    el.click()
+    return true
   }, txt, exact)
-  const el = h.asElement()
-  if (!el) throw new Error(`no clickable element containing "${txt}"`)
-  await el.click()
-  await new Promise((r) => setTimeout(r, 120))
+  if (!ok) throw new Error(`no clickable element containing "${txt}"`)
+  await new Promise((r) => setTimeout(r, 140))
 }
 const footerEnabled = () => p.evaluate(() => {
   const bs = [...document.querySelectorAll('button')]
@@ -121,9 +125,18 @@ await nextLevel()
 
 // ---- L4 Capacity
 log('L4', await levelName())
-for (let i = 0; i < 8; i++) {
+const spentNow = () => p.evaluate(() => {
+  const s = JSON.parse(localStorage.getItem('ascent-v1')).state.answers.capacity.spend
+  return Object.values(s).reduce((a,b)=>a+b,0)
+})
+for (let i = 0; i < 40 && (await spentNow()) < 8; i++) {
+  // re-query every time: the list re-renders after each click, so cached
+  // handles go stale and the click silently lands on nothing
   const plus = await p.$$('button[aria-label^="Add an hour"]')
+  const before = await spentNow()
   await plus[i % 4].click()
+  await new Promise(r=>setTimeout(r,60))
+  if (await spentNow() === before) { await new Promise(r=>setTimeout(r,120)) }
 }
 const spent = await p.evaluate(() => {
   const s = JSON.parse(localStorage.getItem('ascent-v1')).state.answers.capacity.spend
@@ -175,36 +188,54 @@ await nextLevel()
 // ---- L5 Trials
 log('L5', await levelName())
 if (await footerEnabled() !== false) errors.push('L5: Next enabled before answering')
-const yeses = await p.$$('button.chip')
-for (const y of yeses) {
-  const t = await p.evaluate((e)=>e.textContent.trim(), y)
-  if (t === 'Yes') await y.click()
+// click by live text each time — the card re-renders and invalidates handles
+const clickChipByText = async (txt) => {
+  const ok = await p.evaluate((t) => {
+    const b = [...document.querySelectorAll('button.chip')].find(x => x.textContent.trim() === t)
+    if (!b) return false
+    b.click(); return true
+  }, txt)
+  await new Promise(r=>setTimeout(r,180))
+  return ok
 }
-await new Promise(r=>setTimeout(r,200))
-const fu = await p.$$('button.chip')
-for (const f of fu) {
-  const t = await p.evaluate((e)=>e.textContent.trim(), f)
-  if (['A live role-play','Yes, still mandatory'].includes(t)) await f.click()
+// answer both trials Yes (two separate cards, so do it twice by index)
+for (let i = 0; i < 2; i++) {
+  const ok = await p.evaluate((idx) => {
+    const yes = [...document.querySelectorAll('button.chip')].filter(x => x.textContent.trim() === 'Yes')
+    if (!yes[idx]) return false
+    yes[idx].click(); return true
+  }, i)
+  if (!ok) errors.push(`L5: no Yes button at index ${i}`)
+  await new Promise(r=>setTimeout(r,200))
 }
+for (const t of ['A live role-play','Yes, still mandatory']) {
+  if (!await clickChipByText(t)) errors.push(`L5: follow-up "${t}" not found`)
+}
+const trialState = await p.evaluate(() => JSON.parse(localStorage.getItem('ascent-v1')).state.answers.trials)
+log('   trials:', Object.entries(trialState).map(([k,v])=>`${k}=${v.answer}/${v.followUp.length}`).join(' '))
 await shot('5-trials')
 if (await footerEnabled() !== true) errors.push('L5: Next disabled after both answered')
 await nextLevel()
 
 // ---- L6 Route
 log('L6', await levelName())
+// scroll into view before clicking: on a 390px viewport an off-screen
+// element takes the click silently and the placement is lost
 const place = async (brickText, year) => {
-  const chips = await p.$$('button.chip')
-  let hit = null
-  for (const c of chips) {
-    const t = await p.evaluate((e)=>e.textContent.trim(), c)
-    if (t.startsWith(brickText)) { hit = c; break }
-  }
-  if (!hit) { errors.push(`L6: no brick chip "${brickText}"`); return }
-  await hit.click()
-  const cols = await p.$$('button[class*="min-h-"]')
-  const col = cols[year]
-  if (!col) { errors.push(`L6: no year column ${year}`); return }
-  await col.click(); await new Promise(r=>setTimeout(r,120))
+  const gotChip = await p.evaluate((t) => {
+    const b = [...document.querySelectorAll('button.chip')].find(x => x.textContent.trim().startsWith(t))
+    if (!b) return false
+    b.scrollIntoView({ block: 'center' }); b.click(); return true
+  }, brickText)
+  if (!gotChip) { errors.push(`L6: no brick chip "${brickText}"`); return }
+  await new Promise(r=>setTimeout(r,160))
+  const gotCol = await p.evaluate((y) => {
+    const c = [...document.querySelectorAll('button[aria-label^="Year"]')][y]
+    if (!c) return false
+    c.scrollIntoView({ block: 'center' }); c.click(); return true
+  }, year)
+  if (!gotCol) errors.push(`L6: no year column ${year}`)
+  await new Promise(r=>setTimeout(r,160))
 }
 await place('The morning meeting', 0)
 await place("Shadow the Advisor's client meetings", 0)
