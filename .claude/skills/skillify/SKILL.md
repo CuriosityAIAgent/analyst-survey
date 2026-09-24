@@ -1,0 +1,1 @@
+/Users/haresh/conductor/repos/analyst-survey/.claude/skills/gstack/skillify/SKILL.md
