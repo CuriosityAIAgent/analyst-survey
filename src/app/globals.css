@@ -165,4 +165,6 @@ html[data-skin="survey"] .panel {
 /* The band is fixed, the sheet scrolls over it, so the sheet must be opaque
    and above it or text lands on the silhouette. */
 html[data-skin="survey"] .panel { position: relative; z-index: 10; }
-html[data-skin="survey"] .choice { background: var(--color-ground); }
+html[data-skin="survey"] .choice:not([aria-pressed="true"]):not([data-on="true"]) {
+  background: var(--color-ground);
+}
