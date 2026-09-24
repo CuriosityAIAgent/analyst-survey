@@ -32,6 +32,7 @@ export default function L6() {
       <div className="grid grid-cols-3 gap-2">
         {years.map((col, y) => (
           <button key={y} type="button" onClick={() => drop(y)}
+            aria-label={`Year ${y + 1}, ${used(col)} of ${YEAR_CAPACITY} units used${sel ? `. Place ${brick(sel).label} here` : ''}`}
             className="min-h-[160px] rounded-2xl border p-2 text-left transition"
             style={{
               borderColor: sel && used(col) + (sel ? brick(sel).units : 0) <= YEAR_CAPACITY
@@ -43,7 +44,13 @@ export default function L6() {
             </div>
             <div className="space-y-1">
               {col.map((id, idx) => (
-                <span key={idx} onClick={(e) => { e.stopPropagation(); remove(y, idx) }}
+                <span
+                  key={idx} role="button" tabIndex={0}
+                  aria-label={`Remove ${brick(id).label} from year ${y + 1}`}
+                  onClick={(e) => { e.stopPropagation(); remove(y, idx) }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); remove(y, idx) }
+                  }}
                   className="block cursor-pointer rounded-lg px-2 py-1 text-[11px] leading-tight"
                   style={{ background: 'rgba(233,185,91,0.18)', border: '1px solid rgba(233,185,91,0.5)', minHeight: 22 * brick(id).units }}>
                   {brick(id).label}
