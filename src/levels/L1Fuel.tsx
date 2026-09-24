@@ -43,15 +43,20 @@ export default function L1({ onDone }: { onDone: (done: boolean) => void }) {
     >
       <div className="space-y-3">
         {shown.map((id) => (
-          <div key={id} className="rounded-2xl border border-ink2/20 bg-[rgba(10,18,40,0.5)] p-4">
+          <div key={id} role="group" aria-label={label(id)}
+            className="rounded-2xl border border-ink2/20 bg-[rgba(10,18,40,0.5)] p-4">
             <div className="text-[15px] leading-snug text-snow">{label(id)}</div>
             <div className="mt-3 flex gap-2">
               <button
                 type="button" className="chip flex-1" data-on={best === id}
+                aria-pressed={best === id}
+                aria-label={`${label(id)} — taught me most`}
                 onClick={() => { setBest(id); if (worst === id) setWorst(undefined) }}
               >Taught me most</button>
               <button
                 type="button" className="chip flex-1" data-on={worst === id}
+                aria-pressed={worst === id}
+                aria-label={`${label(id)} — taught me least`}
                 onClick={() => { setWorst(id); if (best === id) setBest(undefined) }}
               >Taught me least</button>
             </div>
