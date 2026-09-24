@@ -1,0 +1,20 @@
+import puppeteer from 'puppeteer-core'
+const B='http://localhost:3300'
+const br = await puppeteer.launch({ executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless:'new' })
+const p = await br.newPage()
+const errs=[]; p.on('pageerror',e=>errs.push(String(e).slice(0,90)))
+const show = async (label) => {
+  const h1 = await p.evaluate(()=>document.querySelector('h1')?.textContent?.slice(0,34) ?? '(no h1)')
+  console.log(label.padEnd(34), '->', h1, errs.length?`ERRORS: ${errs[0]}`:'no crash')
+  errs.length=0
+}
+for (const q of ['?level=wat','?level=4.5','?level=-99','?level=1e9','?demo=1&level=8']) {
+  await p.goto(B+q,{waitUntil:'networkidle2'}); await new Promise(r=>setTimeout(r,700)); await show(q)
+}
+// hostile persisted state
+await p.goto(B,{waitUntil:'networkidle2'})
+await p.evaluate(()=>localStorage.setItem('ascent-v1', JSON.stringify({state:{level:'boom',answers:{advisor:{top3:['x','y','z'],dependence:'NaN'},route:{years:['nope',null,[{}]]},fuel:'no',trials:{evil:{answer:'maybe'}},capacity:{spend:{evil:999}}}},version:1})))
+await p.goto(B,{waitUntil:'networkidle2'}); await new Promise(r=>setTimeout(r,800)); await show('hostile localStorage')
+const st = await p.evaluate(()=>JSON.parse(localStorage.getItem('ascent-v1')).state)
+console.log('   sanitised ->', 'level:', st.level, '| top3:', JSON.stringify(st.answers.advisor.top3), '| dependence:', st.answers.advisor.dependence, '| trials:', JSON.stringify(st.answers.trials), '| spend:', JSON.stringify(st.answers.capacity.spend))
+await br.close()

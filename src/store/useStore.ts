@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { LEVELS } from '@/content/content'
+import { emptyAnswers, validateAnswers } from './validate'
 
 export type Lane = 'agent' | 'both' | 'human'
 
@@ -17,17 +18,7 @@ export type Answers = {
   summit: { message?: string }
 }
 
-const empty: Answers = {
-  segment: { canAlone: [], notTrusted: [] },
-  fuel: [],
-  advisor: { top3: [], dependence: 50, changeTop2: [] },
-  handover: { lanes: {}, notDone: [], clips: [] },
-  capacity: { spend: {}, after: {} },
-  trials: {},
-  route: { years: [[], [], []] },
-  mark: {},
-  summit: {},
-}
+const empty: Answers = emptyAnswers()
 
 type State = {
   level: number
@@ -68,6 +59,18 @@ export const useStore = create<State>()(
       goto: (i) => set({ level: i, enteredAt: Date.now() }),
       reset: () => set({ level: 0, answers: empty, startedAt: Date.now(), enteredAt: Date.now(), timing: [] }),
     }),
-    { name: 'ascent-v1' },
+    {
+      name: 'ascent-v1',
+      version: 1,
+      // localStorage is attacker-controllable and survives deploys. Validate the
+      // whole shape on the way in; a malformed value must not crash the app.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<State>
+        const lvl = typeof p.level === 'number' && Number.isInteger(p.level)
+          ? Math.min(LEVELS.length - 1, Math.max(0, p.level))
+          : 0
+        return { ...current, ...p, level: lvl, answers: validateAnswers(p.answers) }
+      },
+    },
   ),
 )

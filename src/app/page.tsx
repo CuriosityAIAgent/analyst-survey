@@ -6,6 +6,7 @@ import { FooterBar } from '@/components/ui'
 import { LEVELS, TURN_INDEX } from '@/content/content'
 import { tForLevel } from '@/lib/tokens'
 import { seed } from '@/lib/demo'
+import { safeLevel } from '@/store/validate'
 
 import L0, { l0Ready } from '@/levels/L0Basecamp'
 import L1 from '@/levels/L1Fuel'
@@ -26,10 +27,17 @@ export default function Page() {
   const [beat, setBeat] = useState(0)
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
-    if (q.get('demo') === '1') useStore.setState({ answers: seed() })
-    const l = q.get('level')
-    if (l !== null) useStore.setState({ level: Math.max(0, Math.min(LEVELS.length - 1, Number(l))) })
-    if (q.get('demo') === '1') { setFuelDone(true); setBeat(3) }
+    // Demo mode seeds a full response and skips every gate, so it must not be
+    // reachable on a public deployment. Off unless explicitly enabled at build time.
+    const demoAllowed =
+      process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ALLOW_DEMO === '1'
+    const demo = demoAllowed && q.get('demo') === '1'
+    if (demo) useStore.setState({ answers: seed() })
+    if (demoAllowed) {
+      const lvl = safeLevel(q.get('level'), LEVELS.length)
+      if (lvl !== null) useStore.setState({ level: lvl })
+    }
+    if (demo) { setFuelDone(true); setBeat(3) }
     setMounted(true)
   }, [])
 

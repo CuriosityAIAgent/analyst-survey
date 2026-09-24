@@ -16,8 +16,14 @@ export default function L0() {
   return (
     <Level
       title="You're on the climb. Help us map the next one."
-      sub="Twelve minutes, mostly tapping. It shapes what the programme teaches and where the firm puts AI first. Your answers reach the working group under a code, never with your name on them."
+      sub="Twelve minutes, mostly tapping. It shapes what the programme teaches and where the firm puts AI first."
     >
+      <p className="mb-6 rounded-2xl border border-ice/30 bg-[rgba(127,212,224,0.08)] p-3 text-[13px] leading-relaxed text-ink2">
+        <strong className="text-ice">Prototype.</strong> Nothing is sent anywhere yet. Your
+        answers stay in this browser and are cleared when you start again. Before this is
+        fielded it needs the token service and the response API, so what you type here is
+        for shaping the instrument, not for the record.
+      </p>
       <div className="space-y-6">
         <Field label="Which business?">
           {BUSINESS.map((b) => <Chip key={b} on={s.business === b} onClick={() => set('segment', { business: b })}>{b}</Chip>)}
