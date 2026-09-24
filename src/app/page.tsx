@@ -65,7 +65,7 @@ export default function Page() {
 
   if (!started) {
     return (
-      <main className="relative min-h-dvh">
+      <main className={`relative min-h-dvh ${skin === 'survey' ? 'pb-[130px] sm:pb-[190px]' : ''}`}>
         <Scene t={0} successor={0} skin={skin} level={0} />
         <div className="relative z-10">
           <Title onBegin={begin} />
@@ -96,7 +96,7 @@ export default function Page() {
   const label = level === 0 ? 'Start the climb' : level === 7 ? 'To the top' : 'Next'
 
   return (
-    <main className="relative min-h-dvh">
+    <main className={`relative min-h-dvh ${skin === 'survey' ? 'pb-[130px] sm:pb-[190px]' : ''}`}>
       <Scene t={t} successor={successor} skin={skin} level={level} />
       <div className="relative z-10 flex min-h-dvh flex-col">
         <div className="mx-auto w-full max-w-[720px] px-4 pt-5">

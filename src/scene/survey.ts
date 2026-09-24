@@ -11,15 +11,33 @@ import { clamp } from '@/lib/tokens'
 
 const INK = '13,12,11'
 const LIGHT = '246,237,224'
+/* The accent trio does real work here rather than decorating: the route is
+   navy, the survey marks are bronze, the reached camps are forest. */
+const NAVY = '22,36,59'
+const BRONZE = '146,86,38'
+const FOREST = '35,64,47'
+const SKIN_T = '198,146,106'
 const COLS = 420
 
-const sample = (l: Float32Array, u: number) => {
+const raw = (l: Float32Array, u: number) => {
   const p = clamp(u) * (COLS - 1)
   const i = Math.floor(p)
   return l[i] + ((l[Math.min(i + 1, COLS - 1)] ?? l[i]) - l[i]) * (p - i)
 }
 
-export type SurveyOpts = { t: number; level: number; successor: number; panU: number; reduced: boolean }
+/* Blend the noise with a rising ramp so the ridge ascends toward a summit at
+   u=0.82. Without this the profile is just terrain, "further along" is not
+   "higher", and the climber can summit in a valley with the successor above
+   them, which is exactly what it did. */
+const sample = (l: Float32Array, u: number) => {
+  const c = clamp(u)
+  const climb = Math.pow(Math.min(c / 0.82, 1), 0.85)
+  const after = c > 0.82 ? (c - 0.82) / 0.18 : 0
+  const ramp = climb - after * 0.22
+  return raw(l, c) * 0.42 - ramp * 0.52
+}
+
+export type SurveyOpts = { t: number; level: number; successor: number; panU: number; reduced: boolean; stride: number }
 
 export function drawSurvey(
   ctx: CanvasRenderingContext2D, w: number, h: number, terr: Terrain, o: SurveyOpts,
@@ -28,8 +46,11 @@ export function drawSurvey(
   const near = terr.lines[3]
   const far = terr.lines[1]
   // the band maps the ridge's own range onto the full height of the strip
-  let hi = 1, lo = 0
-  for (let x = 0; x < COLS; x++) { hi = Math.min(hi, near[x]); lo = Math.max(lo, near[x]) }
+  let hi = Infinity, lo = -Infinity
+  for (let i = 0; i <= 120; i++) {
+    const v = sample(near, i / 120)
+    hi = Math.min(hi, v); lo = Math.max(lo, v)
+  }
   const span = Math.max(lo - hi, 0.001)
   const yOf = (v: number) => h - 6 - ((lo - v) / span) * (h - 18)
   const pan = o.reduced ? 0 : o.panU
@@ -85,9 +106,27 @@ export function drawSurvey(
     ctx.stroke()
   }
 
+  // --- the route, navy, dashed ahead and solid behind ----------------------
+  if (stage >= 1) {
+    const drawnTo = 0.10 + (o.level / 8) * 0.80
+    for (const [from, to, solid] of [[0.10, drawnTo, true], [drawnTo, 0.90, false]] as const) {
+      if (to <= from) continue
+      ctx.strokeStyle = solid ? `rgb(${NAVY})` : `rgba(${NAVY},0.32)`
+      ctx.lineWidth = solid ? 1.8 : 1.2
+      ctx.setLineDash(solid ? [] : [4, 4])
+      ctx.beginPath()
+      for (let u = from; u <= to; u += 0.006) {
+        const x = u * w, y = yOf(sample(near, u + pan)) - 2
+        u === from ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
+      }
+      ctx.stroke()
+    }
+    ctx.setLineDash([])
+  }
+
   // --- hachures: denser where the face is steeper --------------------------
   if (stage >= 2) {
-    ctx.strokeStyle = `rgba(${INK},0.42)`
+    ctx.strokeStyle = `rgba(${BRONZE},0.55)`
     ctx.lineWidth = 1
     for (let x = 0; x <= w; x += 7) {
       const u = x / w + pan
@@ -101,7 +140,7 @@ export function drawSurvey(
 
   // --- contours and spot heights -------------------------------------------
   if (stage >= 3) {
-    ctx.strokeStyle = `rgba(${INK},0.28)`
+    ctx.strokeStyle = `rgba(${BRONZE},0.40)`
     ctx.lineWidth = 1
     for (const frac of [0.35, 0.55, 0.75]) {
       ctx.beginPath()
@@ -118,30 +157,74 @@ export function drawSurvey(
     }
   }
 
-  // --- the two marks: solid is you, hollow is the one behind ---------------
-  const markAt = (u: number, filled: boolean, alpha: number) => {
+  // --- the climbers -------------------------------------------------------
+  /* A drawn figure, not a tick: pack, axe, mid-stride. Scaled to the band so
+     it stays legible at 110px on a phone. `lead` is the respondent in colour;
+     the successor is the same figure, smaller and unfilled, behind. */
+  const climber = (u: number, lead: boolean, alpha: number, stride: number) => {
     if (alpha <= 0.02) return
     const x = u * w
     const y = yOf(sample(near, u + pan))
+    const S = (lead ? 1 : 0.78) * Math.min(1.25, h / 110)
+    const jacket = lead ? `rgb(${BRONZE})` : `rgba(${INK},0.30)`
+    const pack = lead ? `rgb(${FOREST})` : `rgba(${INK},0.22)`
+    const swing = Math.sin(stride) * 3.2 * S
+
     ctx.save(); ctx.globalAlpha = alpha
-    ctx.strokeStyle = `rgb(${INK})`; ctx.fillStyle = `rgb(${INK})`; ctx.lineWidth = 1.25
-    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 11); ctx.stroke()
-    ctx.beginPath(); ctx.arc(x, y - 14, 3.2, 0, Math.PI * 2)
-    filled ? ctx.fill() : (ctx.fillStyle = `rgb(248,247,244)`, ctx.fill(), ctx.stroke())
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+
+    // legs, mid-stride
+    ctx.strokeStyle = `rgb(${NAVY})`; ctx.lineWidth = 2.3 * S
+    ctx.beginPath(); ctx.moveTo(x, y - 9 * S); ctx.lineTo(x - 3 * S + swing, y); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(x, y - 9 * S); ctx.lineTo(x + 4 * S - swing, y - 1 * S); ctx.stroke()
+
+    // ice axe, planted uphill
+    ctx.strokeStyle = `rgba(${INK},0.75)`; ctx.lineWidth = 1.4 * S
+    ctx.beginPath(); ctx.moveTo(x + 5 * S, y - 13 * S); ctx.lineTo(x + 9 * S, y - 1 * S); ctx.stroke()
+
+    // torso
+    ctx.strokeStyle = jacket; ctx.lineWidth = 4.2 * S
+    ctx.beginPath(); ctx.moveTo(x, y - 9 * S); ctx.lineTo(x + 1 * S, y - 17 * S); ctx.stroke()
+
+    // pack
+    ctx.fillStyle = pack
+    ctx.beginPath()
+    ctx.roundRect(x - 5 * S, y - 18 * S, 4.6 * S, 8 * S, 1.4 * S)
+    ctx.fill()
+
+    // arm to the axe
+    ctx.strokeStyle = jacket; ctx.lineWidth = 2 * S
+    ctx.beginPath(); ctx.moveTo(x + 1 * S, y - 15 * S); ctx.lineTo(x + 5.5 * S, y - 12.5 * S); ctx.stroke()
+
+    // head
+    ctx.fillStyle = lead ? `rgb(${SKIN_T})` : `rgba(${INK},0.30)`
+    ctx.beginPath(); ctx.arc(x + 1.4 * S, y - 20 * S, 2.9 * S, 0, Math.PI * 2); ctx.fill()
+    // hat
+    ctx.fillStyle = lead ? `rgb(${BRONZE})` : `rgba(${INK},0.30)`
+    ctx.beginPath()
+    ctx.ellipse(x + 1.4 * S, y - 22 * S, 3.4 * S, 1.7 * S, 0, Math.PI, 0)
+    ctx.fill()
     ctx.restore()
   }
   const you = 0.30 + 0.40 * o.t
-  markAt(you - 0.15, false, o.successor)
-  markAt(you, true, 1)
+  climber(you - 0.15, false, o.successor, o.stride + 1.6)
+  climber(you, true, 1, o.stride)
 
   // --- camps: hollow ahead, filled behind ----------------------------------
   if (stage >= 1) {
-    ctx.strokeStyle = `rgb(${INK})`; ctx.lineWidth = 1
     for (let i = 0; i < 9; i++) {
       const u = 0.10 + (i / 8) * 0.80
       const x = u * w, y = yOf(sample(near, u + pan))
-      ctx.beginPath(); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 3); ctx.stroke()
-      if (i <= o.level) { ctx.fillStyle = `rgb(${INK})`; ctx.fillRect(x - 1.5, y - 1.5, 3, 3) }
+      const reached = i <= o.level
+      ctx.strokeStyle = reached ? `rgb(${FOREST})` : `rgba(${INK},0.35)`
+      ctx.lineWidth = reached ? 1.6 : 1
+      ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x, y + 3); ctx.stroke()
+      if (reached) {
+        // a small pitched tent at every camp you have reached
+        ctx.fillStyle = `rgb(${FOREST})`
+        ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x + 4, y - 2); ctx.lineTo(x - 4, y - 2)
+        ctx.closePath(); ctx.fill()
+      }
     }
   }
 }

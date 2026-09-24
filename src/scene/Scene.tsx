@@ -53,6 +53,7 @@ export default function Scene({ t, successor, skin = 'night', level = 0 }: { t: 
       if (s.skin === 'survey') {
         drawSurvey(ctx, cv.clientWidth, cv.clientHeight, terr.current!, {
           t: s.tt, level: s.level, successor: s.ss, panU: 0, reduced,
+          stride: reduced ? 0 : now / 460,
         })
       } else {
         drawScene(ctx, cv.clientWidth, cv.clientHeight, terr.current!, {
@@ -60,7 +61,7 @@ export default function Scene({ t, successor, skin = 'night', level = 0 }: { t: 
         })
       }
       // the scene is static between transitions: stop rather than burn battery
-      idle = d < 0.0015 ? idle + 1 : 0
+      idle = d < 0.0015 && s.skin !== 'survey' ? idle + 1 : 0
       if (idle > 30) { running = false; return }
       raf = requestAnimationFrame(frame)
     }
@@ -86,7 +87,7 @@ export default function Scene({ t, successor, skin = 'night', level = 0 }: { t: 
       aria-hidden
       className={
         skin === 'survey'
-          ? 'fixed inset-x-0 bottom-0 h-[110px] w-full sm:h-[170px]'
+          ? 'pointer-events-none fixed inset-x-0 bottom-0 z-0 h-[120px] w-full sm:h-[180px]'
           : 'fixed inset-0 h-full w-full'
       }
     />
