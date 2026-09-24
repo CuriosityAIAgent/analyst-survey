@@ -1,23 +1,26 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { buildTerrain, drawScene, Terrain } from './mountain'
+import { drawSurvey } from './survey'
 
-export default function Scene({ t, successor }: { t: number; successor: number }) {
+export default function Scene({ t, successor, skin = 'night', level = 0 }: { t: number; successor: number; skin?: 'night' | 'survey'; level?: number }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const terr = useRef<Terrain | null>(null)
-  const state = useRef({ t, successor, px: 0, tt: t, ss: successor })
+  const state = useRef({ t, successor, px: 0, tt: t, ss: successor, level, skin })
   const wakeRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     state.current.t = t
     state.current.successor = successor
+    state.current.level = level
+    state.current.skin = skin
     wakeRef.current?.()   // a new screen restarts the loop if it had settled
-  }, [t, successor])
+  }, [t, successor, level, skin])
 
   useEffect(() => {
     if (!terr.current) terr.current = buildTerrain()
     const cv = ref.current!
-    const ctx = cv.getContext('2d', { alpha: false })!
+    const ctx = cv.getContext('2d', { alpha: true })!
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     let reduced = mq.matches
     const onMQ = (e: MediaQueryListEvent) => { reduced = e.matches; wake() }
@@ -47,9 +50,15 @@ export default function Scene({ t, successor }: { t: number; successor: number }
       s.tt += (s.t - s.tt) * k(0.045)
       s.ss += (s.successor - s.ss) * k(0.05)
       s.px += (targetPx - s.px) * k(0.06)
-      drawScene(ctx, cv.clientWidth, cv.clientHeight, terr.current!, {
-        t: s.tt, px: s.px, reduced, successor: s.ss, climberU: 0.30 + 0.34 * s.tt,
-      })
+      if (s.skin === 'survey') {
+        drawSurvey(ctx, cv.clientWidth, cv.clientHeight, terr.current!, {
+          t: s.tt, level: s.level, successor: s.ss, panU: 0, reduced,
+        })
+      } else {
+        drawScene(ctx, cv.clientWidth, cv.clientHeight, terr.current!, {
+          t: s.tt, px: s.px, reduced, successor: s.ss, climberU: 0.30 + 0.34 * s.tt,
+        })
+      }
       // the scene is static between transitions: stop rather than burn battery
       idle = d < 0.0015 ? idle + 1 : 0
       if (idle > 30) { running = false; return }
@@ -71,5 +80,15 @@ export default function Scene({ t, successor }: { t: number; successor: number }
     }
   }, [])
 
-  return <canvas ref={ref} aria-hidden className="fixed inset-0 h-full w-full" />
+  return (
+    <canvas
+      ref={ref}
+      aria-hidden
+      className={
+        skin === 'survey'
+          ? 'fixed inset-x-0 bottom-0 h-[110px] w-full sm:h-[170px]'
+          : 'fixed inset-0 h-full w-full'
+      }
+    />
+  )
 }

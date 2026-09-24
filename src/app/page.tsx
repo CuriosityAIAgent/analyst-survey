@@ -28,10 +28,14 @@ export default function Page() {
   const [mounted, setMounted] = useState(false)
   const [fuelDone, setFuelDone] = useState(false)
   const [beat, setBeat] = useState(0)
+  const [skin, setSkin] = useState<'night' | 'survey'>('night')
   useLayoutEffect(() => { window.scrollTo({ top: 0 }) }, [level])
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
+    const sk = q.get('skin') === 'survey' ? 'survey' : 'night'
+    setSkin(sk)
+    document.documentElement.dataset.skin = sk
     // Demo mode seeds a full response and skips every gate, so it must not be
     // reachable on a public deployment. Off unless explicitly enabled at build time.
     const demoAllowed =
@@ -62,7 +66,7 @@ export default function Page() {
   if (!started) {
     return (
       <main className="relative min-h-dvh">
-        <Scene t={0} successor={0} />
+        <Scene t={0} successor={0} skin={skin} level={0} />
         <div className="relative z-10">
           <Title onBegin={begin} />
         </div>
@@ -93,7 +97,7 @@ export default function Page() {
 
   return (
     <main className="relative min-h-dvh">
-      <Scene t={t} successor={successor} />
+      <Scene t={t} successor={successor} skin={skin} level={level} />
       <div className="relative z-10 flex min-h-dvh flex-col">
         <div className="mx-auto w-full max-w-[720px] px-4 pt-5">
           <div className="flex items-center gap-1.5" aria-hidden>

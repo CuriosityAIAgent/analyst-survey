@@ -154,3 +154,12 @@ body {
     transition-duration: .15s !important;
   }
 }
+
+/* ---- survey skin: the whole product is the sheet ------------------------ */
+html[data-skin="survey"] body { background: var(--color-paper); }
+html[data-skin="survey"] .panel {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+html[data-skin="survey"] .choice { background: var(--color-ground); }
