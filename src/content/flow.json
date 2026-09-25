@@ -1,80 +1,371 @@
 {
-  "name": "placeholder",
-  "thesis": "Exercises every card kind until the designed graph lands.",
-  "start": "hello",
-  "consistencyPairs": [],
-  "mainPathSeconds": 60,
+  "name": "The Ascent: The Conversation, review pass",
+  "thesis": "Ask what graduates did in one real moment, how it was arranged, who framed it, who made or recommended the call, and what the feedback was about, not how much A2A developed them. Every answer at a branch point costs the same, so no answer is the shortcut. Images sit only on the two show cards. The open question comes straight after the moment it asks about, and the sponsor's core question sits in the first third. All recall comes before any automation or AI wording. The AI questions follow one neutral picture of meeting prep at five rungs, in which every rung shows who catches the same planted error, and ask where the next Analyst could start each task and still learn.",
+  "start": "p1_prep",
+  "mainPathSeconds": 414,
   "cards": [
     {
-      "id": "hello",
-      "section": "open",
-      "kind": "show",
-      "prompt": "You made the climb. Help us map the next one.",
-      "sub": "Six minutes. Mostly thumbs.",
-      "next": "prep",
-      "answers": [],
-      "seconds": 5
-    },
-    {
-      "id": "prep",
+      "id": "p1_prep",
       "section": "pulse",
       "kind": "slider",
-      "prompt": "How well did A2A prepare you to be an Advisor?",
+      "prompt": "Mark A2A to market: how well did it prepare you for what came next?",
+      "sub": "Your gut read. Specific moments come next.",
       "slider": {
-        "min": 0,
-        "max": 10,
-        "left": "Barely",
-        "right": "Completely",
+        "min": 1,
+        "max": 5,
+        "left": "Underprepared",
+        "right": "Well prepared",
         "marks": [
           {
             "at": 1,
-            "label": "Thrown in"
+            "label": "Underprepared"
+          },
+          {
+            "at": 2,
+            "label": "Patchy"
           },
           {
             "at": 3,
-            "label": "Treading water"
+            "label": "Partly ready"
           },
           {
-            "at": 5,
-            "label": "Half ready"
-          },
-          {
-            "at": 7,
+            "at": 4,
             "label": "Mostly ready"
           },
           {
-            "at": 9,
-            "label": "Ready to run"
+            "at": 5,
+            "label": "Well prepared"
           }
-        ],
-        "style": "route"
+        ]
       },
-      "branches": [
-        {
-          "when": "lte:3",
-          "goto": "gap"
-        }
-      ],
-      "next": "fuel",
+      "next": "h2_blocker",
       "answers": [
-        "A:mark"
+        "A:mark",
+        "D3"
       ],
-      "seconds": 6
+      "seconds": 7
     },
     {
-      "id": "gap",
+      "id": "h2_blocker",
       "section": "pulse",
-      "kind": "multi",
-      "prompt": "What were you least ready for?",
-      "max": 2,
+      "kind": "pick",
+      "prompt": "For Analysts on teams like yours, what most slowed their development?",
+      "sub": "The setup, not a person. The biggest one.",
       "options": [
         {
-          "id": "prospect",
-          "label": "Prospecting"
+          "id": "admin",
+          "label": "Admin and processing work"
+        },
+        {
+          "id": "clientbats",
+          "label": "Too few client at-bats"
+        },
+        {
+          "id": "seniorbats",
+          "label": "Too little time with seniors"
+        },
+        {
+          "id": "debrief",
+          "label": "No one to debrief them"
+        },
+        {
+          "id": "mix",
+          "label": "The team's client mix"
+        },
+        {
+          "id": "unclear",
+          "label": "Unclear what promotion needs"
+        },
+        {
+          "id": "nothing",
+          "label": "Nothing much, honestly"
+        }
+      ],
+      "next": "h1_first",
+      "answers": [
+        "D1",
+        "D4",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "h1_first",
+      "section": "hindsight",
+      "kind": "slider",
+      "prompt": "When did a client first call you, not your Advisor?",
+      "sub": "Your first. 'Not yet' is a real answer.",
+      "slider": {
+        "min": 1,
+        "max": 5,
+        "left": "Year one",
+        "right": "Not yet",
+        "style": "plain",
+        "marks": [
+          {
+            "at": 1,
+            "label": "Year one"
+          },
+          {
+            "at": 2,
+            "label": "Year two"
+          },
+          {
+            "at": 3,
+            "label": "Year three"
+          },
+          {
+            "at": 4,
+            "label": "After A2A"
+          },
+          {
+            "at": 5,
+            "label": "Not yet"
+          }
+        ]
+      },
+      "next": "h1_can",
+      "answers": [
+        "D1",
+        "A:compress"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "h1_can",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "Think of one client moment that changed what you could do.",
+      "sub": "Afterwards, you could… Pick the closest.",
+      "options": [
+        {
+          "id": "diagnose",
+          "label": "Diagnose the real need"
+        },
+        {
+          "id": "lead",
+          "label": "Lead the conversation"
+        },
+        {
+          "id": "view",
+          "label": "Form and defend a view"
+        },
+        {
+          "id": "connect",
+          "label": "Connect across the franchise"
+        },
+        {
+          "id": "difficult",
+          "label": "Handle a difficult moment"
+        },
+        {
+          "id": "drive",
+          "label": "Spot an opportunity, drive it"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "moment",
+      "answers": [
+        "D1",
+        "D3"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "moment",
+      "section": "hindsight",
+      "kind": "text",
+      "prompt": "In a sentence or two: what happened, and what did you do?",
+      "sub": "For better or worse. Roles, not names.",
+      "optional": true,
+      "next": "h2_how",
+      "answers": [
+        "D1",
+        "D3"
+      ],
+      "seconds": 45
+    },
+    {
+      "id": "h2_how",
+      "section": "hindsight",
+      "kind": "swipe",
+      "prompt": "That moment. Which of these were true?",
+      "sub": "Swipe each. 'Not really' is as useful as true.",
+      "options": [
+        {
+          "id": "stretch",
+          "label": "A stretch, uncomfortable at the time"
+        },
+        {
+          "id": "ownview",
+          "label": "I formed my view before theirs"
+        },
+        {
+          "id": "modelled",
+          "label": "A senior explained their thinking"
+        },
+        {
+          "id": "owncall",
+          "label": "I made or recommended the call"
+        },
+        {
+          "id": "access",
+          "label": "It got me more client access"
+        }
+      ],
+      "sides": {
+        "left": "Not really",
+        "right": "True"
+      },
+      "next": "i3_coach",
+      "answers": [
+        "D3",
+        "D2"
+      ],
+      "seconds": 16
+    },
+    {
+      "id": "i3_coach",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "The feedback on that moment: what was it mostly about?",
+      "sub": "The main feedback, if there was any.",
+      "options": [
+        {
+          "id": "reasoning",
+          "label": "My reasoning"
+        },
+        {
+          "id": "output",
+          "label": "My output"
+        },
+        {
+          "id": "me",
+          "label": "Me: my rating or standing"
+        },
+        {
+          "id": "setback",
+          "label": "It set me back"
+        },
+        {
+          "id": "none",
+          "label": "There wasn't any"
+        }
+      ],
+      "next": "h2_rank",
+      "answers": [
+        "D3",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "h2_rank",
+      "section": "hindsight",
+      "kind": "rank",
+      "prompt": "What taught you that most? Drag your top three up.",
+      "sub": "Never had one? Leave it low.",
+      "options": [
+        {
+          "id": "watching",
+          "label": "Watching Advisors with clients"
+        },
+        {
+          "id": "preparing",
+          "label": "Building the prep myself"
+        },
+        {
+          "id": "interpreting",
+          "label": "Saying what the analysis meant"
+        },
+        {
+          "id": "presenting",
+          "label": "Presenting part of a meeting"
+        },
+        {
+          "id": "owning",
+          "label": "Owning an outcome end to end"
+        },
+        {
+          "id": "classroom",
+          "label": "Classroom, role plays, self-learning"
+        }
+      ],
+      "next": "i2_central",
+      "answers": [
+        "A:learned",
+        "D2",
+        "D3"
+      ],
+      "seconds": 16,
+      "shuffle": true,
+      "max": 3
+    },
+    {
+      "id": "i2_central",
+      "section": "hindsight",
+      "kind": "multi",
+      "prompt": "No one should graduate from A2A without having… which three?",
+      "sub": "Regardless of team. The rest stays with teams.",
+      "options": [
+        {
+          "id": "present",
+          "label": "Presented in a client meeting"
+        },
+        {
+          "id": "review",
+          "label": "Prepared a portfolio review"
+        },
+        {
+          "id": "recommend",
+          "label": "Defended an integrated recommendation"
+        },
+        {
+          "id": "proactive",
+          "label": "Advanced a proactive opportunity"
+        },
+        {
+          "id": "difficult",
+          "label": "Handled a difficult client conversation"
+        },
+        {
+          "id": "specialists",
+          "label": "Coordinated specialists, then got feedback"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "max": 3,
+      "next": "h3_surprise",
+      "answers": [
+        "D3",
+        "D5"
+      ],
+      "seconds": 14,
+      "shuffle": true
+    },
+    {
+      "id": "h3_surprise",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "Since A2A, what hit hardest that it hadn't prepared you for?",
+      "sub": "Your 'should have learned years ago'.",
+      "options": [
+        {
+          "id": "relationships",
+          "label": "Building relationships, prospecting"
         },
         {
           "id": "meetings",
-          "label": "Running meetings"
+          "label": "Running meetings, hard questions"
         },
         {
           "id": "advice",
@@ -83,116 +374,391 @@
         {
           "id": "partners",
           "label": "Internal partnerships"
+        },
+        {
+          "id": "prioritise",
+          "label": "Prioritising across a book"
+        },
+        {
+          "id": "ambiguity",
+          "label": "Ambiguity, winning commitment"
+        },
+        {
+          "id": "none",
+          "label": "Nothing caught me out"
         }
       ],
-      "next": "fuel",
+      "next": "built_swipe",
       "answers": [
-        "D1"
+        "D1",
+        "D3"
       ],
-      "seconds": 8
+      "seconds": 7,
+      "shuffle": true
     },
     {
-      "id": "fuel",
+      "id": "built_swipe",
       "section": "hindsight",
-      "kind": "rank",
-      "prompt": "What actually taught you the job?",
-      "sub": "Drag your top one to the top.",
+      "kind": "swipe",
+      "prompt": "Your own Analyst work: did it mostly get work done, or grow you?",
+      "sub": "Often both. Swipe for the bigger one.",
       "options": [
+        {
+          "id": "pack",
+          "label": "Building the review pack",
+          "visual": "Line drawing, ink on paper, same desk, lamp and camera as the other five; no faces, no screens lit brighter than others: a twelve-page pack being assembled, pages fanned"
+        },
+        {
+          "id": "brief",
+          "label": "Drafting the meeting brief",
+          "visual": "Line drawing, ink on paper, same desk, lamp and camera as the other five; no faces, no screens lit brighter than others: a single page of notes beside a closed laptop"
+        },
+        {
+          "id": "research",
+          "label": "Researching a family's situation",
+          "visual": "Line drawing, ink on paper, same desk, lamp and camera as the other five; no faces, no screens lit brighter than others: a family tree sketched beside property and trust papers"
+        },
+        {
+          "id": "kyc",
+          "label": "Onboarding and KYC",
+          "visual": "Line drawing, ink on paper, same desk, lamp and camera as the other five; no faces, no screens lit brighter than others: a stack of forms with a passport-shaped card and tick boxes"
+        },
+        {
+          "id": "meetings",
+          "label": "Sitting in client meetings",
+          "visual": "Line drawing, ink on paper, same desk, lamp and camera as the other five; no faces, no screens lit brighter than others: two chairs across a table, a notebook open on one side"
+        },
+        {
+          "id": "present",
+          "label": "Presenting a section myself",
+          "visual": "Line drawing, ink on paper, same desk, lamp and camera as the other five; no faces, no screens lit brighter than others: a hand turning a page of the pack toward the other chair"
+        }
+      ],
+      "sides": {
+        "left": "Mostly got the work done",
+        "right": "Mostly grew me"
+      },
+      "next": "then_now",
+      "answers": [
+        "D2"
+      ],
+      "seconds": 19
+    },
+    {
+      "id": "then_now",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "Which felt like busywork then, but you draw on now?",
+      "sub": "Hindsight often flips one.",
+      "options": [
+        {
+          "id": "pack",
+          "label": "Building the review pack"
+        },
+        {
+          "id": "brief",
+          "label": "Drafting the meeting brief"
+        },
+        {
+          "id": "research",
+          "label": "Researching a family's situation"
+        },
+        {
+          "id": "kyc",
+          "label": "Onboarding and KYC"
+        },
         {
           "id": "meetings",
           "label": "Sitting in client meetings"
         },
         {
+          "id": "present",
+          "label": "Presenting a section myself"
+        },
+        {
+          "id": "none",
+          "label": "None of them"
+        }
+      ],
+      "next": "three_year",
+      "answers": [
+        "D2",
+        "D1"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "three_year",
+      "section": "hindsight",
+      "kind": "slider",
+      "prompt": "A2A took about three years. For you, that was…",
+      "sub": "No right end.",
+      "slider": {
+        "min": 1,
+        "max": 5,
+        "left": "Ready after one year",
+        "right": "Needed more than three",
+        "marks": [
+          {
+            "at": 1,
+            "label": "Ready at one"
+          },
+          {
+            "at": 2,
+            "label": "Ready at two"
+          },
+          {
+            "at": 3,
+            "label": "Three felt right"
+          },
+          {
+            "at": 4,
+            "label": "Needed a bit more"
+          },
+          {
+            "at": 5,
+            "label": "Needed more than three"
+          }
+        ]
+      },
+      "next": "took_time",
+      "answers": [
+        "A:compress",
+        "D1"
+      ],
+      "seconds": 7,
+      "branches": [
+        {
+          "when": "lte:2",
+          "goto": "took_ready"
+        },
+        {
+          "when": "gte:4",
+          "goto": "took_more"
+        }
+      ]
+    },
+    {
+      "id": "took_time",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "Three felt right. What would a shorter A2A have cost you?",
+      "sub": "The biggest one.",
+      "options": [
+        {
+          "id": "trust",
+          "label": "Clients trusting me directly"
+        },
+        {
+          "id": "fullyear",
+          "label": "Seeing a full client year"
+        },
+        {
+          "id": "expertise",
+          "label": "Subject and product expertise"
+        },
+        {
+          "id": "confidence",
+          "label": "Confidence in the room"
+        },
+        {
+          "id": "nothing",
+          "label": "Nothing much, honestly"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "cohort_miss",
+      "answers": [
+        "A:compress",
+        "D1",
+        "D3"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "took_ready",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "Ready early. Ready to do what, on your own?",
+      "sub": "The one you were most ready for.",
+      "options": [
+        {
+          "id": "review",
+          "label": "Run a client review solo"
+        },
+        {
+          "id": "cover",
+          "label": "Cover my Advisor's clients"
+        },
+        {
+          "id": "pitch",
+          "label": "Pitch a prospect"
+        },
+        {
+          "id": "book",
+          "label": "Build my own book"
+        },
+        {
+          "id": "prospect",
+          "label": "Prospect and cold-call"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "shuffle": true,
+      "next": "cohort_miss",
+      "answers": [
+        "A:compress",
+        "D1"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "took_more",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "What was still missing when the three years were up?",
+      "sub": "The biggest one.",
+      "options": [
+        {
+          "id": "trust",
+          "label": "Clients trusting me directly"
+        },
+        {
+          "id": "expertise",
+          "label": "Subject and product expertise"
+        },
+        {
+          "id": "lead",
+          "label": "Leading meetings myself"
+        },
+        {
+          "id": "prospect",
+          "label": "Winning new clients on my own"
+        },
+        {
+          "id": "letrun",
+          "label": "Being allowed to run solo"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "shuffle": true,
+      "next": "cohort_miss",
+      "answers": [
+        "A:compress",
+        "D1",
+        "D3"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "cohort_miss",
+      "section": "hindsight",
+      "kind": "pick",
+      "prompt": "Someone from your Analyst cohort who left before graduating: what did they lack?",
+      "sub": "The system, not the person. Skip the name.",
+      "options": [
+        {
+          "id": "clientbats",
+          "label": "Enough client at-bats"
+        },
+        {
+          "id": "delegate",
+          "label": "A senior who handed things over"
+        },
+        {
+          "id": "feedback",
+          "label": "Feedback on their reasoning"
+        },
+        {
+          "id": "clarity",
+          "label": "Clarity on what promotion needs"
+        },
+        {
+          "id": "mix",
+          "label": "The right client mix"
+        },
+        {
+          "id": "sponsor",
+          "label": "Someone who pushed for them"
+        },
+        {
+          "id": "none",
+          "label": "Can't think of anyone"
+        }
+      ],
+      "next": "faster",
+      "answers": [
+        "D5",
+        "D3"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "faster",
+      "section": "knowing",
+      "kind": "tokens",
+      "prompt": "Next Analyst: three afternoons a month off desk work. Where should they go?",
+      "sub": "The desk loses them. Stack them if you like.",
+      "options": [
+        {
           "id": "morning",
           "label": "The morning meeting"
         },
         {
-          "id": "desk",
-          "label": "Watching the desk"
+          "id": "advisor",
+          "label": "Meetings with their senior Advisor"
         },
         {
-          "id": "own",
-          "label": "Owning a deliverable"
+          "id": "observing",
+          "label": "Observing everything around them"
+        },
+        {
+          "id": "ops",
+          "label": "Time inside operations"
         },
         {
           "id": "roleplay",
-          "label": "Role-plays"
-        }
-      ],
-      "next": "keep",
-      "answers": [
-        "D2",
-        "A:learned"
-      ],
-      "seconds": 12
-    },
-    {
-      "id": "keep",
-      "section": "ai",
-      "kind": "swipe",
-      "prompt": "If AI did it, would you miss it?",
-      "sides": {
-        "left": "Happy to lose",
-        "right": "It made me"
-      },
-      "options": [
-        {
-          "id": "pitchbook",
-          "label": "Building the pitchbook",
-          "visual": "A bound pitchbook, navy cover, three-quarter view"
+          "label": "Role plays and self-learning"
         },
         {
-          "id": "review",
-          "label": "The review pack"
-        },
-        {
-          "id": "kyc",
-          "label": "Onboarding and KYC"
+          "id": "classroom",
+          "label": "Classroom training"
         }
       ],
-      "branches": [
+      "tokens": [
         {
-          "when": "right:pitchbook",
-          "goto": "how"
+          "id": "block",
+          "label": "Block",
+          "count": 3,
+          "colour": "slate"
         }
       ],
-      "next": "pack",
+      "next": "vote",
       "answers": [
-        "D6"
+        "A:accelerate",
+        "A:classroom",
+        "A:learned",
+        "D1"
       ],
       "seconds": 10
     },
     {
-      "id": "how",
-      "section": "ai",
-      "kind": "pick",
-      "prompt": "So how does the next analyst learn it?",
-      "options": [
-        {
-          "id": "hand",
-          "label": "By hand first, then AI"
-        },
-        {
-          "id": "critique",
-          "label": "Critique the AI's draft"
-        },
-        {
-          "id": "depends",
-          "label": "It depends"
-        }
-      ],
-      "next": "pack",
-      "answers": [
-        "D6"
-      ],
-      "seconds": 6
-    },
-    {
-      "id": "pack",
+      "id": "vote",
       "section": "knowing",
       "kind": "tokens",
-      "prompt": "Pack their rucksack.",
-      "sub": "Green: more of. Red: less of. Gold: the one thing.",
+      "prompt": "Knowing what you know now, spend tokens on the next Analyst.",
+      "sub": "Place every token. At most one of each colour per area.",
       "options": [
         {
           "id": "client",
@@ -200,84 +766,1347 @@
         },
         {
           "id": "advice",
-          "label": "Develop advice"
+          "label": "Develop and communicate advice"
         },
         {
           "id": "opps",
-          "label": "Create opportunities"
+          "label": "Create and convert opportunities"
         },
         {
           "id": "lead",
           "label": "Lead the relationship"
+        },
+        {
+          "id": "franchise",
+          "label": "Navigate the franchise, execute"
+        },
+        {
+          "id": "judgment",
+          "label": "Judgment, leadership, adaptability"
         }
       ],
       "tokens": [
         {
           "id": "green",
-          "label": "More",
+          "label": "Needs materially more",
           "count": 2,
-          "colour": "forest"
+          "colour": "green"
+        },
+        {
+          "id": "amber",
+          "label": "Needed, but redesign or coach",
+          "count": 1,
+          "colour": "amber"
         },
         {
           "id": "red",
-          "label": "Less",
+          "label": "Substantially free them from it",
+          "count": 1,
+          "colour": "red"
+        },
+        {
+          "id": "blue",
+          "label": "The one that speeds readiness",
+          "count": 1,
+          "colour": "blue"
+        }
+      ],
+      "branches": [
+        {
+          "when": "token:blue:advice",
+          "goto": "blue_advice"
+        },
+        {
+          "when": "token:blue:opps",
+          "goto": "blue_opps"
+        },
+        {
+          "when": "token:blue:lead",
+          "goto": "blue_lead"
+        },
+        {
+          "when": "token:blue:franchise",
+          "goto": "blue_franchise"
+        },
+        {
+          "when": "token:blue:judgment",
+          "goto": "blue_judgment"
+        }
+      ],
+      "next": "blue_client",
+      "answers": [
+        "D1",
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "seconds": 29,
+      "shuffle": true,
+      "oneEach": true
+    },
+    {
+      "id": "blue_client",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "Blue on Understand the client. Which experience, exactly?",
+      "sub": "The one most likely to speed up readiness.",
+      "options": [
+        {
+          "id": "family",
+          "label": "Learn the family, goals, holdings"
+        },
+        {
+          "id": "meetings",
+          "label": "Attend client and prospect meetings"
+        },
+        {
+          "id": "fit",
+          "label": "See why recommendations fit"
+        },
+        {
+          "id": "diagnose",
+          "label": "Watch Advisors diagnose needs"
+        },
+        {
+          "id": "followup",
+          "label": "Own follow-up and continuity"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "red_less",
+      "answers": [
+        "D3",
+        "D1"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "blue_advice",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "Blue on Develop and communicate advice. Which experience, exactly?",
+      "sub": "The one most likely to speed up readiness.",
+      "options": [
+        {
+          "id": "analysis",
+          "label": "Run portfolio, risk, credit analysis"
+        },
+        {
+          "id": "translate",
+          "label": "Translate analysis into implications"
+        },
+        {
+          "id": "compare",
+          "label": "Compare solutions and trade-offs"
+        },
+        {
+          "id": "present",
+          "label": "Prepare and present recommendations"
+        },
+        {
+          "id": "challenge",
+          "label": "Respond to challenge, revise"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "red_less",
+      "answers": [
+        "D3",
+        "D1"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "blue_opps",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "Blue on Create and convert opportunities. Which experience, exactly?",
+      "sub": "The one most likely to speed up readiness.",
+      "options": [
+        {
+          "id": "gaps",
+          "label": "Spot product or lending gaps"
+        },
+        {
+          "id": "wallet",
+          "label": "Analyse wallet share, potential"
+        },
+        {
+          "id": "connect",
+          "label": "Connect circumstances to ideas"
+        },
+        {
+          "id": "outreach",
+          "label": "Draft and deliver proactive outreach"
+        },
+        {
+          "id": "track",
+          "label": "Track opportunities to outcome"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "red_less",
+      "answers": [
+        "D3",
+        "D1"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "blue_lead",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "Blue on Lead the relationship. Which experience, exactly?",
+      "sub": "The one most likely to speed up readiness.",
+      "options": [
+        {
+          "id": "agenda",
+          "label": "Prepare agendas and meeting strategy"
+        },
+        {
+          "id": "sections",
+          "label": "Present sections of meetings"
+        },
+        {
+          "id": "document",
+          "label": "Document decisions, follow through"
+        },
+        {
+          "id": "objections",
+          "label": "Handle questions and objections"
+        },
+        {
+          "id": "progress",
+          "label": "Move from observing to leading"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "red_less",
+      "answers": [
+        "D3",
+        "D1"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "blue_franchise",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "Blue on Navigate the franchise, execute. Which experience, exactly?",
+      "sub": "The one most likely to speed up readiness.",
+      "options": [
+        {
+          "id": "partners",
+          "label": "Work with Investors, Lenders, T&E"
+        },
+        {
+          "id": "ops",
+          "label": "Learn onboarding, execution, controls"
+        },
+        {
+          "id": "escalate",
+          "label": "Know when and how to escalate"
+        },
+        {
+          "id": "coordinate",
+          "label": "Coordinate partners with accountability"
+        },
+        {
+          "id": "tools",
+          "label": "Challenge tools, data, workflows"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "red_less",
+      "answers": [
+        "D3",
+        "D1"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "blue_judgment",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "Blue on Judgment, leadership, adaptability. Which experience, exactly?",
+      "sub": "The one most likely to speed up readiness.",
+      "options": [
+        {
+          "id": "coaching",
+          "label": "Seek coaching and specific feedback"
+        },
+        {
+          "id": "cases",
+          "label": "Review cases: what good looks like"
+        },
+        {
+          "id": "mentor",
+          "label": "Mentor or train juniors"
+        },
+        {
+          "id": "own",
+          "label": "Own a workstream or improvement"
+        },
+        {
+          "id": "ai",
+          "label": "Review and challenge AI work"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "red_less",
+      "answers": [
+        "D3",
+        "D1"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "red_less",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "Every Analyst should spend less time on…",
+      "sub": "The one task to free them from first.",
+      "options": [
+        {
+          "id": "holdings",
+          "label": "Compiling holdings data by hand"
+        },
+        {
+          "id": "format",
+          "label": "Formatting packs and decks"
+        },
+        {
+          "id": "reports",
+          "label": "Pulling pipeline and wallet reports"
+        },
+        {
+          "id": "notes",
+          "label": "Writing up notes and CRM"
+        },
+        {
+          "id": "chase",
+          "label": "Chasing documents and exceptions"
+        },
+        {
+          "id": "admin",
+          "label": "Internal reporting and admin"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "red_how",
+      "answers": [
+        "D4"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "red_how",
+      "section": "knowing",
+      "kind": "pick",
+      "prompt": "How should they be freed from it?",
+      "sub": "Not every cut means automate.",
+      "options": [
+        {
+          "id": "reduce",
+          "label": "Reduce or stop it"
+        },
+        {
+          "id": "automate",
+          "label": "Automate, a human reviews"
+        },
+        {
+          "id": "reassign",
+          "label": "Reassign or self-serve"
+        },
+        {
+          "id": "redesign",
+          "label": "Redesign how it's done"
+        }
+      ],
+      "next": "class_mandatory",
+      "answers": [
+        "D4"
+      ],
+      "seconds": 6,
+      "branches": [
+        {
+          "when": "carried:faster:token:block:classroom",
+          "goto": "class_kept"
+        }
+      ]
+    },
+    {
+      "id": "class_mandatory",
+      "section": "infrastructure",
+      "kind": "pick",
+      "prompt": "Classroom usually loses to a desk deadline. Should it be protected?",
+      "sub": "About the programme, not you.",
+      "options": [
+        {
+          "id": "yes",
+          "label": "Yes, make it mandatory"
+        },
+        {
+          "id": "fit",
+          "label": "Yes, but clients come first"
+        },
+        {
+          "id": "quality",
+          "label": "Only if the sessions improve"
+        },
+        {
+          "id": "no",
+          "label": "No, keep it optional"
+        }
+      ],
+      "next": "tagged",
+      "answers": [
+        "A:classroom",
+        "A:accelerate"
+      ],
+      "seconds": 6
+    },
+    {
+      "id": "class_kept",
+      "section": "infrastructure",
+      "kind": "pick",
+      "prompt": "You'd give them classroom time. It usually loses to desk deadlines. Mandatory?",
+      "sub": "About the programme, not you.",
+      "options": [
+        {
+          "id": "yes",
+          "label": "Yes, make it mandatory"
+        },
+        {
+          "id": "fit",
+          "label": "Yes, but clients come first"
+        },
+        {
+          "id": "quality",
+          "label": "Only if the sessions improve"
+        },
+        {
+          "id": "no",
+          "label": "No, keep it optional"
+        }
+      ],
+      "next": "tagged",
+      "answers": [
+        "A:classroom",
+        "A:accelerate"
+      ],
+      "seconds": 6
+    },
+    {
+      "id": "tagged",
+      "section": "infrastructure",
+      "kind": "pick",
+      "prompt": "Analysts on teams like yours, tagged to a different Advisor: still make it?",
+      "sub": "About the system. No wrong answer.",
+      "options": [
+        {
+          "id": "me",
+          "label": "Yes, it's mostly their drive"
+        },
+        {
+          "id": "programme",
+          "label": "Yes, the programme carries them"
+        },
+        {
+          "id": "clients",
+          "label": "Depends on the clients they get"
+        },
+        {
+          "id": "delegate",
+          "label": "Depends how much Advisors delegate"
+        },
+        {
+          "id": "team",
+          "label": "Depends on their team and manager"
+        },
+        {
+          "id": "advisor",
+          "label": "No, the Advisor is decisive"
+        }
+      ],
+      "next": "ai_ladder",
+      "answers": [
+        "A:tagged",
+        "D5"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "ai_ladder",
+      "section": "ai",
+      "kind": "show",
+      "prompt": "Five ways to prep Monday's client review. Same meeting each time.",
+      "sub": "Each rung keeps some work and hands some off. None is the answer.",
+      "next": "ai_last",
+      "answers": [
+        "D6"
+      ],
+      "seconds": 25,
+      "scene": "ladder"
+    },
+    {
+      "id": "ai_last",
+      "section": "ai",
+      "kind": "slider",
+      "prompt": "Your last meeting prep as an Associate: which rung was it, mostly?",
+      "sub": "There's no right rung.",
+      "slider": {
+        "min": 1,
+        "max": 5,
+        "left": "I do it",
+        "right": "It's a service",
+        "style": "plain",
+        "marks": [
+          {
+            "at": 1,
+            "label": "I do it"
+          },
+          {
+            "at": 2,
+            "label": "It helps while I work"
+          },
+          {
+            "at": 3,
+            "label": "I brief it, then check"
+          },
+          {
+            "at": 4,
+            "label": "I set it up once"
+          },
+          {
+            "at": 5,
+            "label": "It's a service"
+          }
+        ]
+      },
+      "next": "draft_next",
+      "answers": [
+        "D6"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "draft_next",
+      "section": "ai",
+      "kind": "pick",
+      "prompt": "Last time a tool drafted something for you, what did you do next?",
+      "sub": "The last time, not the usual.",
+      "options": [
+        {
+          "id": "asis",
+          "label": "Used it as-is"
+        },
+        {
+          "id": "numbers",
+          "label": "Checked the numbers"
+        },
+        {
+          "id": "rebuilt",
+          "label": "Rebuilt the logic myself"
+        },
+        {
+          "id": "why",
+          "label": "Asked it why"
+        },
+        {
+          "id": "never",
+          "label": "No tool has drafted for me"
+        }
+      ],
+      "next": "ai_swipe",
+      "answers": [
+        "D6",
+        "A:agents"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "ai_swipe",
+      "section": "ai",
+      "kind": "tokens",
+      "prompt": "Which rung could the next Analyst start each task at, and still learn?",
+      "sub": "Still learn to catch the page-nine error. Tap a task, then its rung.",
+      "options": [
+        {
+          "id": "own",
+          "label": "I do it"
+        },
+        {
+          "id": "assisted",
+          "label": "It helps while I work"
+        },
+        {
+          "id": "briefed",
+          "label": "I brief it, then check"
+        },
+        {
+          "id": "standing",
+          "label": "I set it up once"
+        },
+        {
+          "id": "service",
+          "label": "It's a service"
+        }
+      ],
+      "tokens": [
+        {
+          "id": "pack",
+          "label": "Building the review pack",
+          "count": 1,
+          "colour": "forest"
+        },
+        {
+          "id": "research",
+          "label": "Researching a family's situation",
           "count": 1,
           "colour": "bronze"
         },
         {
-          "id": "gold",
-          "label": "The one",
+          "id": "firstview",
+          "label": "Forming a first client view",
+          "count": 1,
+          "colour": "navy"
+        },
+        {
+          "id": "call",
+          "label": "Making the recommendation call",
           "count": 1,
           "colour": "gold"
         }
       ],
-      "next": "cert",
+      "next": "sim",
+      "answers": [
+        "D6",
+        "D4"
+      ],
+      "seconds": 24
+    },
+    {
+      "id": "sim",
+      "section": "ai",
+      "kind": "pick",
+      "prompt": "Mandatory avatar role plays before real client reps: good idea?",
+      "sub": "Simulations, avatars, on-demand modules: training at scale.",
+      "options": [
+        {
+          "id": "most",
+          "label": "Yes, make them mandatory"
+        },
+        {
+          "id": "before",
+          "label": "Optional, as a warm-up"
+        },
+        {
+          "id": "debrief",
+          "label": "Only with a human debrief"
+        },
+        {
+          "id": "no",
+          "label": "No, it has to be real"
+        }
+      ],
+      "next": "agents",
+      "answers": [
+        "A:avatars",
+        "D3",
+        "D6"
+      ],
+      "seconds": 6
+    },
+    {
+      "id": "agents",
+      "section": "ai",
+      "kind": "slider",
+      "prompt": "When should the next Analyst get their own AI agent?",
+      "sub": "Assume the tools are ready.",
+      "next": "ai_refocus",
+      "answers": [
+        "A:agents",
+        "D6"
+      ],
+      "seconds": 7,
+      "slider": {
+        "min": 1,
+        "max": 4,
+        "left": "Week one",
+        "right": "Not before Associate",
+        "marks": [
+          {
+            "at": 1,
+            "label": "Week one"
+          },
+          {
+            "at": 2,
+            "label": "After one pack by hand"
+          },
+          {
+            "at": 3,
+            "label": "After they catch its error"
+          },
+          {
+            "at": 4,
+            "label": "Not before Associate"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ai_refocus",
+      "section": "ai",
+      "kind": "pick",
+      "prompt": "If time is freed up, where should it go first?",
+      "sub": "The first call on the time, if it is freed at all.",
+      "options": [
+        {
+          "id": "clients",
+          "label": "Client and prospect exposure"
+        },
+        {
+          "id": "opps",
+          "label": "Finding opportunities, proactive support"
+        },
+        {
+          "id": "expertise",
+          "label": "Deeper technical and product expertise"
+        },
+        {
+          "id": "coaching",
+          "label": "Coaching and case-based development"
+        },
+        {
+          "id": "capacity",
+          "label": "Carrying more of the team's load"
+        },
+        {
+          "id": "notfreed",
+          "label": "It won't really be freed"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "traits_rank",
       "answers": [
         "D1",
         "D4"
       ],
-      "seconds": 15
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "traits_rank",
+      "section": "bold",
+      "kind": "tokens",
+      "prompt": "Picture the best Advisor you have worked with. Where do the three stars go?",
+      "sub": "Stack them if one trait matters most.",
+      "options": [
+        {
+          "id": "eq",
+          "label": "Reading people"
+        },
+        {
+          "id": "hunt",
+          "label": "A hunter's drive"
+        },
+        {
+          "id": "depth",
+          "label": "Markets and product depth"
+        },
+        {
+          "id": "story",
+          "label": "Turning complexity into advice"
+        }
+      ],
+      "tokens": [
+        {
+          "id": "star",
+          "label": "Star",
+          "count": 3,
+          "colour": "gold"
+        }
+      ],
+      "next": "traits_swipe",
+      "answers": [
+        "A:innate"
+      ],
+      "seconds": 10
+    },
+    {
+      "id": "traits_swipe",
+      "section": "bold",
+      "kind": "swipe",
+      "prompt": "The strongest Advisors you've worked with: arrived with it, or built it?",
+      "sub": "Often both. Swipe for the bigger share.",
+      "options": [
+        {
+          "id": "eq",
+          "label": "Reading people"
+        },
+        {
+          "id": "hunt",
+          "label": "A hunter's drive"
+        },
+        {
+          "id": "depth",
+          "label": "Markets and product depth"
+        },
+        {
+          "id": "story",
+          "label": "Turning complexity into advice"
+        }
+      ],
+      "sides": {
+        "left": "Mostly arrived with it",
+        "right": "Mostly built on the job"
+      },
+      "next": "cert",
+      "answers": [
+        "A:innate"
+      ],
+      "seconds": 14
     },
     {
       "id": "cert",
       "section": "bold",
       "kind": "pick",
-      "prompt": "Certify Advisors before they pitch in J.P. Morgan's name?",
-      "sub": "Pilots are. Surgeons are.",
+      "prompt": "Should anyone pass a readiness check before pitching or reviewing for J.P. Morgan?",
+      "sub": "Whoever does it: Analyst, Associate or Advisor.",
       "options": [
         {
           "id": "yes",
-          "label": "Yes",
-          "visual": "A pilot's wings pin on a lapel"
+          "label": "Yes"
         },
         {
           "id": "no",
-          "label": "No",
-          "visual": "An open door, no gate"
+          "label": "No"
         },
         {
           "id": "depends",
-          "label": "It depends",
-          "visual": "A signpost with two arrows"
+          "label": "It depends"
         }
       ],
-      "next": "one",
+      "branches": [
+        {
+          "when": "is:no",
+          "goto": "cert_no"
+        },
+        {
+          "when": "is:depends",
+          "goto": "dep_cert"
+        }
+      ],
+      "next": "cert_how",
+      "answers": [
+        "A:certification",
+        "D5",
+        "D3"
+      ],
+      "seconds": 6
+    },
+    {
+      "id": "cert_how",
+      "section": "bold",
+      "kind": "pick",
+      "prompt": "How should someone prove they're ready?",
+      "sub": "The main way.",
+      "options": [
+        {
+          "id": "roleplay",
+          "label": "Role play, live or avatar"
+        },
+        {
+          "id": "test",
+          "label": "A written test"
+        },
+        {
+          "id": "observed",
+          "label": "Observed doing it for real"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "pace",
+      "answers": [
+        "A:certification",
+        "A:avatars"
+      ],
+      "seconds": 6
+    },
+    {
+      "id": "cert_no",
+      "section": "bold",
+      "kind": "pick",
+      "prompt": "Then what should decide who's ready?",
+      "sub": "The main thing.",
+      "options": [
+        {
+          "id": "advisor",
+          "label": "Their Advisor's judgement"
+        },
+        {
+          "id": "record",
+          "label": "Client outcomes, over time"
+        },
+        {
+          "id": "time",
+          "label": "Time and exposure"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "pace",
       "answers": [
         "A:certification"
       ],
-      "seconds": 5
+      "seconds": 6
     },
     {
-      "id": "one",
+      "id": "dep_cert",
+      "section": "bold",
+      "kind": "pick",
+      "prompt": "What should the readiness check hinge on?",
+      "sub": "The main thing.",
+      "options": [
+        {
+          "id": "function",
+          "label": "Which function it is"
+        },
+        {
+          "id": "how",
+          "label": "How it's assessed"
+        },
+        {
+          "id": "risk",
+          "label": "Client risk involved"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "pace",
+      "answers": [
+        "A:certification"
+      ],
+      "seconds": 6
+    },
+    {
+      "id": "pace",
+      "section": "bold",
+      "kind": "pick",
+      "prompt": "Should time to Advisor depend on skills shown, not years?",
+      "options": [
+        {
+          "id": "yes",
+          "label": "Yes, pace it by skills"
+        },
+        {
+          "id": "floor",
+          "label": "Skills, above a minimum time"
+        },
+        {
+          "id": "no",
+          "label": "No, the time itself matters"
+        },
+        {
+          "id": "trust",
+          "label": "Client trust sets the pace"
+        }
+      ],
+      "branches": [
+        {
+          "when": "carried:vote:token:blue:advice",
+          "goto": "wrap_one_advice"
+        },
+        {
+          "when": "carried:vote:token:blue:opps",
+          "goto": "wrap_one_opps"
+        },
+        {
+          "when": "carried:vote:token:blue:lead",
+          "goto": "wrap_one_lead"
+        },
+        {
+          "when": "carried:vote:token:blue:franchise",
+          "goto": "wrap_one_franchise"
+        },
+        {
+          "when": "carried:vote:token:blue:judgment",
+          "goto": "wrap_one_judgment"
+        }
+      ],
+      "next": "wrap_one_client",
+      "answers": [
+        "A:compress",
+        "A:certification",
+        "D5"
+      ],
+      "seconds": 6
+    },
+    {
+      "id": "wrap_one_client",
+      "section": "wrap",
+      "kind": "pick",
+      "prompt": "If we could make only one change…",
+      "sub": "Pick one.",
+      "options": [
+        {
+          "id": "blue",
+          "label": "More reps understanding the client"
+        },
+        {
+          "id": "early",
+          "label": "Client exposure from week one"
+        },
+        {
+          "id": "cert",
+          "label": "A readiness certification"
+        },
+        {
+          "id": "coaching",
+          "label": "Protected coaching time"
+        },
+        {
+          "id": "less",
+          "label": "Less production work"
+        },
+        {
+          "id": "pace",
+          "label": "Skills-based pacing"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "wrap_more",
+      "answers": [
+        "D1",
+        "D3",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "wrap_one_advice",
+      "section": "wrap",
+      "kind": "pick",
+      "prompt": "If we could make only one change…",
+      "sub": "Pick one.",
+      "options": [
+        {
+          "id": "blue",
+          "label": "More reps developing and communicating advice"
+        },
+        {
+          "id": "early",
+          "label": "Client exposure from week one"
+        },
+        {
+          "id": "cert",
+          "label": "A readiness certification"
+        },
+        {
+          "id": "coaching",
+          "label": "Protected coaching time"
+        },
+        {
+          "id": "less",
+          "label": "Less production work"
+        },
+        {
+          "id": "pace",
+          "label": "Skills-based pacing"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "wrap_more",
+      "answers": [
+        "D1",
+        "D3",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "wrap_one_opps",
+      "section": "wrap",
+      "kind": "pick",
+      "prompt": "If we could make only one change…",
+      "sub": "Pick one.",
+      "options": [
+        {
+          "id": "blue",
+          "label": "More reps creating opportunities"
+        },
+        {
+          "id": "early",
+          "label": "Client exposure from week one"
+        },
+        {
+          "id": "cert",
+          "label": "A readiness certification"
+        },
+        {
+          "id": "coaching",
+          "label": "Protected coaching time"
+        },
+        {
+          "id": "less",
+          "label": "Less production work"
+        },
+        {
+          "id": "pace",
+          "label": "Skills-based pacing"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "wrap_more",
+      "answers": [
+        "D1",
+        "D3",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "wrap_one_lead",
+      "section": "wrap",
+      "kind": "pick",
+      "prompt": "If we could make only one change…",
+      "sub": "Pick one.",
+      "options": [
+        {
+          "id": "blue",
+          "label": "More reps leading the relationship"
+        },
+        {
+          "id": "early",
+          "label": "Client exposure from week one"
+        },
+        {
+          "id": "cert",
+          "label": "A readiness certification"
+        },
+        {
+          "id": "coaching",
+          "label": "Protected coaching time"
+        },
+        {
+          "id": "less",
+          "label": "Less production work"
+        },
+        {
+          "id": "pace",
+          "label": "Skills-based pacing"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "wrap_more",
+      "answers": [
+        "D1",
+        "D3",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "wrap_one_franchise",
+      "section": "wrap",
+      "kind": "pick",
+      "prompt": "If we could make only one change…",
+      "sub": "Pick one.",
+      "options": [
+        {
+          "id": "blue",
+          "label": "More reps navigating the franchise"
+        },
+        {
+          "id": "early",
+          "label": "Client exposure from week one"
+        },
+        {
+          "id": "cert",
+          "label": "A readiness certification"
+        },
+        {
+          "id": "coaching",
+          "label": "Protected coaching time"
+        },
+        {
+          "id": "less",
+          "label": "Less production work"
+        },
+        {
+          "id": "pace",
+          "label": "Skills-based pacing"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "wrap_more",
+      "answers": [
+        "D1",
+        "D3",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "wrap_one_judgment",
+      "section": "wrap",
+      "kind": "pick",
+      "prompt": "If we could make only one change…",
+      "sub": "Pick one.",
+      "options": [
+        {
+          "id": "blue",
+          "label": "More reps building judgment"
+        },
+        {
+          "id": "early",
+          "label": "Client exposure from week one"
+        },
+        {
+          "id": "cert",
+          "label": "A readiness certification"
+        },
+        {
+          "id": "coaching",
+          "label": "Protected coaching time"
+        },
+        {
+          "id": "less",
+          "label": "Less production work"
+        },
+        {
+          "id": "pace",
+          "label": "Skills-based pacing"
+        },
+        {
+          "id": "other",
+          "label": "Something not here"
+        }
+      ],
+      "next": "wrap_more",
+      "answers": [
+        "D1",
+        "D3",
+        "D5"
+      ],
+      "seconds": 7,
+      "shuffle": true
+    },
+    {
+      "id": "wrap_more",
       "section": "wrap",
       "kind": "text",
-      "prompt": "No one should graduate without having...",
+      "prompt": "What did our lists miss? An activity, experience or change.",
+      "sub": "Missing activities are findings. Please name no one.",
       "optional": true,
       "next": "END",
       "answers": [
+        "D1",
         "D3"
       ],
-      "seconds": 12
+      "seconds": 30
     }
-  ]
+  ],
+  "consistencyPairs": [
+    {
+      "a": "h1_first",
+      "b": "three_year",
+      "construct": "STAGING CHECK on readiness timing, two formats, ten cards apart. h1_first is a dated relational first (a client first called you, not your Advisor; tap stops 1-5). three_year is how the three years felt (tap stops 1-5). The flag is three_year 'Ready at one' (1) with h1_first 'After A2A' or 'Not yet' (4-5): ready after a year, yet no client came to you directly in three. The reverse, 'Year one' with three_year >= 4, is coherent (a client can call before you feel ready) and is reported, not flagged. 'Not yet' respondents are reported separately."
+    },
+    {
+      "a": "built_swipe",
+      "b": "ai_swipe",
+      "construct": "LINKED FIELDS, per task, never quoted back. pack and research appear on both cards. A task swiped 'Mostly grew me' is read against the highest rung at which the respondent thinks the next Analyst could start it and still learn to catch the page-nine error. 'Grew me' placed on 'I set it up once' or 'It's a service' is the case to look at: either the respondent thinks the learning survives there, or the answer is staged. Reported, not used to exclude."
+    },
+    {
+      "a": "vote",
+      "b": "wrap_one_client",
+      "construct": "STAGING CHECK, blue token against stem 4, unprompted. pace routes to the wrap_one_* variant for the respondent's blue area, which lists that area as option id 'blue' among five other changes. The token is never mentioned. Choosing it unprompted counts as consistent. The six variants merge into one field."
+    },
+    {
+      "a": "traits_rank",
+      "b": "traits_swipe",
+      "construct": "HYPOTHESIS TEST, not a staging check (Adam's EQ hypothesis). Both cards ask about the best Advisors the respondent has worked with, not about the respondent, so the answer is an observation rather than a self-description (Denrell 2003; evidence finding 11). Where the three stars go is set against whether those Advisors mostly arrived with or built each trait. Reported as a perception. No combination is inconsistent, so this pair never flags anyone."
+    },
+    {
+      "a": "faster",
+      "b": "class_mandatory",
+      "construct": "LINKED FIELDS FOR CONTEXT: stated versus revealed preference on classroom. faster places three afternoons a month that the desk loses; class_mandatory asks whether classroom should be protected from desk deadlines. Afternoons on classroom with 'No, keep it optional' is a divergence to report, not a flag. class_kept asks the same thing, worded from the faster answer, with the same option ids; the two merge into one field."
+    },
+    {
+      "a": "faster",
+      "b": "h2_rank",
+      "construct": "LINKED FIELDS FOR CONTEXT: where costed time should go against what taught the respondent's own moment. Id map: morning, advisor and observing map to watching; roleplay and classroom map to classroom; ops has no rank counterpart."
+    },
+    {
+      "a": "h2_blocker",
+      "b": "cohort_miss",
+      "construct": "LINKED FIELDS FOR CONTEXT: what slowed Analysts on teams like yours against what a cohort peer who left before graduating lacked. Same option ids where the constructs match (clientbats, mix, and unclear/clarity); cohort_miss 'sponsor' has no h2_blocker counterpart. Both third person; reported as perceptions (Fisher 1993; Denrell 2003)."
+    },
+    {
+      "a": "red_less",
+      "b": "ai_swipe",
+      "construct": "LINKED FIELDS FOR CONTEXT (Meade & Craig consistency pair, never quoted back): red_less 'format' or 'holdings' against where ai_swipe places 'Building the review pack'. Wanting Analysts freed from formatting packs while placing the pack on 'I do it' is coherent only if the respondent separates building the pack from formatting it. Report the rate; do not exclude."
+    }
+  ],
+  "weakestPoint": "1) Length is the formula's, not a stopwatch's. Every route is 36 cards and 414s (6.9 min): every branch sends each answer to a follow-up of the same seconds (three_year to took_ready, took_time or took_more; vote to one blue_*; red_how to class_mandatory or class_kept; cert to cert_how, cert_no or dep_cert; pace to one wrap_one_*), and simulate.test fails if any two routes differ by more than 10s or the longest exceeds mainPathSeconds. Text cards are timed as typed on a phone: moment 45s, wrap_more 30s. The rest uses the fatigue reviewer's formula: rank 4+2.5(n-1); swipe 4+2.5n; multi 6+1.2 per chip; tokens 4+5 per coloured token, or 2 per stacked block; pick 6 (four options or fewer) or 7; slider 7; ai_ladder 25. The title screen computes 'About 7 minutes'. Time five people on phones before sign-off.\n2) Engine behaviour the content relies on (built and tested):\n(a) Cards marked shuffle show their options in a per-respondent order drawn from a seed stored with the response and the card id, so every order can be rebuilt at analysis; catch-alls (other, none, nothing, never, notfreed) stay last (rule 14).\n(b) vote has oneEach: the control refuses a second token of the same colour on one area, and isAnswered rejects it. faster and traits_rank still stack.\n(c) h2_rank has max 3: the list shows a divider under the top three. The full order is still stored; read only the top three (Liang et al.).\n(d) ai_ladder is drawn by LadderRungs (real text plus the LadderScene desk drawings), not an image slot, so it reads to a screen reader.\n(e) Placed tokens show their label; a single-use token shows a tick once placed.\n(f) The summit plays back the respondent's green areas, red_less, i2_central and wrap_one_* answers. No score, no badge.\n(g) Still to build: title and cohort year from segmented invite links, cells under ten suppressed (rule 7), and a Details tap on the title screen: anonymous, graduates only, no group under ten, the survivorship note.\n3) Deck and review items not carried, all for length:\n- The vote is 2 green, 1 amber, 1 red, 1 blue, not the session's 3/2/2/1 (+15s). The readout must report each colour as shares of tokens, not raw counts, beside the session's tallies. The survey votes on six areas; the session votes on activities within them. Red is an area-level vote only; stem 2 ('spend less time on') is red_less, asked of everyone with six production tasks.\n- 'Could the experience have happened earlier?' is not asked of the moment (+2.5s). The 'earlier' signals are three_year, h1_first and wrap_one 'Client exposure from week one'.\n- h3_surprise stays a negative-only pick; 'where did you feel genuinely prepared' is carried only by p1_prep (a swipe over the six responsibilities would add 12s).\n- Who gave the feedback (Advisor, manager, peer or recent grad, client) is not asked; i3_coach asks what it was about, and 'There wasn't any' shows where no one debriefed.\n- then_now has no access partner card ('which first got you into a client conversation', +7s). Access is asked once, on the moment (h2_how 'It got me more client access').\n- i2_ecm (what an Early Career Manager should track) is cut for length. D5's manager routines are covered by tagged ('Depends on their team and manager'), class_mandatory and i2_central.\n- Adam's 'ready to do what?' is asked as took_ready of those ready at one or two; three_year's other stops get took_time (what a shorter A2A would have cost) or took_more (what was still missing), each 7s. Adam's 'more classroom, so mandatory?' is class_kept, worded from the respondent's own faster answer when they gave classroom a block; everyone else gets class_mandatory. Same option ids, one field.\n4) Measurement limits that remain:\n- p1_prep is the one global rating (peak-end; Sitzmann). Report it as 'graduates' overall mark', never as the headline, and nothing branches on it. Coded 1-5 so the stops are equally spaced.\n- h2_rank is the one drag rank, kept because Adam asked for it by name; rule 8 prefers best-worst.\n- Rule 6's 'a tool or example library could have taught me this faster' is not asked: it asks for an estimate of AI's effect on one's own development, which rule 7 bans. draft_next records behaviour on the last draft instead.\n- Rule 10: there is no screener card. Instead no answer anywhere buys or saves a card.\n- Survivorship: only graduates are asked. cohort_miss asks about a peer who left before graduating, in the third person; the readout must say findings describe what completers credit, not what works. Recommend a short parallel pulse with current Analysts and leavers.\n5) Analysis: blue_* and wrap_one_* each merge into one field. The deck's four-level AI scale is read on ai_swipe: own = human-owned; assisted = human-led, AI-assisted; briefed and standing = AI-led with human review; service = reassign or self-serve. ai_swipe asks the highest rung a task could START at with the Analyst still learning to catch the planted error (evidence property 2), not who should do it. red_how adds reduce/automate/reassign/redesign for the red_less task. Final-call ownership is read from h2_how 'owncall' (the moment) and ai_swipe 'call' (the future).\n6) Validation: checkGraph clean; graph.test word limits pass; simulate.test walks 1,000 respondents, none stranded, all 51 cards reached, every route 414s. e2e/flow.mjs walks seeded random routes in Chrome at 390px: all reach the summit, all 51 cards covered across ten routes, no overflow, no page errors. Not yet timed with people on phones."
 }
