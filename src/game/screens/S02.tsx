@@ -23,6 +23,7 @@
    Layout at 390x660 (design budget): zones 2x2 of ~180x68 = 142, a flexible
    gap showing the camp, tray 4x3 of 64px tiles + two-line 12px labels
    = 276, the camp-walk strip (Frame) replaces Continue. */
+import { useLayoutEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Frame from '../Frame'
@@ -59,6 +60,24 @@ export default function S02(p: StepProps) {
 
 function S02Phone({ p, B }: { p: StepProps; B: ReturnType<typeof useS02Board> }) {
   const { order, board, valid, d, stage, trayLit, liftedLabel } = B
+  // Size the tray's tiles to the height the stage really has, so all three rows
+  // stay on screen on short phones (390x600) under the plain-English header.
+  const [tile, setTile] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    const el = stage.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const fit = () => {
+      const zones = el.querySelector<HTMLElement>('[data-zones]')?.offsetHeight ?? 142
+      const free = el.clientHeight - zones - 8 /* padding */ - 6 /* tray border */
+      const perRow = free / 3 - 30 /* two-line label + gaps */
+      setTile(Math.max(40, Math.min(64, Math.floor(perRow))))
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [stage])
+  const vars = tile ? ({ ...BOARD_VARS, '--tile': `${tile}px` } as CSSProperties) : BOARD_VARS
 
   return (
     <Frame
@@ -67,10 +86,10 @@ function S02Phone({ p, B }: { p: StepProps; B: ReturnType<typeof useS02Board> })
       onContinue={p.next}
       helper={liftedLabel ? <span>Holding <span className="text-forest">{liftedLabel}</span></span> : undefined}
     >
-      <div {...d.stageProps} ref={(el) => { stage.current = el; d.stageProps.ref(el) }} style={{ ...d.stageProps.style, ...BOARD_VARS }}
+      <div {...d.stageProps} ref={(el) => { stage.current = el; d.stageProps.ref(el) }} style={{ ...d.stageProps.style, ...vars }}
         className="absolute inset-0 flex flex-col px-3 pb-1 pt-1" data-board>
         {/* the four zones */}
-        <div className="grid shrink-0 grid-cols-2 gap-[6px]">
+        <div className="grid shrink-0 grid-cols-2 gap-[6px]" data-zones>
           {ZONE_IDS.map((z) => (
             <ZoneBox key={z} z={z} d={d} board={board} reduced={p.reduced} />
           ))}

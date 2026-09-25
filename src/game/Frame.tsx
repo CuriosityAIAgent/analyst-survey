@@ -47,7 +47,7 @@
    'column' (S01) a centred 560px column of it, unscaled.
    Screens that measure closest('[data-frame]') get the stage region, which
    holds the scene, exactly as the phone frame does. */
-import { Children, isValidElement, useLayoutEffect, useRef, useState } from 'react'
+import { Children, isValidElement, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Art } from './art'
@@ -195,6 +195,7 @@ function PhoneFrame(p: FrameProps) {
   const walk = p.walk ?? (!!s.walk && beat === beats[beats.length - 1])
   const scene = p.scene === undefined ? sceneFor(p.id) : p.scene
   const long = a.question.length > 60
+  const short = useShortPhone()
 
   return (
     <div
@@ -221,19 +222,23 @@ function PhoneFrame(p: FrameProps) {
         {/* the ridge and the pencil route run behind the prompt: a paper halo
             keeps every letter clear of them */}
         {PLAIN_ASK ? (
-          <header className="halo relative z-[3] shrink-0 px-5 pb-2 pt-0">
-            <p className="font-[family-name:var(--font-text)] text-[13px] italic leading-[17px] text-muted" data-caption>
-              {caption}
-            </p>
+          <header className="halo relative z-[3] shrink-0 px-5 pb-2 pt-0" data-short={short || undefined}>
+            {/* on short phones (under 640px tall) the caption goes and the type
+                tightens, so the stage keeps room for its mechanic (Codex P1) */}
+            {!short && (
+              <p className="font-[family-name:var(--font-text)] text-[13px] italic leading-[17px] text-muted" data-caption>
+                {caption}
+              </p>
+            )}
             <h1
               tabIndex={-1}
               style={{ outline: 'none' }}
-              className={`mt-[2px] font-[family-name:var(--font-text)] font-semibold text-ink ${long ? 'text-[21px] leading-[26px]' : 'text-[24px] leading-[30px]'}`}
+              className={`mt-[2px] font-[family-name:var(--font-text)] font-semibold text-ink ${short ? 'text-[19px] leading-[23px]' : long ? 'text-[21px] leading-[26px]' : 'text-[24px] leading-[30px]'}`}
               data-prompt
             >
               {a.question}
             </h1>
-            <p className="mt-1 font-[family-name:var(--font-text)] text-[15px] leading-[20px] text-ink-2" data-helper>
+            <p className={`mt-1 font-[family-name:var(--font-text)] text-ink-2 ${short ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-[20px]'}`} data-helper>
               {live ?? (p.how === undefined ? a.how : p.how)}
             </p>
           </header>
@@ -679,4 +684,16 @@ export function Tents({ camp }: { camp: number }) {
       })}
     </div>
   )
+}
+
+/** True on phones shorter than 640px (e.g. 390x600 with the browser bars showing). */
+function useShortPhone(): boolean {
+  const [short, setShort] = useState(false)
+  useEffect(() => {
+    const on = () => setShort(window.innerHeight < 640)
+    on()
+    window.addEventListener('resize', on)
+    return () => window.removeEventListener('resize', on)
+  }, [])
+  return short
 }
