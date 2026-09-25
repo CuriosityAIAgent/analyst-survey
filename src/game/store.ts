@@ -321,7 +321,14 @@ function event(s: Pick<GameState, 'answers' | 'screen' | 'beat' | 'sheet'>, type
    Pure, so it is tested (store.test.ts). Whatever was in localStorage, the
    result is a state the game can render and move on from. */
 export function rehydrate(persisted: unknown) {
-  const p = (persisted && typeof persisted === 'object' ? persisted : {}) as Record<string, unknown>
+  let p = (persisted && typeof persisted === 'object' ? persisted : {}) as Record<string, unknown>
+  // A session saved under older rules (a class year before 2022, or 'Other'
+  // as business) would lose its segment silently and could finish without
+  // one. Start it fresh instead (Codex P1 on narrowing the validators).
+  const raw = (p.answers && typeof p.answers === 'object' ? p.answers : {}) as Record<string, unknown>
+  const kept = cleanAnswers(p.answers) as Record<string, unknown>
+  const legacy = (['segment.business', 'segment.cohort'] as const).some((k) => raw[k] != null && kept[k] == null)
+  if (legacy) p = { seed: p.seed, sound: p.sound, link: p.link, mode: p.mode }
   const answers = cleanAnswers(p.answers)
   const started = p.started === true
   let screen: ScreenId = started && isScreenId(p.screen) ? p.screen : 'S01'
