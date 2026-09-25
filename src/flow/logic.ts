@@ -15,7 +15,16 @@ import type { Answer, Card, Graph } from './types'
    a malformed graph must degrade to the default path, not strand a respondent.
 --------------------------------------------------------------------------- */
 
-export function test(cond: string, own: Answer | undefined, all: Record<string, Answer>): boolean {
+/* Arity per operator. `is:yes:ignored` used to match because destructuring
+   silently dropped the extra segment; now a malformed condition never matches. */
+const ARITY: Record<string, number> = {
+  is: 1, includes: 1, top: 1, gte: 1, lte: 1, right: 1, left: 1, token: 2,
+}
+
+export function test(
+  cond: unknown, own: Answer | undefined, all: Record<string, Answer>, onPath?: Set<string>,
+): boolean {
+  if (typeof cond !== 'string') return false
   const c = cond.trim()
   if (c === 'always') return true
 
@@ -24,11 +33,17 @@ export function test(cond: string, own: Answer | undefined, all: Record<string, 
     const i = rest.indexOf(':')
     if (i < 0) return false
     const card = rest.slice(0, i)
-    if (!(card in all)) return false            // never visited on this path
-    return test(rest.slice(i + 1), all[card], all)
+    // Only an answer on the CURRENT path counts. An answer left behind on a
+    // branch the respondent backed out of must not steer where they go next.
+    if (onPath && !onPath.has(card)) return false
+    if (!(card in all)) return false
+    return test(rest.slice(i + 1), all[card], all, onPath)
   }
 
-  const [op, a, b] = c.split(':')
+  const parts = c.split(':')
+  const op = parts[0]
+  if (!(op in ARITY) || parts.length !== ARITY[op] + 1 || parts.slice(1).some((x) => x === '')) return false
+  const [, a, b] = parts
   const v = own
   switch (op) {
     case 'is':
@@ -38,9 +53,9 @@ export function test(cond: string, own: Answer | undefined, all: Record<string, 
     case 'top':
       return Array.isArray(v) && v[0] === a
     case 'gte':
-      return typeof v === 'number' && v >= Number(a)
+      return typeof v === 'number' && Number.isFinite(Number(a)) && v >= Number(a)
     case 'lte':
-      return typeof v === 'number' && v <= Number(a)
+      return typeof v === 'number' && Number.isFinite(Number(a)) && v <= Number(a)
     case 'right':
     case 'left':
       return isRecord(v) && (v as Record<string, unknown>)[a] === op
@@ -56,11 +71,43 @@ export function test(cond: string, own: Answer | undefined, all: Record<string, 
 
 const isRecord = (v: unknown) => !!v && typeof v === 'object' && !Array.isArray(v)
 
-export function nextId(card: Card, own: Answer | undefined, all: Record<string, Answer>): string {
+export function nextId(
+  card: Card, own: Answer | undefined, all: Record<string, Answer>, onPath?: Set<string>,
+): string {
   for (const br of card.branches ?? []) {
-    if (test(br.when, own, all)) return br.goto
+    if (test(br?.when, own, all, onPath)) return br.goto
   }
   return card.next
+}
+
+/* Whether a card has been answered well enough to leave. Lives here, not in a
+   component, so the store can refuse to advance past an unanswered card no
+   matter what triggered the advance. */
+export function isAnswered(card: Card, v: Answer | undefined): boolean {
+  // optional means skippable: leaving it blank is a legitimate answer
+  if (card.optional && (v === undefined || v === '' || (Array.isArray(v) && v.length === 0))) return true
+  const opts = card.options ?? []
+  const ids = new Set(opts.map((o) => o.id))
+  switch (card.kind) {
+    case 'show': return true
+    case 'text': return !!card.optional || (typeof v === 'string' && v.trim().length > 0)
+    case 'pick': return typeof v === 'string' && ids.has(v)
+    case 'slider': return typeof v === 'number' && Number.isFinite(v)
+    case 'multi':
+      return Array.isArray(v) && v.every((x) => ids.has(x as string)) && (v.length > 0 || !!card.optional)
+    case 'rank':
+      return Array.isArray(v) && v.length === opts.length && v.every((x) => ids.has(x as string))
+    case 'swipe':
+      return !!v && typeof v === 'object' && !Array.isArray(v) &&
+        opts.every((o) => ['left', 'right'].includes((v as Record<string, string>)[o.id]))
+    case 'tokens': {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return false
+      const r = v as Record<string, unknown>
+      return (card.tokens ?? []).every((t) =>
+        Array.isArray(r[t.id]) && (r[t.id] as string[]).length === t.count && (r[t.id] as string[]).every((x) => ids.has(x)))
+    }
+    default: return false
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -69,25 +116,59 @@ export function nextId(card: Card, own: Answer | undefined, all: Record<string, 
 --------------------------------------------------------------------------- */
 export type GraphProblem = { card: string; problem: string }
 
+/* Can `from` appear earlier on some path than `to`? */
+let canPrecede: (from: string, to: string) => boolean = () => true
+
+const KINDS = new Set(['show', 'pick', 'multi', 'swipe', 'slider', 'rank', 'tokens', 'text'])
+
 export function checkGraph(g: Graph): GraphProblem[] {
   const out: GraphProblem[] = []
+  if (!g || !Array.isArray(g.cards)) return [{ card: '*', problem: 'graph has no cards array' }]
   const byId = new Map(g.cards.map((c) => [c.id, c]))
   if (byId.size !== g.cards.length) out.push({ card: '*', problem: 'duplicate card ids' })
   if (!byId.has(g.start)) out.push({ card: '*', problem: `start "${g.start}" does not exist` })
+  const edges = (id: string) => {
+    const c = byId.get(id)
+    return c ? [c.next, ...(c.branches ?? []).map((b) => b?.goto)].filter((x): x is string => typeof x === 'string') : []
+  }
+  canPrecede = (from, to) => {
+    const seen = new Set<string>(); const stack = [...edges(from)]
+    while (stack.length) {
+      const x = stack.pop()!
+      if (x === to) return true
+      if (seen.has(x) || x === 'END') continue
+      seen.add(x); stack.push(...edges(x))
+    }
+    return false
+  }
 
   for (const c of g.cards) {
-    const targets = [c.next, ...(c.branches ?? []).map((b) => b.goto)]
+    if (!KINDS.has(c.kind)) out.push({ card: c.id, problem: `unknown kind "${c.kind}" renders no control` })
+    if (c.kind === 'multi' && !c.optional && (c.max ?? 1) < 1) out.push({ card: c.id, problem: 'multi with max < 1 can never be answered' })
+    const brs = c.branches ?? []
+    const alwaysAt = brs.findIndex((b) => b?.when === 'always')
+    if (alwaysAt >= 0 && alwaysAt < brs.length - 1) out.push({ card: c.id, problem: 'branches after "always" can never fire' })
+    for (const b of brs) if (typeof b?.when !== 'string') out.push({ card: c.id, problem: 'branch with no condition' })
+    const targets = [c.next, ...brs.map((b) => b.goto)]
     for (const t of targets) {
       if (t !== 'END' && !byId.has(t)) out.push({ card: c.id, problem: `goes to missing card "${t}"` })
     }
     const opts = new Set((c.options ?? []).map((o) => o.id))
     const toks = new Set((c.tokens ?? []).map((t) => t.id))
     for (const br of c.branches ?? []) {
+      if (typeof br?.when !== 'string') continue
       const [op, a, b] = br.when.split(':')
       if (op === 'carried') {
         const ref = a
         if (!byId.has(ref)) out.push({ card: c.id, problem: `carried: refers to missing card "${ref}"` })
+        else if (ref === c.id || !canPrecede(ref, c.id)) {
+          out.push({ card: c.id, problem: `carried: "${ref}" can never come before this card` })
+        }
         continue
+      }
+      const arity = ARITY[op]
+      if (arity !== undefined && br.when.split(':').length !== arity + 1) {
+        out.push({ card: c.id, problem: `branch "${br.when}" has the wrong number of parts` })
       }
       if (['is', 'includes', 'top', 'right', 'left'].includes(op) && opts.size && !opts.has(a)) {
         out.push({ card: c.id, problem: `branch "${br.when}" names option "${a}" which this card does not have` })

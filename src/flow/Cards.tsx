@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Answer, Card } from './types'
+import type { Card } from './types'
 
-type P<T> = { card: Card; value: T | undefined; set: (v: T) => void; done: () => void }
+type P<T> = { card: Card; value: T | undefined; set: (v: T) => void; done: (from: string) => void }
 
 const TONE: Record<string, string> = {
   forest: 'var(--color-forest)', bronze: 'var(--color-bronze)', navy: 'var(--color-navy)',
@@ -12,9 +12,11 @@ const tone = (c?: string) => TONE[c ?? ''] ?? 'var(--color-ink)'
 
 /* -------------------------------------------------------------- pick */
 export function Pick({ card, value, set, done }: P<string>) {
+  // Instagram-fast: a tap is an answer. The advance is bound to THIS card, so
+  // a double tap cannot schedule a second advance that fires on the next one.
   const pick = (id: string) => {
     set(id)
-    window.setTimeout(done, 220)   // Instagram-fast: a tap is an answer
+    window.setTimeout(() => done(card.id), 220)
   }
   return (
     <div className="grid gap-2.5">
@@ -88,7 +90,7 @@ export function Swipe({ card, value = {}, set, done }: P<Record<string, 'left' |
     const next = { ...value, [cur.id]: side }
     set(next)
     setDx(0)
-    if (Object.keys(next).length === items.length) window.setTimeout(done, 260)
+    if (Object.keys(next).length === items.length) window.setTimeout(() => done(card.id), 260)
   }
 
   useEffect(() => {
@@ -115,6 +117,8 @@ export function Swipe({ card, value = {}, set, done }: P<Record<string, 'left' |
           const d = dx; start.current = null
           if (d > 90) decide('right'); else if (d < -90) decide('left'); else setDx(0)
         }}
+        onPointerCancel={() => { start.current = null; setDx(0) }}
+        onLostPointerCapture={() => { if (start.current !== null) { start.current = null; setDx(0) } }}
       >
         <span className="display text-[26px] leading-tight text-ink">{cur.label}</span>
         {dx < -30 && <span className="absolute left-3 top-3 font-[family-name:var(--font-ui)] text-[12px] text-bronze">{card.sides!.left}</span>}
@@ -131,7 +135,7 @@ export function Swipe({ card, value = {}, set, done }: P<Record<string, 'left' |
 /* -------------------------------------------------------------- rank */
 export function Rank({ card, value, set }: P<string[]>) {
   const order = value ?? card.options!.map((o) => o.id)
-  const label = (id: string) => card.options!.find((o) => o.id === id)!.label
+  const label = (id: string) => card.options!.find((o) => o.id === id)?.label ?? id
   const [drag, setDrag] = useState<number | null>(null)
   const rows = useRef<(HTMLLIElement | null)[]>([])
 
@@ -157,6 +161,8 @@ export function Rank({ card, value, set }: P<string[]>) {
             if (to >= 0 && to !== drag) { move(drag, to); setDrag(to) }
           }}
           onPointerUp={() => setDrag(null)}
+          onPointerCancel={() => setDrag(null)}
+          onLostPointerCapture={() => setDrag(null)}
         >
           <span className="w-6 font-[family-name:var(--font-ui)] text-[15px] font-semibold text-ink">{i + 1}</span>
           <span className="flex-1 touch-none select-none text-[16px] text-ink">{label(id)}</span>
@@ -226,23 +232,7 @@ export function Text({ card, value = '', set }: P<string>) {
   )
 }
 
-/* -------------------------------------------------------------- readiness */
-export function isAnswered(card: Card, v: Answer | undefined): boolean {
-  switch (card.kind) {
-    case 'show': return true
-    case 'text': return !!card.optional || (typeof v === 'string' && v.trim().length > 0)
-    case 'pick': return typeof v === 'string'
-    case 'slider': return typeof v === 'number'
-    case 'multi': return Array.isArray(v) && (v.length > 0 || !!card.optional)
-    case 'rank': return Array.isArray(v) && v.length === card.options!.length
-    case 'swipe': return !!v && typeof v === 'object' && Object.keys(v).length === card.options!.length
-    case 'tokens': {
-      if (!v || typeof v !== 'object') return false
-      const r = v as Record<string, string[]>
-      return card.tokens!.every((t) => (r[t.id]?.length ?? 0) === t.count)
-    }
-  }
-}
+export { isAnswered } from './logic'
 
 /* Cards that answer themselves on the last gesture do not need a Continue. */
 export const AUTO = new Set(['pick', 'swipe'])

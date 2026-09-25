@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, useReducedMotion } from 'motion/react'
 import { useFlow, GRAPH, CARD } from './store'
@@ -23,18 +23,10 @@ export default function Player() {
   const card = id === 'END' ? null : CARD.get(id) ?? null
   const v = card ? answers[card.id] : undefined
 
-  // One advance per CARD, not per unit of time. A time lock (the first version)
-  // swallowed a fast tap on the next card after a pick auto-advanced, which on
-  // an Instagram-speed thumb means answers silently not registering.
-  const advancedFrom = useRef<string | null>(null)
-  const go = useCallback(() => {
-    const cur = useFlow.getState().path.at(-1) ?? null
-    if (cur === null || advancedFrom.current === cur) return
-    advancedFrom.current = cur
-    advance()
-  }, [advance])
-  // going Back re-arms the card you land on
-  useEffect(() => { if (advancedFrom.current === id) advancedFrom.current = null }, [id])
+  // Every advance names the card it came from. The store ignores one whose card
+  // is no longer current, and refuses to leave an unanswered card, so neither a
+  // double tap nor a stale timer can skip a question.
+  const go = useCallback((from?: string) => advance(from ?? useFlow.getState().path.at(-1)), [advance])
 
   useEffect(() => { window.scrollTo({ top: 0 }) }, [id])
 
@@ -143,12 +135,12 @@ export default function Player() {
 
           {!AUTO.has(card.kind) && (
             <div className="mt-8 flex items-center gap-4">
-              <button type="button" className="btn" disabled={!ready} onClick={go}>
+              <button type="button" className="btn" disabled={!ready} onClick={() => go(card.id)}>
                 {card.kind === 'show' ? 'Continue' : 'Next'}
               </button>
               {card.optional && card.kind !== 'show' && (
                 <button type="button" className="font-[family-name:var(--font-ui)] text-[14px] text-muted underline"
-                  onClick={go}>Skip</button>
+                  onClick={() => go(card.id)}>Skip</button>
               )}
             </div>
           )}
