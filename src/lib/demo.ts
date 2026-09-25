@@ -8,7 +8,7 @@ export function seed(): Answers {
   const spend: Record<string, number> = {}
   ;['clientroom', 'checkai', 'names', 'learning'].forEach((d, i) => { spend[d] = [3, 2, 2, 1][i] })
   return {
-    segment: { business: 'USPB', months: '13–24', aiUse: 'Most weeks', canAlone: ['Run a client review'], notTrusted: ['Pitch a prospect'] },
+    segment: { business: 'USPB', aiUse: 'Most weeks', canAlone: ['Run a client review'], notTrusted: ['Pitch a prospect'] },
     fuel: MAXDIFF_SETS.map((s, i) => ({ round: i, shown: [...s], best: s[0], worst: s[2], ms: 9000 })),
     advisor: { top3: [TRAITS[7].id, TRAITS[0].id, TRAITS[3].id], dependence: 72, changeTop2: ['checkwork', 'standards'] },
     handover: {

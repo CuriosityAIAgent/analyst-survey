@@ -37,32 +37,32 @@ export default function L4() {
       >
         <div className="mb-4 flex items-center gap-2">
           {Array.from({ length: HOURS }).map((_, i) => (
-            <div key={i} className="h-3 flex-1 rounded-full"
-              style={{ background: i < spent ? 'var(--color-gold)' : 'rgba(185,198,224,0.18)' }} />
+            <div key={i} className="h-3 flex-1 rounded-[2px]"
+              style={{ background: i < spent ? 'var(--color-ink)' : 'var(--color-rule-soft)' }} />
           ))}
-          <span className="ml-2 w-12 text-right text-[13px] text-ink2">{HOURS - spent} left</span>
+          <span className="ml-2 w-12 text-right text-[13px] text-muted">{HOURS - spent} left</span>
         </div>
         <div className="space-y-2">
           {DESTINATIONS.map((d) => {
             const n = c.spend[d.id] ?? 0
             return (
-              <div key={d.id} className="flex items-center gap-3 rounded-2xl border border-ink2/20 bg-[rgba(10,18,40,0.5)] p-3">
+              <div key={d.id} className="flex items-center gap-3 rounded-[2px] border border-rule-soft bg-ground p-3">
                 <div className="min-w-0 flex-1">
-                  <div className="text-[15px] text-snow">{d.label}</div>
-                  <div className="text-[13px] text-ink2/75">{d.gloss}</div>
+                  <div className="text-[15px] text-ink">{d.label}</div>
+                  <div className="text-[13px] text-muted">{d.gloss}</div>
                 </div>
                 <button type="button" aria-label={`Remove an hour from ${d.label}`} onClick={() => add(d.id, -1)}
-                  className="chip h-11 w-11 shrink-0 p-0 text-lg">−</button>
-                <span className="w-5 text-center text-[16px] font-semibold text-goldlight">{n || ''}</span>
+                  className="choice h-11 w-11 shrink-0 p-0 text-lg">−</button>
+                <span className="w-5 text-center text-[16px] font-semibold text-ink">{n || ''}</span>
                 <button type="button" aria-label={`Add an hour to ${d.label}`} onClick={() => add(d.id, 1)}
-                  className="chip h-11 w-11 shrink-0 p-0 text-lg">+</button>
+                  className="choice h-11 w-11 shrink-0 p-0 text-lg">+</button>
               </div>
             )
           })}
         </div>
         <button type="button" disabled={spent !== HOURS} onClick={() => setPhase(2)}
-          className="mt-5 min-h-[44px] w-full rounded-full text-[15px] font-semibold disabled:opacity-40"
-          style={{ background: 'var(--color-gold)', color: '#0A1430' }}>
+          className="mt-5 btn w-full disabled:opacity-40"
+          >
           {spent === HOURS ? "That's the day" : `Spend ${HOURS - spent} more`}
         </button>
       </Level>
@@ -80,12 +80,12 @@ export default function L4() {
           const has = c.spend[d.id] ?? 0, gone = c.after[d.id] ?? 0
           return (
             <button key={d.id} type="button" onClick={() => take(d.id)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-ink2/20 bg-[rgba(10,18,40,0.5)] p-3 text-left">
-              <div className="min-w-0 flex-1 text-[15px] text-snow">{d.label}</div>
+              className="flex w-full items-center gap-3 rounded-[2px] border border-rule-soft bg-ground p-3 text-left">
+              <div className="min-w-0 flex-1 text-[15px] text-ink">{d.label}</div>
               <div className="flex gap-1">
                 {Array.from({ length: has }).map((_, i) => (
-                  <span key={i} className="h-3 w-3 rounded-full"
-                    style={{ background: i < has - gone ? 'var(--color-gold)' : 'rgba(229,106,94,0.5)' }} />
+                  <span key={i} className="h-3 w-3 rounded-[2px]"
+                    style={{ background: i < has - gone ? 'var(--color-ink)' : 'var(--color-bronze)' }} />
                 ))}
               </div>
             </button>

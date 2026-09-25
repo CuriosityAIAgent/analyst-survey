@@ -30,7 +30,7 @@ export default function L1({ onDone }: { onDone: (done: boolean) => void }) {
   if (finished) {
     return (
       <Level title="That's the nine." sub="Nothing to change here — carry on up.">
-        <p className="text-[15px] text-ink2">You ranked nine ways of learning the job against each other, three at a time.</p>
+        <p className="text-[15px] text-muted">You ranked nine ways of learning the job against each other, three at a time.</p>
       </Level>
     )
   }
@@ -44,17 +44,17 @@ export default function L1({ onDone }: { onDone: (done: boolean) => void }) {
       <div className="space-y-3">
         {shown.map((id) => (
           <div key={id} role="group" aria-label={label(id)}
-            className="rounded-2xl border border-ink2/20 bg-[rgba(10,18,40,0.5)] p-4">
-            <div className="text-[15px] leading-snug text-snow">{label(id)}</div>
+            className="rounded-[2px] border border-rule-soft bg-ground p-4">
+            <div className="text-[15px] leading-snug text-ink">{label(id)}</div>
             <div className="mt-3 flex gap-2">
               <button
-                type="button" className="chip flex-1" data-on={best === id}
+                type="button" className="choice flex-1" data-on={best === id}
                 aria-pressed={best === id}
                 aria-label={`${label(id)} — taught me most`}
                 onClick={() => { setBest(id); if (worst === id) setWorst(undefined) }}
               >Taught me most</button>
               <button
-                type="button" className="chip flex-1" data-on={worst === id}
+                type="button" className="choice flex-1" data-on={worst === id}
                 aria-pressed={worst === id}
                 aria-label={`${label(id)} — taught me least`}
                 onClick={() => { setWorst(id); if (best === id) setBest(undefined) }}
@@ -64,9 +64,8 @@ export default function L1({ onDone }: { onDone: (done: boolean) => void }) {
         ))}
         <button
           type="button" onClick={commit} disabled={!best || !worst}
-          className="mt-2 min-h-[44px] w-full rounded-full text-[15px] font-semibold disabled:opacity-40"
-          style={{ background: 'var(--color-gold)', color: '#0A1430' }}
-        >
+          className="mt-2 btn w-full disabled:opacity-40"
+          >
           {round + 1 === MAXDIFF_SETS.length ? 'Done' : 'Next three'}
         </button>
       </div>

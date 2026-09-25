@@ -46,7 +46,6 @@ export function validateAnswers(raw: unknown): Answers {
   const seg = obj(a.segment)
   out.segment = {
     business: str(seg.business, 40),
-    months: str(seg.months, 40),
     aiUse: str(seg.aiUse, 40),
     canAlone: strArr(seg.canAlone, undefined, 20),
     notTrusted: strArr(seg.notTrusted, undefined, 20),

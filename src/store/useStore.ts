@@ -7,7 +7,7 @@ import { emptyAnswers, validateAnswers } from './validate'
 export type Lane = 'agent' | 'both' | 'human'
 
 export type Answers = {
-  segment: { business?: string; months?: string; aiUse?: string; canAlone: string[]; notTrusted: string[] }
+  segment: { business?: string; aiUse?: string; canAlone: string[]; notTrusted: string[] }
   fuel: { round: number; shown: string[]; best?: string; worst?: string; ms: number }[]
   advisor: { top3: string[]; dependence: number; changeTop2: string[] }
   handover: { lanes: Record<string, Lane>; notDone: string[]; clips: string[]; reckoning?: string; reckoningText?: string }
@@ -21,6 +21,7 @@ export type Answers = {
 const empty: Answers = emptyAnswers()
 
 type State = {
+  started: boolean
   level: number
   answers: Answers
   startedAt: number
@@ -30,12 +31,14 @@ type State = {
   next: () => void
   back: () => void
   goto: (i: number) => void
+  begin: () => void
   reset: () => void
 }
 
 export const useStore = create<State>()(
   persist(
     (set, get) => ({
+      started: false,
       level: 0,
       answers: empty,
       startedAt: Date.now(),
@@ -50,14 +53,12 @@ export const useStore = create<State>()(
           enteredAt: now,
           timing: [...timing, { level: LEVELS[level].id, ms: now - enteredAt }],
         })
-        if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
       },
-      back: () => {
-        set({ level: Math.max(get().level - 1, 0), enteredAt: Date.now() })
-        if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
-      },
+      back: () => set({ level: Math.max(get().level - 1, 0), enteredAt: Date.now() }),
       goto: (i) => set({ level: i, enteredAt: Date.now() }),
-      reset: () => set({ level: 0, answers: empty, startedAt: Date.now(), enteredAt: Date.now(), timing: [] }),
+      begin: () => set({ started: true, enteredAt: Date.now() }),
+      reset: () =>
+        set({ started: false, level: 0, answers: empty, startedAt: Date.now(), enteredAt: Date.now(), timing: [] }),
     }),
     {
       name: 'ascent-v1',
@@ -69,7 +70,16 @@ export const useStore = create<State>()(
         const lvl = typeof p.level === 'number' && Number.isInteger(p.level)
           ? Math.min(LEVELS.length - 1, Math.max(0, p.level))
           : 0
-        return { ...current, ...p, level: lvl, answers: validateAnswers(p.answers) }
+        const answers = validateAnswers(p.answers)
+        // An older build persisted started:true with nothing behind it. That is
+        // a stale flag, not a climb in progress, so send them to the title.
+        const hasProgress =
+          lvl > 0 ||
+          !!answers.segment.business ||
+          !!answers.segment.aiUse ||
+          answers.segment.canAlone.length > 0 ||
+          answers.segment.notTrusted.length > 0
+        return { ...current, ...p, started: p.started === true && hasProgress, level: lvl, answers }
       },
     },
   ),

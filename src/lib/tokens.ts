@@ -14,18 +14,20 @@ export const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v)
 export const T = {
   snow: hex('#F3F6FC'),
   ink2: hex('#B9C6E0'),
-  gold: hex('#E9B95B'),
-  goldLight: hex('#F6D68A'),
+  gold: hex('#C9A227'),
+  goldLight: hex('#E9D5BB'),
   ice: hex('#7FD4E0'),
   rope: hex('#E56A5E'),
   moss: hex('#7CCB8F'),
 }
 
 /** Sky as a continuous function of t: dusk -> predawn -> dawn. */
+/* Six deliberate stages rather than a continuously drifting gradient, and
+   warmer than the first pass so the paper panel reads as belonging to it. */
 const SKY: Array<[number, RGB, RGB]> = [
-  [0.0, hex('#0A1430'), hex('#2B4A86')],
-  [0.5, hex('#0E1B3A'), hex('#4A5F8A')],
-  [1.0, hex('#2E3F6E'), hex('#F2B76A')],
+  [0.0, hex('#0B1424'), hex('#1B2A44')],
+  [0.5, hex('#132033'), hex('#3A4A63')],
+  [1.0, hex('#2B3A52'), hex('#E9D5BB')],
 ]
 
 export function skyAt(t: number): { top: RGB; horizon: RGB } {

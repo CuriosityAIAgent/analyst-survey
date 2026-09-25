@@ -52,14 +52,14 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
       <Level title="Thirteen things you do." sub="Read them first, then we'll take them one at a time. Nothing to answer yet.">
         <ul className="space-y-2">
           {ACTIVITIES.map((a) => (
-            <li key={a.id} className="text-[15px] text-snow">
-              {a.label} <span className="text-ink2/70">— {a.gloss}</span>
+            <li key={a.id} className="text-[15px] text-ink">
+              {a.label} <span className="text-muted">— {a.gloss}</span>
             </li>
           ))}
         </ul>
         <button type="button" onClick={() => setBeat(1)}
-          className="mt-6 min-h-[44px] w-full rounded-full text-[15px] font-semibold"
-          style={{ background: 'var(--color-gold)', color: '#0A1430' }}>Deal the thirteen</button>
+          className="mt-6 btn w-full"
+          >Deal the thirteen</button>
       </Level>
     )
   }
@@ -71,21 +71,21 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
         sub="We're looking for the work we can't quietly automate."
         aside={`${placed} of ${ACTIVITIES.length} placed`}
       >
-        <div className="rounded-2xl border border-ink2/25 bg-[rgba(10,18,40,0.6)] p-5">
-          <div className="display text-[22px] text-snow">{current.label}</div>
-          <div className="mt-1 text-[14px] text-ink2">{current.gloss}</div>
+        <div className="rounded-[2px] border border-rule-soft bg-ground p-5">
+          <div className="display text-[22px] text-ink">{current.label}</div>
+          <div className="mt-1 text-[14px] text-muted">{current.gloss}</div>
         </div>
         <div className="mt-4 space-y-2">
           {LANES.map((l) => (
             <button key={l.id} type="button" onClick={() => lane(current.id, l.id as Lane)}
-              className="chip flex w-full flex-col items-start justify-center gap-0.5 py-3 text-left"
+              className="choice flex w-full flex-col items-start justify-center gap-0.5 py-3 text-left"
               style={{ minHeight: 60, borderRadius: 18 }}>
               <span className="text-[15px] font-medium">{l.label}</span>
-              <span className="text-[13px] text-ink2/80">{l.sub}</span>
+              <span className="text-[13px] text-muted">{l.sub}</span>
             </button>
           ))}
           <button type="button" onClick={() => lane(current.id, 'none')}
-            className="chip w-full text-ink2/80">I haven&apos;t done this one</button>
+            className="choice w-full text-muted">I haven&apos;t done this one</button>
         </div>
       </Level>
     )
@@ -105,10 +105,10 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
             if (!ids.length) return null
             return (
               <div key={l.id}>
-                <div className="mb-2 text-[13px] uppercase tracking-wide text-ink2/60">{l.label}</div>
+                <div className="mb-2 text-[13px] uppercase tracking-wide text-muted">{l.label}</div>
                 <div className="flex flex-wrap gap-2">
                   {ids.map((id) => (
-                    <button key={id} type="button" className="chip" data-on={h.clips.includes(id)}
+                    <button key={id} type="button" className="choice" data-on={h.clips.includes(id)}
                       onClick={() => clip(id)}>{act(id).label}</button>
                   ))}
                 </div>
@@ -116,8 +116,8 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
             )
           })}
           <button type="button" onClick={() => setBeat(3)}
-            className="mt-2 min-h-[44px] w-full rounded-full text-[15px] font-semibold"
-            style={{ background: 'var(--color-gold)', color: '#0A1430' }}>
+            className="mt-2 btn w-full"
+          >
             {h.clips.length ? "That's them" : 'None of these taught me much'}
           </button>
         </div>
@@ -130,7 +130,7 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
   if (!first) {
     return (
       <Level title="Worth knowing." sub={`You'd hand ${Object.values(h.lanes).filter((l) => l === 'agent').length} of them to an agent, and none of those is one that taught you.`}>
-        <p className="text-[15px] text-ink2">That's a clean answer. Carry on.</p>
+        <p className="text-[15px] text-muted">That's a clean answer. Carry on.</p>
       </Level>
     )
   }
@@ -139,10 +139,10 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
       title="One thing doesn't add up, and it's the interesting bit."
       sub={`You'd hand ${act(first).label.toLowerCase()} to an agent. It's also one of the ones that taught you.`}
     >
-      <div className="text-[15px] text-snow">So how does the next analyst learn that?</div>
+      <div className="text-[15px] text-ink">So how does the next analyst learn that?</div>
       <div className="mt-3 flex flex-wrap gap-2">
         {RECKONING.map((r) => (
-          <button key={r} type="button" className="chip text-left" data-on={h.reckoning === r}
+          <button key={r} type="button" className="choice text-left" data-on={h.reckoning === r}
             onClick={() => set('handover', { reckoning: r })}>{r}</button>
         ))}
       </div>
@@ -151,7 +151,7 @@ export default function L3({ onBeat }: { onBeat: (b: number) => void }) {
         aria-label="How should the next analyst learn that, in your words?"
         onChange={(e) => set('handover', { reckoningText: e.target.value })}
         placeholder="In your words, if you have them."
-        className="mt-4 w-full rounded-2xl border border-ink2/25 bg-[rgba(10,18,40,0.55)] p-3 text-[15px] text-snow placeholder:text-ink2/50"
+        className="mt-4 w-full rounded-[2px] border border-rule-soft bg-ground p-3 text-[15px] text-ink placeholder:text-muted/50"
         rows={2}
       />
     </Level>
