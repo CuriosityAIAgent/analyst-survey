@@ -69,7 +69,7 @@ const ROUTES = {
     sheets: ['F1', 'F2a', 'F3a', 'F4', 'F5'], variant: 'B',
   },
   B: {
-    token: false, business: 'ipb', cohort: '2019',
+    token: false, business: 'ipb', cohort: '2023',
     board: { rucksack: ['meetings', 'present', 'portfolio'], hand: ['meetings'], out: ['admin', 'roleplay'], rerig: ['ops', 'formatting'] },
     campWalk: 'button',
     rule: '',
@@ -219,7 +219,7 @@ for (const name of routes) {
   /* ---- start clean */
   await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(() => localStorage.clear())
-  await page.goto(BASE + (R.token ? '/?business=uspb&cohort=2021' : '/'), { waitUntil: 'networkidle2' })
+  await page.goto(BASE + (R.token ? '/?business=uspb&cohort=2024' : '/'), { waitUntil: 'networkidle2' })
   await page.addStyleTag({ content: 'nextjs-portal{display:none!important}' }).catch(() => {})
   await page.waitForSelector('[data-game]')
   await sleep(500)

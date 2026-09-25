@@ -58,6 +58,8 @@ export type GameState = {
   setToken: (t: Token) => void
   /** Review mode (?preview=1): move on without answering, and see every follow-up. Not persisted. */
   preview: boolean
+  /** Which kind of session is saved: a preview run never leaks into a real one, or back. */
+  mode: 'live' | 'preview'
   setPreview: (on: boolean) => void
   toggleSound: () => void
   reset: () => void
@@ -239,7 +241,18 @@ export const useGame = create<GameState>()(
         },
 
         preview: false,
-        setPreview: (on) => setState({ preview: on }),
+        mode: 'live' as const,
+        setPreview: (on) => {
+          const mode = on ? 'preview' : 'live'
+          const s = get()
+          // switching between a preview run and a real one starts fresh, so sample
+          // answers from a preview never appear in a real response (or the reverse)
+          if (s.mode !== mode && (s.started || Object.keys(s.answers).length > 0)) {
+            setState({ ...fresh(), token: s.token, link: s.link, preview: on, mode })
+            return
+          }
+          setState({ preview: on, mode })
+        },
 
         setToken: (t) => {
           const id = linkId(t)
@@ -263,7 +276,7 @@ export const useGame = create<GameState>()(
       storage: createJSONStorage(safeStorage),
       partialize: (s) => ({
         started: s.started, finished: s.finished, screen: s.screen, beat: s.beat, sheet: s.sheet,
-        answers: s.answers, events: s.events, timing: s.timing, seed: s.seed, sound: s.sound, link: s.link,
+        answers: s.answers, events: s.events, timing: s.timing, seed: s.seed, sound: s.sound, link: s.link, mode: s.mode,
       }),
       merge: (persisted, current) => ({ ...current, ...rehydrate(persisted) }),
       // persist writes only on set(); write once so a seed minted during
@@ -344,6 +357,7 @@ export function rehydrate(persisted: unknown) {
     seed: Number.isInteger(p.seed) ? (p.seed as number) : newSeed(),
     sound: p.sound === true,
     link: typeof p.link === 'string' ? p.link.slice(0, 120) : '',
+    mode: p.mode === 'preview' ? 'preview' as const : 'live' as const,
     enteredAt: Date.now(),
   }
 }
@@ -415,14 +429,14 @@ export function useSeeded(key: string): number {
 
 /* ---------------------------------------------------------------- token */
 
-/** Read segments from the link: ?business=uspb&cohort=2021 (or b= / c=). */
+/** Read segments from the link: ?business=uspb&cohort=2024 (or b= / c=). */
 export function readToken(search: string): Token {
   const q = new URLSearchParams(search)
   const b = (q.get('business') ?? q.get('b') ?? '').toLowerCase()
   const c = (q.get('cohort') ?? q.get('c') ?? '').toLowerCase()
   const t: Token = {}
-  if (['uspb', 'ipb', 'solutions', 'other'].includes(b)) t.business = b as Token['business']
-  if (/^(20(1[7-9]|2[0-5])|earlier)$/.test(c)) t.cohort = c
+  if (['uspb', 'ipb', 'solutions'].includes(b)) t.business = b as Token['business']
+  if (/^202[2-5]$/.test(c)) t.cohort = c
   // the respondent code People Analytics puts on each link
   const r = q.get('r') ?? q.get('code') ?? ''
   if (/^[A-Za-z0-9_-]{4,64}$/.test(r)) t.code = r

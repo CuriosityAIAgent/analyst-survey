@@ -205,14 +205,9 @@ export default function S03(p: StepProps) {
           <Art id="signpost" width={artW} height={H} />
         </div>
 
-        {/* the carved line, and the textarea that carves it */}
-        <div className="absolute" style={{ left: area.left, top: 8 + area.top, width: areaW, height: areaH }}>
-          {/* focus: a chalk line where the chisel is working */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[-3px] h-0 border-b border-dashed transition-opacity duration-150"
-            style={{ borderColor: BRONZE, opacity: focused ? 0.7 : 0 }} />
-          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden" style={{ ...textStyle, color: BRONZE, textShadow: '0 1px 0 rgba(255,255,255,0.9), 0 -0.5px 0 rgba(13,12,11,0.35)' }}>
-            <Carved text={text} reduced={p.reduced} />
-          </div>
+        {/* the answer box: plainly a place to type (the carved-on-the-arm field read as nothing to do) */}
+        <label className="absolute left-5 right-5 block" style={{ top: 8 + H + 18 }}>
+          <span className="mb-1 block font-[family-name:var(--font-ui)] text-[13px] font-semibold text-ink">Your answer</span>
           <textarea
             ref={taRef}
             value={text}
@@ -222,21 +217,19 @@ export default function S03(p: StepProps) {
             autoCapitalize="none"
             autoComplete="off"
             enterKeyHint="done"
-            placeholder={GHOST}
-            aria-label="No one reaches the top without having…"
+            placeholder="Type a few words…"
             aria-describedby="s03-left"
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (typed) finish(); else taRef.current?.blur() } }}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="absolute inset-x-0 top-0 w-full resize-none overflow-hidden border-0 bg-transparent p-0 placeholder:text-rule placeholder:[-webkit-text-fill-color:#8C857A]"
-            style={{ ...textStyle, height: areaH + 16, outline: 'none', color: 'transparent', caretColor: BRONZE, WebkitTextFillColor: 'transparent' }}
+            className="block h-[76px] w-full resize-none rounded-[2px] border-[1.5px] border-ink bg-ground px-3 py-2 font-[family-name:var(--font-text)] text-[17px] leading-[24px] text-ink placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             data-testid="rule-input"
           />
-        </div>
+        </label>
         {/* a count, near the end of the 60 */}
         <p id="s03-left" className="absolute font-[family-name:var(--font-ui)] text-[12px] leading-[14px] text-muted"
-          style={{ left: area.left, top: 8 + area.bottom + 8, opacity: text.length >= 40 ? 1 : 0, transition: 'opacity 150ms' }}
+          style={{ left: 20, top: 8 + H + 18 + 20 + 76 + 6, opacity: text.length >= 40 ? 1 : 0, transition: 'opacity 150ms' }}
           aria-live="polite">
           {text.length >= 40 ? `${left} left` : ''}
         </p>

@@ -11,7 +11,7 @@ export function demoAnswers(): AnswerMap {
     consent: true,
     'variant.seed': 1,
     'segment.business': 'uspb',
-    'segment.cohort': '2021',
+    'segment.cohort': '2024',
     'segment.source': 'token',
     'vote.green': ['classroom', 'meetings', 'debrief'],
     'vote.greenOrder': ['meetings', 'classroom', 'debrief'],

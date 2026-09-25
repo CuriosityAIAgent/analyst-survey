@@ -317,7 +317,7 @@ function ZoneBox({ z, d, board, reduced }: { z: ZoneId; d: DragApiT; board: Boar
         background: d.over === z ? `color-mix(in srgb, ${c} 7%, #F8F7F4)` : undefined,
       } as CSSProperties}
     >
-      <p className="flex items-center gap-[5px] truncate font-[family-name:var(--font-ui)] text-[12px] leading-[14px] text-ink">
+      <p className="flex items-center gap-[5px] truncate font-[family-name:var(--font-ui)] text-[14px] font-semibold leading-[17px] text-ink">
         <span className="inline-block h-[7px] w-[7px] shrink-0 rounded-full" style={{ background: c }} aria-hidden />
         {label('S02', z)}
       </p>
@@ -336,7 +336,7 @@ function ZoneBox({ z, d, board, reduced }: { z: ZoneId; d: DragApiT; board: Boar
             <Slot key={i} z={z} i={i} id={list[i] ?? null} d={d} />
           ))}
           {z === 'hand' && (
-            <span className="ml-2 font-[family-name:var(--font-ui)] text-[11px] leading-[13px] text-muted">Can also be packed</span>
+            <span className="ml-2 font-[family-name:var(--font-ui)] text-[12px] leading-[14px] text-ink-2">Can also be packed</span>
           )}
           <FullMark z={z} full={full} reduced={reduced} />
         </div>

@@ -39,7 +39,7 @@ describe('rules', () => {
   })
   it('S01 Beat B shows only when the token lacks business or class', () => {
     expect(needsSegment({})).toBe(true)
-    expect(needsSegment({ 'segment.business': 'uspb', 'segment.cohort': '2021' })).toBe(false)
+    expect(needsSegment({ 'segment.business': 'uspb', 'segment.cohort': '2024' })).toBe(false)
   })
   it('deep paths resolve through the longest store key', () => {
     const a = fromPaths({ 'calls.certify.answer': 'policy', 'kit.lane.brief': 'day1', 'vote.blue': 'x' })
