@@ -123,8 +123,8 @@
       "title": "Kit them out",
       "camp": "Base camp",
       "mechanic": "pack",
-      "prompt": "Kit out the next climber. Fill every zone.",
-      "helper": "Drop on a full slot to swap.",
+      "prompt": "Kit out the next Analyst.",
+      "helper": "Drag each item into a box. Fill every empty slot.",
       "items": [
         {
           "id": "meetings",
@@ -206,14 +206,14 @@
       "zones": [
         {
           "id": "rucksack",
-          "label": "More of it",
+          "label": "Do more of this",
           "art": "rucksack",
           "slots": 3,
           "vote": "GREEN"
         },
         {
           "id": "hand",
-          "label": "Speeds them most",
+          "label": "Speeds them up most",
           "art": "hand-zone",
           "slots": 1,
           "vote": "BLUE",
@@ -221,14 +221,14 @@
         },
         {
           "id": "out",
-          "label": "Free them of it",
+          "label": "Take off their plate",
           "art": "tarp-out",
           "slots": 2,
           "vote": "RED"
         },
         {
           "id": "rerig",
-          "label": "Keep, but re-rig",
+          "label": "Keep, but change how",
           "art": "bench-rerig",
           "slots": 2,
           "vote": "AMBER"
@@ -278,7 +278,7 @@
       "camp": "Camp I",
       "mechanic": "text",
       "prompt": "No one reaches the top without having…",
-      "helper": "Finish the line. Seen it, done it, or led it?",
+      "helper": "Finish the sentence: one experience every Analyst must have had.",
       "items": [
         {
           "id": "rule",
