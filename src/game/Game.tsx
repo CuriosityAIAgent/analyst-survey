@@ -74,6 +74,8 @@ export default function Game() {
   useEffect(() => {
     const g = useGame.getState()
     g.setToken(readToken(window.location.search))
+    // ?preview=1: a review mode that moves on without answers and shows every follow-up
+    g.setPreview(new URLSearchParams(window.location.search).get('preview') === '1')
     if (process.env.NODE_ENV !== 'production') devJump(window.location.search)
     const html = document.documentElement, body = document.body
     const prev = { skin: html.dataset.skin, ho: html.style.overflow, bo: body.style.overflow, bg: body.style.background }
