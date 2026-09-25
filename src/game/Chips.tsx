@@ -15,13 +15,19 @@
    answer. Both are pure drawings: put them inside your own button or drag
    item, which owns the hit area (44px or more). */
 
+import type { ReactNode } from 'react'
+
 const INK = '#0D0C0B'
 const PAPER = '#F8F7F4'
 const RULE = '#8C857A'
 const FOREST = '#1F4B3A'
 const BRONZE = '#7A3E12'
 
-export function TagChip({ label, on, size = 15 }: { label: string; on: boolean; size?: number }) {
+export function TagChip({ label, on, size = 15, trail }: {
+  label: string; on: boolean; size?: number
+  /** Drawn inside the tag at its right end (desk: the option's number key). */
+  trail?: ReactNode
+}) {
   return (
     <span className="relative block h-full w-full">
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 170 56" preserveAspectRatio="none" aria-hidden style={{ overflow: 'visible' }}>
@@ -36,11 +42,12 @@ export function TagChip({ label, on, size = 15 }: { label: string; on: boolean; 
         <circle cx={2} r={1.3} fill={PAPER} />
       </svg>
       <span
-        className={`absolute inset-y-0 left-[24px] right-[8px] flex items-center justify-center text-center font-[family-name:var(--font-ui)] text-ink ${on ? 'font-semibold' : ''}`}
+        className={`absolute inset-y-0 left-[24px] ${trail ? 'right-[40px]' : 'right-[8px]'} flex items-center justify-center text-center font-[family-name:var(--font-ui)] text-ink ${on ? 'font-semibold' : ''}`}
         style={{ fontSize: size, lineHeight: `${size + 4}px` }}
       >
         {label}
       </span>
+      {trail && <span className="absolute right-[10px] top-1/2 flex -translate-y-1/2">{trail}</span>}
     </span>
   )
 }
@@ -89,3 +96,16 @@ export function NameTip({ text }: { text: string }) {
   )
 }
 
+
+/** Desk: a board item's full name and its keys, shown on hover or keyboard
+    focus with a fine pointer (design 3.7; styled in DeskStyles, hidden while
+    the item is lifted). Put it inside the useDrag item (the `group`). */
+export function HoverTip({ text, keys }: { text: string; keys: string }) {
+  return (
+    <span data-hover-tip
+      className="pointer-events-none absolute bottom-[calc(100%+4px)] left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-[3px] bg-ink px-[8px] py-[4px] font-[family-name:var(--font-ui)] text-[12px] leading-[16px] text-paper"
+      aria-hidden>
+      {text} <span className="opacity-70">· Press {keys}</span>
+    </span>
+  )
+}

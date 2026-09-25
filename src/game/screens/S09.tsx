@@ -20,8 +20,11 @@ import Frame from '../Frame'
 import SwipeStack, { type SwipeExit } from '../SwipeStack'
 import { Art } from '../art'
 import { copy, fill, items, label, zones } from '../content'
-import { useOrder, useSeeded } from '../store'
-import { useDrag } from '../useDrag'
+import { useSeeded } from '../store'
+import { useLayout } from '../layout'
+import { CLIPS, trait, useS09Rope } from './boards/useS09Rope'
+import S09Desk from './boards/S09Desk'
+import S09BDesk from './S09BDesk'
 import { useGameCtx } from '../context'
 import { buzz, campPaper, sfx } from '../feel'
 import GroundBand from '../GroundBand'
@@ -31,10 +34,6 @@ import GroundBand from '../GroundBand'
 const PAPER3 = campPaper('S09')
 import type { StepProps, TraitId } from '../types'
 
-const TRAITS = items('S09') as { id: TraitId; label: string; art: string }[]
-const TRAIT_IDS = TRAITS.map((t) => t.id)
-const trait = (id: string) => TRAITS.find((t) => t.id === id)!
-const CLIPS = zones('S09') // clip1, clip2, clip3
 const ORIGIN = zones('S09', 'B') // born, built
 const origin = (id: string) => ORIGIN.find((z) => z.id === id)!
 
@@ -65,67 +64,19 @@ function Tile({ id, compact, ground }: { id: TraitId; compact?: boolean; ground?
 }
 
 export default function S09(p: StepProps) {
+  // desk Beat B: its own view (S09BDesk.tsx); same stored answers
+  const layout = useLayout()
+  if (p.beat === 'B' && layout !== 'phone') return <S09BDesk {...p} />
   return p.beat === 'B' ? <BeatB {...p} /> : <BeatA {...p} />
 }
 
 /* ------------------------------------------------------------ Beat A */
 
 function BeatA(p: StepProps) {
-  const ctx = useGameCtx()
-  const order = useOrder('traits.order', TRAIT_IDS)
-  const [slots, setSlots] = useState<Slots>(() => {
-    const t = p.answers['traits.top3'] ?? []
-    return [t[0] ?? null, t[1] ?? null, t[2] ?? null]
-  })
-  const slotsRef = useRef(slots)
-  slotsRef.current = slots
-  const [clicked, setClicked] = useState<{ k: number; n: number } | null>(null)
-
-  const commit = (next: Slots) => {
-    setSlots(next)
-    const top3 = next.filter(Boolean) as TraitId[]
-    if (top3.length) p.set('traits.top3', top3)
-    else p.unset('traits.top3')
-  }
-
-  const clipIndex = (z: string) => CLIPS.findIndex((c) => c.id === z)
-
-  const d = useDrag({
-    disabled: p.covered,
-    labelOf: (id) => (id === 'tray' ? 'Back to the tray' : clipIndex(id) >= 0 ? `Clip ${CLIPS[clipIndex(id)].label}` : label('S09', id)),
-    zones: [...CLIPS.map((c) => c.id), 'tray'],
-    canDrop: (item, z) => {
-      const s = slotsRef.current
-      if (z === 'tray') return s.includes(item as TraitId)
-      const k = clipIndex(z)
-      return k >= 0 && s[k] !== item
-    },
-    onDrop: (item, zone, via) => {
-      const s = [...slotsRef.current] as Slots
-      const id = item as TraitId
-      const from = s.indexOf(id)
-      if (zone === 'tray') {
-        if (from < 0) return false
-        s[from] = null
-        commit(s)
-        p.log('unclip', { item, from: from + 1, via })
-        return
-      }
-      const k = zone ? clipIndex(zone) : -1
-      if (k < 0) return false
-      const occupant = s[k]
-      s[k] = id
-      if (from >= 0) s[from] = occupant && occupant !== id ? occupant : null
-      commit(s)
-      p.log('clip', { item, clip: k + 1, via, from: from >= 0 ? from + 1 : 'tray', swapped: occupant ?? null })
-      sfx('click', ctx.sound)
-      buzz()
-      setClicked((c) => ({ k, n: (c?.n ?? 0) + 1 }))
-    },
-  })
-
-  const valid = slots.every(Boolean)
-  const inTray = order.filter((id) => !slots.includes(id))
+  const layout = useLayout()
+  const R = useS09Rope(p, { desk: layout !== 'phone' })
+  if (layout !== 'phone') return <S09Desk p={p} R={R} />
+  const { order, slots, clicked, d, valid, inTray } = R
 
   return (
     <Frame id="S09" beat="A" valid={valid} onContinue={p.next}>

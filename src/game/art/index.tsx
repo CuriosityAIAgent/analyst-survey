@@ -6,7 +6,8 @@
    fills in as the art lands. See STYLE.md. */
 import type { ArtProps, ArtRegistry } from './kit'
 import { naturalSize, RULE, INK } from './kit'
-import { SPRITES } from './sprites'
+import { SPRITES, SPRITES_2X } from './sprites'
+import { useLayout } from '../layout'
 import { SCENES, SCENE_IDS } from './scenes'
 import { PEOPLE, PEOPLE_IDS } from './people'
 import { PROPS, PROP_IDS } from './props'
@@ -74,13 +75,17 @@ function Sprite({ id, file, ...p }: ArtProps & { id: string; file: string }) {
   const h = p.height ?? (p.size ?? (scene ? '100%' : vh))
   const w = p.width ?? (p.size ? (p.size * sw) / sh : scene ? '100%' : (vh * sw) / sh)
   const a11y = p.title ? { role: 'img' as const, 'aria-label': p.title } : { 'aria-hidden': true as const }
+  // desk draws the pieces it shows large from their 2x copy; the phone keeps
+  // the 1x file (same framing and aspect, so the viewBox is the same)
+  const desk = useLayout() !== 'phone'
+  const href = desk && SPRITES_2X.has(file) ? `/game/3d/2x/${file}.webp` : `/game/3d/${file}.webp`
   return (
     <svg viewBox={`0 0 ${sw} ${sh}`} width={w} height={h} data-art={id} data-sprite={file}
       preserveAspectRatio={scene ? 'xMidYMax slice' : 'xMidYMid meet'}
       className={p.className}
       style={{ display: 'block', overflow: 'visible', pointerEvents: 'none', opacity: p.state === 'ghost' ? 0.35 : undefined, ...p.style }}
       {...a11y}>
-      <image href={`/game/3d/${file}.webp`} width={sw} height={sh} />
+      <image href={href} width={sw} height={sh} />
     </svg>
   )
 }

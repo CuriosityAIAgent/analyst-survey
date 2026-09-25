@@ -13,7 +13,15 @@
    card first and the card leaves holdMs later (S07's storm calls).
    `onLean`: the parent hears the top card's lean as it is dragged (S09 Beat
    B lights the edge glyphs with it).
-   Reduced motion: the card fades instead of flying. */
+   Reduced motion: the card fades instead of flying.
+
+   Desk additions (additive; the phone is unchanged):
+   - `apiRef`: { leave(exitId, via) } so a screen can map window-level keys
+     (useHotkeys) onto the same exit path as the stack's own keys (via
+     'key'), or draw its own targets (via 'button').
+   - Inside a host scaled by transform (DeskCanvas sets --host-k), the drag
+     offset is divided by the host's scale, so the card stays under the
+     pointer and the 30% threshold means the same share of the card. */
 import { Fragment, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
@@ -59,12 +67,16 @@ export type SwipeStackProps<T extends { id: string }> = {
   holdMs?: number
   /** The top card's lean (-1..1) and the exit it leans toward, as it moves. */
   onLean?: (lean: number, toward: string | null) => void
-  /** Hide the button row (render your own and call the `ref` API instead). */
+  /** Hide the button row (render your own and call `apiRef` instead). */
   hideButtons?: boolean
+  /** Imperative exits for window-level keys: leave(exitId) as a key exit. */
+  apiRef?: React.MutableRefObject<SwipeApi | null>
   disabled?: boolean
   className?: string
   style?: CSSProperties
 }
+
+export type SwipeApi = { leave: (exitId: string, via?: 'button' | 'key') => void }
 
 const LEAVE_MS = 260
 const defaultKey = (d: SwipeDir) => (d === 'left' ? 'ArrowLeft' : d === 'right' ? 'ArrowRight' : 'ArrowDown')
@@ -78,7 +90,7 @@ export default function SwipeStack<T extends { id: string }>(p: SwipeStackProps<
   const timers = useRef<number[]>([])
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
   const shownAt = useRef(Date.now())
-  const press = useRef<{ id: number; x0: number; t0: number; lastX: number; lastT: number; vx: number } | null>(null)
+  const press = useRef<{ id: number; x0: number; t0: number; lastX: number; lastT: number; vx: number; k: number } | null>(null)
   const top = p.cards[0]
   const threshold = p.width * 0.3
 
@@ -112,16 +124,18 @@ export default function SwipeStack<T extends { id: string }>(p: SwipeStackProps<
     if (p.disabled || leaving || stamped || e.button !== 0) return
     try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* ignore */ }
     const now = performance.now()
-    press.current = { id: e.pointerId, x0: e.clientX, t0: now, lastX: e.clientX, lastT: now, vx: 0 }
+    // a host scaled by transform (desk): screen px -> card px
+    const k = parseFloat(getComputedStyle(e.currentTarget).getPropertyValue('--host-k')) || 1
+    press.current = { id: e.pointerId, x0: e.clientX, t0: now, lastX: e.clientX, lastT: now, vx: 0, k }
   }
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const pr = press.current
     if (!pr || pr.id !== e.pointerId) return
     const now = performance.now()
     const dt = Math.max(1, now - pr.lastT)
-    pr.vx = 0.7 * pr.vx + 0.3 * ((e.clientX - pr.lastX) / dt)
+    pr.vx = 0.7 * pr.vx + 0.3 * ((e.clientX - pr.lastX) / pr.k / dt)
     pr.lastX = e.clientX; pr.lastT = now
-    const d = e.clientX - pr.x0
+    const d = (e.clientX - pr.x0) / pr.k
     if (!dragging && Math.abs(d) > 4) setDragging(true)
     setDx(d)
   }
@@ -130,7 +144,7 @@ export default function SwipeStack<T extends { id: string }>(p: SwipeStackProps<
     if (!pr || pr.id !== e.pointerId) return
     press.current = null
     setDragging(false)
-    const d = e.clientX - pr.x0
+    const d = (e.clientX - pr.x0) / pr.k
     const flick = Math.abs(pr.vx) > 0.6 && Math.abs(d) > 24
     if (Math.abs(d) > threshold || flick) {
       const ex = exitBy(d > 0 ? 'right' : 'left')
@@ -138,6 +152,14 @@ export default function SwipeStack<T extends { id: string }>(p: SwipeStackProps<
     }
     setDx(0)
   }
+
+  // refreshed after every render, so it always leaves through the current state
+  useEffect(() => {
+    if (!p.apiRef) return
+    p.apiRef.current = {
+      leave: (id: string, via: 'button' | 'key' = 'key') => { const ex = p.exits.find((x) => x.id === id); if (ex) leave(ex, via) },
+    }
+  })
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const ex = p.exits.find((x) => (x.key ?? defaultKey(x.dir)) === e.key)

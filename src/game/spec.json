@@ -11,7 +11,8 @@
       "Camp II",
       "Camp III",
       "Summit"
-    ]
+    ],
+    "plainAsk": true
   },
   "screens": [
     {
@@ -22,6 +23,19 @@
       "mechanic": "scene",
       "prompt": "You made the climb. Now kit out the next one.",
       "helper": "About six minutes.",
+      "ask": {
+        "kicker": "J.P. Morgan Private Bank · A2A",
+        "kickerAlone": true,
+        "question": "You made it from Analyst to Advisor. Help us make the next ones better, faster.",
+        "how": "Nine short screens, about six minutes.",
+        "keys": "[Enter] starts. Each screen shows its own keys.",
+        "list": [
+          "Sort the first years' activities",
+          "Set the pace to Advisor",
+          "Decide when AI tools go on",
+          "Make four policy calls, and a few about you"
+        ]
+      },
       "items": [],
       "zones": [],
       "capacity": "No answer. One button: 'Start the climb'. Business and class come from the link token; nothing about the respondent is asked here.",
@@ -38,6 +52,19 @@
           "mechanic": "scene",
           "prompt": "You made the climb. Now kit out the next one.",
           "helper": "About six minutes.",
+          "ask": {
+            "kicker": "J.P. Morgan Private Bank · A2A",
+            "kickerAlone": true,
+            "question": "You made it from Analyst to Advisor. Help us make the next ones better, faster.",
+            "how": "Nine short screens, about six minutes.",
+            "keys": "[Enter] starts. Each screen shows its own keys.",
+            "list": [
+              "Sort the first years' activities",
+              "Set the pace to Advisor",
+              "Decide when AI tools go on",
+              "Make four policy calls, and a few about you"
+            ]
+          },
           "capacity": "No answer. One button: 'Start the climb'.",
           "stores": [
             "t.start",
@@ -53,6 +80,13 @@
           "mechanic": "pick",
           "prompt": "Your business and class? For grouping only.",
           "helper": "Two taps. Reported only in groups of ten or more.",
+          "ask": {
+            "kicker": "Your group",
+            "question": "Which business are you in, and which A2A class were you in?",
+            "how": "Choose one in each row.",
+            "keys": "[←][→] move within a row.",
+            "why": "Used only to group answers. Groups under ten are never reported."
+          },
           "items": [
             {
               "id": "uspb",
@@ -125,6 +159,13 @@
       "mechanic": "pack",
       "prompt": "Kit out the next Analyst.",
       "helper": "Drag each item into a box. Fill every empty slot.",
+      "ask": {
+        "kicker": "The first years",
+        "question": "For the next Analysts: more of what, less of what?",
+        "how": "Drag each activity into a box until every slot is full.",
+        "keys": "[1]–[4] sends the activity you're on. [Del] takes one back.",
+        "why": "Tells the working group what to add, cut and redesign in the first years."
+      },
       "items": [
         {
           "id": "meetings",
@@ -207,6 +248,7 @@
         {
           "id": "rucksack",
           "label": "Do more of this",
+          "plain": "More time on it, earlier",
           "art": "rucksack",
           "slots": 3,
           "vote": "GREEN"
@@ -214,6 +256,7 @@
         {
           "id": "hand",
           "label": "Speeds them up most",
+          "plain": "Can repeat one from another box",
           "art": "hand-zone",
           "slots": 1,
           "vote": "BLUE",
@@ -222,6 +265,7 @@
         {
           "id": "out",
           "label": "Take off their plate",
+          "plain": "Less of it, or none",
           "art": "tarp-out",
           "slots": 2,
           "vote": "RED"
@@ -229,6 +273,7 @@
         {
           "id": "rerig",
           "label": "Keep, but change how",
+          "plain": "Same activity, done differently",
           "art": "bench-rerig",
           "slots": 2,
           "vote": "AMBER"
@@ -279,6 +324,13 @@
       "mechanic": "text",
       "prompt": "No one reaches the top without having…",
       "helper": "Finish the sentence: one experience every Analyst must have had.",
+      "ask": {
+        "kicker": "The one must-have",
+        "question": "No one should become an Advisor without having…",
+        "how": "Name one experience. Say whether they should have watched it, done it or led it.",
+        "keys": "[Enter] to continue. Leaving it blank is fine.",
+        "why": "The one experience the programme must guarantee, in your words."
+      },
       "items": [
         {
           "id": "rule",
@@ -315,6 +367,13 @@
       "mechanic": "drag-slider",
       "prompt": "Drag them up. How long should the climb to Advisor take?",
       "helper": "Camps from one year to four. Or tap: when proven.",
+      "ask": {
+        "kicker": "The pace",
+        "question": "How long should it take a new Analyst to be ready for Advisor?",
+        "how": "Drag the climber to 12 to 48 months, or choose 'When proven' if skills should decide.",
+        "keys": "[↑][↓] move, [P] When proven, [Enter] confirms.",
+        "why": "How long graduates think the path to Advisor should take."
+      },
       "items": [
         {
           "id": "m12",
@@ -367,6 +426,13 @@
           "mechanic": "drag-slider",
           "prompt": "Drag them up. How long should the climb to Advisor take?",
           "helper": "Camps from one year to four. Or tap: when proven.",
+          "ask": {
+            "kicker": "The pace",
+            "question": "How long should it take a new Analyst to be ready for Advisor?",
+            "how": "Drag the climber to 12 to 48 months, or choose 'When proven' if skills should decide.",
+            "keys": "[↑][↓] move, [P] When proven, [Enter] confirms.",
+            "why": "How long graduates think the path to Advisor should take."
+          },
           "capacity": "One stop. The rookie starts on the trailhead ledge, off the scale; Continue stays disabled until they are placed.",
           "stores": [
             "pace.months: 12|18|24|30|36|48|'proven'",
@@ -379,6 +445,13 @@
           "self": true,
           "prompt": "And you? Tap where you felt ready.",
           "helper": "One tap. 'Not yet' is a fine answer.",
+          "ask": {
+            "kicker": "When you were ready",
+            "question": "And you: when did you feel ready for the Advisor role?",
+            "how": "Choose the point on the track, or 'Not yet'. 'Rather not say' is fine.",
+            "keys": "[↑][↓] move, [N] Not yet, [R] Rather not say.",
+            "why": "Read alongside the pace you just chose."
+          },
           "capacity": "One tap on a stop, or 'Not yet'. A small 'Rather not say' link stores null. Tap only, no drag, no images.",
           "stores": [
             "self.readyAt: 12|18|24|30|36|48|'notYet'|null"
@@ -427,6 +500,13 @@
       "mechanic": "lego",
       "prompt": "Build their navigation kit. When does each piece go on?",
       "helper": "Snap each brick into a lane. Tap i to read it.",
+      "ask": {
+        "kicker": "AI tools",
+        "question": "Which AI tools should an Analyst have on day one, which once proven, and which not at all?",
+        "how": "Six tools, from a chat assistant to an agent team. Drag each into a column; (i) says what it does.",
+        "keys": "[1] Day one, [2] Once proven, [3] Not for them. [I] reads the one you're on.",
+        "why": "When AI access should be earned, and what Analysts should learn first."
+      },
       "items": [
         {
           "id": "map",
@@ -549,8 +629,15 @@
       "title": "Who climbs each pitch",
       "camp": "Camp II",
       "mechanic": "pack",
-      "prompt": "Five pitches. Who climbs each one, and how?",
+      "prompt": "Five stretches of the climb. Who takes each one?",
       "helper": "Their own feet take two at most.",
+      "ask": {
+        "kicker": "Who does the work",
+        "question": "Five tasks AI can now do. How should an Analyst do each?",
+        "how": "Drag each task into a box. 'The Analyst, no AI' takes two at most.",
+        "keys": "[1]–[4] sends the task you're on.",
+        "why": "Which work stays human-led even when AI can do it."
+      },
       "items": [
         {
           "id": "p_portfolio",
@@ -586,6 +673,7 @@
         {
           "id": "own",
           "label": "On their own feet",
+          "plain": "The Analyst, no AI",
           "art": "zone-ownfeet",
           "slots": 2,
           "deck": "Human-owned / human-led",
@@ -594,6 +682,7 @@
         {
           "id": "withkit",
           "label": "Walk it with kit",
+          "plain": "The Analyst, AI helps",
           "art": "zone-withkit",
           "deck": "AI-assisted",
           "ladder": "assisted"
@@ -601,6 +690,7 @@
         {
           "id": "kitdrafts",
           "label": "Kit drafts, they check",
+          "plain": "AI drafts, the Analyst checks",
           "art": "zone-kitdrafts",
           "deck": "AI-led with human review",
           "ladder": "briefed"
@@ -608,6 +698,7 @@
         {
           "id": "crew",
           "label": "Base-camp crew",
+          "plain": "Someone else does it, or it stops",
           "art": "zone-crew",
           "deck": "Reassign, self-serve or eliminate",
           "ladder": null
@@ -646,6 +737,13 @@
       "mechanic": "swipe",
       "prompt": "Storm coming. Four calls. Right: make it policy.",
       "helper": "Left: drop it. 'Unsure' is a real answer.",
+      "ask": {
+        "kicker": "Four proposals",
+        "question": "Four ideas for A2A. Should each one become policy?",
+        "how": "One card at a time: Make it policy, Unsure or Drop it. 'Unsure' is a real answer.",
+        "keys": "[→] policy, [↓] unsure, [←] drop.",
+        "why": "Four proposals the working group is weighing."
+      },
       "items": [
         {
           "id": "certify",
@@ -732,6 +830,13 @@
       "self": true,
       "prompt": "Roped to a different Advisor on day one. Where are you now?",
       "helper": "Same you, same effort. Drag yourself onto the ridge.",
+      "ask": {
+        "kicker": "Your own path",
+        "question": "With a different Advisor on day one, where would you be today?",
+        "how": "Same you, same effort. Drag yourself along the ridge, or choose a point. 'Rather not say' is fine.",
+        "keys": "[←][→] or [1]–[5] move, [R] Rather not say.",
+        "why": "How much success depends on who you're paired with."
+      },
       "items": [
         {
           "id": "r1",
@@ -805,6 +910,13 @@
       "mechanic": "rank",
       "prompt": "Rope up the three traits great private bankers lead with.",
       "helper": "Drag onto the rope. Clip one leads.",
+      "ask": {
+        "kicker": "Traits",
+        "question": "Which three traits do great private bankers lead with? Rank your top three.",
+        "how": "Drag three traits onto the rope: 1 leads, then 2, then 3.",
+        "keys": "[1][2][3] clips the trait you're on. [Del] unclips.",
+        "why": "The traits the programme should look for and grow."
+      },
       "items": [
         {
           "id": "reading",
@@ -870,6 +982,13 @@
           "mechanic": "rank",
           "prompt": "Rope up the three traits great private bankers lead with.",
           "helper": "Drag onto the rope. Clip one leads.",
+          "ask": {
+            "kicker": "Traits",
+            "question": "Which three traits do great private bankers lead with? Rank your top three.",
+            "how": "Drag three traits onto the rope: 1 leads, then 2, then 3.",
+            "keys": "[1][2][3] clips the trait you're on. [Del] unclips.",
+            "why": "The traits the programme should look for and grow."
+          },
           "capacity": "Exactly three, ordered. Dropping on a filled clip swaps. Tray order randomised and logged.",
           "stores": [
             "traits.top3[3]",
@@ -879,8 +998,14 @@
         {
           "beat": "B",
           "mechanic": "swipe",
-          "prompt": "{leadTrait}: born with it, or built on the climb?",
+          "prompt": "{leadTrait}: born with it, or built on the job?",
           "helper": "Swipe it, or tap a side.",
+          "ask": {
+            "kicker": "Born or built",
+            "question": "{leadTrait}: are people born with it, or is it built on the job?",
+            "how": "Choose a side, or drag the card toward one.",
+            "keys": "[←][→] choose a side."
+          },
           "items": [
             {
               "id": "lead",
@@ -897,7 +1022,7 @@
             },
             {
               "id": "built",
-              "label": "Built on the climb",
+              "label": "Built on the job",
               "art": "origin-bootprint"
             }
           ],
@@ -938,6 +1063,13 @@
       "mechanic": "stack+text",
       "prompt": "Today's A2A route, as the next climber finds it.",
       "helper": "Stack stones. One: rebuild it. Five: don't touch it.",
+      "ask": {
+        "kicker": "Overall",
+        "question": "How much does today's A2A programme need to change?",
+        "how": "Add stones from the pile to the cairn: 1 = rebuild it, 5 = don't touch it. Take the top stone off to go lower.",
+        "keys": "[1]–[5] sets the height. [Backspace] lifts the top stone.",
+        "why": "One overall read on the programme as it stands."
+      },
       "items": [
         {
           "id": "s1",
@@ -983,6 +1115,13 @@
           "mechanic": "stack",
           "prompt": "Today's A2A route, as the next climber finds it.",
           "helper": "Stack stones. One: rebuild it. Five: don't touch it.",
+          "ask": {
+            "kicker": "Overall",
+            "question": "How much does today's A2A programme need to change?",
+            "how": "Add stones from the pile to the cairn: 1 = rebuild it, 5 = don't touch it. Take the top stone off to go lower.",
+            "keys": "[1]–[5] sets the height. [Backspace] lifts the top stone.",
+            "why": "One overall read on the programme as it stands."
+          },
           "capacity": "Drag or tap stones onto the cairn, 1 to 5; tap the top stone to lift it off. The label under the cairn changes with the count. No default.",
           "stores": [
             "mark: 1-5"
@@ -993,6 +1132,13 @@
           "mechanic": "text",
           "prompt": "One change before they set off. What is it?",
           "helper": "Or anything we didn't ask. A line is plenty.",
+          "ask": {
+            "kicker": "One change",
+            "question": "If you could make one change to A2A, what would it be?",
+            "how": "One line, up to 80 characters, about anything.",
+            "keys": "[Enter] to finish.",
+            "why": "The change you would make first, or anything we didn't ask."
+          },
           "items": [
             {
               "id": "oneChange",
@@ -1039,6 +1185,13 @@
       "mechanic": "scene",
       "prompt": "Their brief is perfect. The last pitch is still on foot.",
       "helper": "Drag them to the top.",
+      "ask": {
+        "kicker": "Summit",
+        "kickerAlone": true,
+        "question": "That's every question. Thank you.",
+        "how": "One last pitch: drag the climber to the top.",
+        "keys": "[End] or [Enter] walks them up."
+      },
       "items": [],
       "zones": [],
       "capacity": "No answer. The drag follows the path; letting go rests the climber in place (no slide back). Skippable. Reduced motion: a tap moves them to the top.",
@@ -1070,6 +1223,12 @@
       "trigger": "Classroom training packed (Green) or put in the hand (Blue)",
       "prompt": "Attendance runs low. Make classroom mandatory?",
       "helper": "Drag the door: shut, ajar or open.",
+      "ask": {
+        "kicker": "Classroom",
+        "question": "Few people turn up to classroom training. Should it be mandatory?",
+        "how": "Drag the door, or choose an answer.",
+        "keys": "[1]–[3], or [←][→]."
+      },
       "items": [
         {
           "id": "mandatory",
@@ -1121,6 +1280,12 @@
       "trigger": "Pace under 36 months, or 'When proven'",
       "prompt": "Ready at {stop}. What do they take on first?",
       "helper": "Drag them to one.",
+      "ask": {
+        "kicker": "Ready for what",
+        "question": "Once someone is ready early, what should they do alone first?",
+        "how": "Drag the climber onto one, or choose it.",
+        "keys": "[1]–[5] chooses."
+      },
       "items": [
         {
           "id": "rookie",
@@ -1178,6 +1343,12 @@
       "trigger": "Pace 36 or 48 months",
       "prompt": "Held to {stop}. What can't be rushed for them?",
       "helper": "Pick one.",
+      "ask": {
+        "kicker": "What takes time",
+        "question": "Which of these only comes with time, and can't be rushed?",
+        "how": "Choose one.",
+        "keys": "[1]–[4] chooses."
+      },
       "items": [
         {
           "id": "cycle",
@@ -1222,6 +1393,12 @@
       "trigger": "Expedition brief placed in Day one",
       "prompt": "Agents on day one. What must they master first?",
       "helper": "Pick one.",
+      "ask": {
+        "kicker": "Agent teams",
+        "question": "What must an Analyst master before an agent team works for them?",
+        "how": "Choose one.",
+        "keys": "[1]–[4] chooses."
+      },
       "items": [
         {
           "id": "byHand",
@@ -1268,6 +1445,12 @@
       "trigger": "Expedition brief placed in Once proven",
       "prompt": "What earns them the agent team?",
       "helper": "Pick one.",
+      "ask": {
+        "kicker": "Agent teams",
+        "question": "What should earn an Analyst the agent team?",
+        "how": "Choose one.",
+        "keys": "[1]–[4] chooses."
+      },
       "items": [
         {
           "id": "cert",
@@ -1313,6 +1496,12 @@
       "trigger": "Expedition brief put in 'Not for them'",
       "prompt": "Why keep agents off their kit?",
       "helper": "Pick one.",
+      "ask": {
+        "kicker": "Agent teams",
+        "question": "Why keep agent teams away from Analysts?",
+        "how": "Choose one.",
+        "keys": "[1]–[4] chooses."
+      },
       "items": [
         {
           "id": "stopLearning",
@@ -1358,6 +1547,12 @@
       "trigger": "S07 certify = 'policy'. On 'drop' or 'unsure' it is skipped, as Adam asked.",
       "prompt": "How should they earn the pass?",
       "helper": "Drag one onto the plaque.",
+      "ask": {
+        "kicker": "Certification",
+        "question": "How should Analysts be certified?",
+        "how": "Drag one onto the plaque, or choose it.",
+        "keys": "[1]–[5] chooses."
+      },
       "items": [
         {
           "id": "avatar",
@@ -1420,6 +1615,11 @@
         "B": "Your rope held. Guarantee that for everyone: one thing."
       },
       "helper": "Clip one onto the rope.",
+      "ask": {
+        "kicker": "One guarantee",
+        "how": "Drag one onto the rope, or choose it.",
+        "keys": "[1]–[6] chooses."
+      },
       "items": [
         {
           "id": "mentor",
@@ -2094,7 +2294,7 @@
     {
       "id": "origin-bootprint",
       "group": "Traits",
-      "brief": "Swipe-edge glyph: the walked bootprint (Built on the climb), same finish as the seed.",
+      "brief": "Swipe-edge glyph: the walked bootprint (Built on the job), same finish as the seed.",
       "status": "derive from bootprints",
       "release": "v1"
     },

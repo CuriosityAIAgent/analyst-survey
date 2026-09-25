@@ -8,7 +8,7 @@
    preserveAspectRatio "xMidYMax meet": the ground stays on the bottom edge
    at 1:1 on a 390-wide phone, nothing is ever cropped off the sides, and a
    taller or wider box shows more sky above and more of the same ground to
-   either side (every scene bleeds 300 units past its viewBox, and the svg
+   either side (every scene bleeds 600 units past its viewBox, and the svg
    overflows visibly into Frame, which clips). The sky is the camp's own
    paper (paperFor in content.ts, the colour Frame paints), so the seam is
    invisible. Use sceneToBox() to put a DOM object on a scene anchor.
@@ -30,7 +30,9 @@ export const SCENE_IDS = ['scene-basecamp', 'scene-camp1', 'scene-camp2', 'scene
 
 const W = 390
 const H = 660
-const BLEED = 300
+// wide enough for a desk stage up to about 2.2:1 (the desk frame shows the
+// scene at xMidYMax meet across the whole stage)
+const BLEED = 600
 
 /* ------------------------------------------------------------ anchors */
 
@@ -357,13 +359,13 @@ function Camp2(p: ArtProps) {
 }
 
 function Shelf({ y, top, face }: { y: number; top: string; face: string }) {
-  const lip = `M-300 ${y} L${W + 300} ${y}`
+  const lip = `M${-BLEED} ${y} L${W + BLEED} ${y}`
   const cracks = [30, 96, 170, 236, 318, 372].map((x, i) => `M${x} ${y + 12} l${i % 2 ? 3 : -2} ${24 + (i % 3) * 8}`).join(' ')
   return (
     <g>
-      <path d={`M-300 ${y - 10} L${W + 300} ${y - 10} L${W + 300} ${y} L-300 ${y} Z`} fill={top} />
-      <path d={`M-300 ${y - 10} H${W + 300}`} {...PENCIL} strokeWidth={1} />
-      <path d={`M-300 ${y} H${W + 300} V${H + 40} H-300 Z`} fill={face} />
+      <path d={`M${-BLEED} ${y - 10} L${W + BLEED} ${y - 10} L${W + BLEED} ${y} L${-BLEED} ${y} Z`} fill={top} />
+      <path d={`M${-BLEED} ${y - 10} H${W + BLEED}`} {...PENCIL} strokeWidth={1} />
+      <path d={`M${-BLEED} ${y} H${W + BLEED} V${H + 40} H${-BLEED} Z`} fill={face} />
       <path d={lip} {...HAIR} strokeWidth={1} />
       <path d={cracks} {...PENCIL} strokeWidth={1} />
     </g>
@@ -463,10 +465,10 @@ function Summit(p: ArtProps) {
   const t = tones(4)
   const a = SCENE_ANCHORS['scene-summit']
   // the summit block: the crest from bottom left to the plateau, then a drop
-  const crest: [number, number][] = [[-300, 700], ...a.route, [390, 262], [398, 268], [420, 300], [690, 330]]
+  const crest: [number, number][] = [[-BLEED, 760], [-300, 700], ...a.route, [390, 262], [398, 268], [420, 300], [690, 330], [W + BLEED, 370]]
   // the block runs well below the frame: on tall phones S11 lifts the
   // camera so the summit sits near 45% of the height
-  const block = `${lineD(crest)} L690 ${H + 320} L-300 ${H + 320} Z`
+  const block = `${lineD(crest)} L${W + BLEED} ${H + 320} L${-BLEED} ${H + 320} Z`
   return (
     <Scene p={p} camp={4}>
       {/* the sun on the far horizon, bronze */}

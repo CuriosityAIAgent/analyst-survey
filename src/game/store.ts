@@ -18,6 +18,14 @@ import { followupFor, needsSegment } from './rules'
 import { fillBefore } from './demo'
 
 export type OpenSheet = { id: SheetId; variant?: Variant }
+/** Which layout the respondent answered in (layout.ts). Logged, never an answer. */
+export type Channel = {
+  mode: 'phone' | 'desk' | 'deskCompact'
+  w: number
+  h: number
+  pointer: 'fine' | 'coarse'
+  dpr: number
+}
 export type Token = { business?: Answers['segment.business']; cohort?: string; code?: string }
 
 export type GameState = {
@@ -60,6 +68,9 @@ export type GameState = {
   preview: boolean
   /** Which kind of session is saved: a preview run never leaks into a real one, or back. */
   mode: 'live' | 'preview'
+  /** The layout in use (the last committed one): response().meta.channel. */
+  channel: Channel | null
+  setChannel: (c: Channel) => void
   setPreview: (on: boolean) => void
   toggleSound: () => void
   reset: () => void
@@ -266,6 +277,8 @@ export const useGame = create<GameState>()(
           }
           setState(id ? { token: t, link: id } : { token: t })
         },
+        channel: null,
+        setChannel: (c) => setState({ channel: c }),
         toggleSound: () => setState((s) => ({ sound: !s.sound })),
         reset: () => setState({ ...fresh() }),
       }
@@ -277,6 +290,7 @@ export const useGame = create<GameState>()(
       partialize: (s) => ({
         started: s.started, finished: s.finished, screen: s.screen, beat: s.beat, sheet: s.sheet,
         answers: s.answers, events: s.events, timing: s.timing, seed: s.seed, sound: s.sound, link: s.link, mode: s.mode,
+        channel: s.channel,
       }),
       merge: (persisted, current) => ({ ...current, ...rehydrate(persisted) }),
       // persist writes only on set(); write once so a seed minted during
@@ -365,8 +379,19 @@ export function rehydrate(persisted: unknown) {
     sound: p.sound === true,
     link: typeof p.link === 'string' ? p.link.slice(0, 120) : '',
     mode: p.mode === 'preview' ? 'preview' as const : 'live' as const,
+    channel: cleanChannel(p.channel),
     enteredAt: Date.now(),
   }
+}
+
+/** A persisted channel, or null if it is not one. */
+export function cleanChannel(c: unknown): Channel | null {
+  if (!c || typeof c !== 'object') return null
+  const x = c as Record<string, unknown>
+  const num = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v < 100000
+  if (!['phone', 'desk', 'deskCompact'].includes(x.mode as string)) return null
+  if (!num(x.w) || !num(x.h) || !num(x.dpr) || !['fine', 'coarse'].includes(x.pointer as string)) return null
+  return { mode: x.mode as Channel['mode'], w: x.w as number, h: x.h as number, pointer: x.pointer as Channel['pointer'], dpr: x.dpr as number }
 }
 
 /* ---------------------------------------------------------------- seeded order
@@ -463,9 +488,15 @@ export function linkId(t: Token): string {
    What analysis gets: answers, events, timing, plus which follow-up sheets
    are on the respondent's current path (a sheet answered on a branch they
    later backed out of stays in `answers` but is listed as off-path). */
-export function response(s: Pick<GameState, 'answers' | 'events' | 'timing' | 'seed'>) {
+export function response(s: Pick<GameState, 'answers' | 'events' | 'timing' | 'seed'> & { channel?: Channel | null }) {
   const onPath = (['S02', 'S04', 'S05', 'S07', 'S08'] as ScreenId[])
     .map((sc) => followupFor(sc, s.answers)?.sheet)
     .filter(Boolean) as SheetId[]
-  return { answers: s.answers, events: s.events, timing: s.timing, seed: s.seed, sheetsOnPath: onPath }
+  // the layout is a covariate for analysis, never an answer (design 2, 9.2)
+  const c = s.channel ?? null
+  const meta = {
+    channel: c?.mode ?? null,
+    viewport: c ? { w: c.w, h: c.h, pointer: c.pointer, dpr: c.dpr } : null,
+  }
+  return { answers: s.answers, events: s.events, timing: s.timing, seed: s.seed, sheetsOnPath: onPath, meta }
 }

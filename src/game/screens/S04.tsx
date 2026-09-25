@@ -24,7 +24,14 @@
    tag sit on the right and the altitude labels read down the left without
    colliding with the tag. One 390x400 box holds every layer and is scaled to
    fit the stage with container units, so the SVG and the HTML controls over
-   it share coordinates. */
+   it share coordinates.
+
+   Desk (design 5, S04): the same box, hosted as-is in the bigger stage (no
+   geometry change: same stops, same prominence of the 'When proven' tag),
+   with a Readout to its left that spells out the choice. Keys work without
+   focusing the slider: Up/Down (Right/Left) step the stops, Home/End jump,
+   P is 'When proven' (Beat A), N is 'Not yet' (Beat B). They store exactly
+   what the slider's own keys store (via 'key'). The phone is unchanged. */
 import { useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { motion } from 'motion/react'
@@ -34,8 +41,13 @@ import type { ThumbState } from '../RouteSlider'
 import Figure from '../Figure'
 import { Art } from '../art'
 import { SWITCHBACK } from '../art/tracks'
-import { items } from '../content'
+import { items, stopText } from '../content'
 import { buzz as vibrate } from '../feel'
+import { useLayoutInfo } from '../layout'
+import { useHotkeys } from '../useHotkeys'
+import Readout from '../Readout'
+import KeyCap from '../KeyCap'
+import { pressPanelPrimary } from '../deskKeys'
 import type { Months, Pace, ReadyAt, StepProps } from '../types'
 
 /* ---------------------------------------------------------------- geometry */
@@ -119,14 +131,32 @@ type BeatProps = StepProps & { labels: Record<string, string> }
 /** The scaled 390x400 box every layer of this screen shares. It sits on the
     foot of the stage, so the trailhead ledge stands on the scene's ground
     plane at any height, and both beats put the track in the same place. */
-function Box({ children, center = false }: { children: ReactNode; center?: boolean }) {
-  return (
+function Box({ children, center = false, side }: { children: ReactNode; center?: boolean; side?: ReactNode }) {
+  const box = (
     <div className={`absolute inset-0 flex justify-center ${center ? 'items-center' : 'items-end'}`} style={{ containerType: 'size' }}>
       <div className="relative" style={{ width: `min(100cqw, calc(100cqh * ${W} / ${H}))`, aspectRatio: `${W} / ${H}` }}>
         {children}
       </div>
     </div>
   )
+  if (!side) return box
+  // desk: the readout in a column on the left, the box hosted as-is beside it
+  return (
+    <div className="absolute inset-0 flex" data-s04-desk>
+      <div className="relative flex w-[clamp(220px,24%,320px)] shrink-0 items-center pl-10 pr-4">{side}</div>
+      <div className="relative min-w-0 flex-1">{box}</div>
+    </div>
+  )
+}
+
+/** Desk keys for a stop scale: the next stop up or down from `cur` (-1 =
+    unset: the first key lands on the first stop, as the slider's keys do). */
+function stepIndex(cur: number, n: number, key: string): number | null {
+  if (key === 'Home') return 0
+  if (key === 'End') return n - 1
+  const up = key === 'ArrowUp' || key === 'ArrowRight'
+  if (cur < 0) return 0
+  return Math.max(0, Math.min(n - 1, cur + (up ? 1 : -1)))
 }
 
 /** Solid ink bootprints along the walked part of the path (only steps draw it). */
@@ -195,9 +225,25 @@ function BeatA(p: BeatProps) {
 
   const stops = CAMPS.map((c) => ({ id: c.id, at: c.at, label: p.labels[c.id], valueText: p.labels[c.id] }))
 
+  /* desk: keys without focusing the slider, and the readout */
+  const L = useLayoutInfo()
+  const keyStop = (e: KeyboardEvent) => {
+    const i = stepIndex(typeof pace === 'number' ? MONTHS.indexOf(pace) : -1, MONTHS.length, e.key)
+    if (i === null) return false
+    vibrate()
+    place(MONTHS[i], 'key')
+  }
+  useHotkeys({
+    ArrowUp: keyStop, ArrowDown: keyStop, ArrowRight: keyStop, ArrowLeft: keyStop, Home: keyStop, End: keyStop,
+    p: () => { vibrate(); place('proven', 'key') },
+  }, { enabled: L.desk && !p.covered })
+  const shown = pace === undefined ? null : pace === 'proven' ? p.labels.proven : stopText(pace)
+
   return (
-    <Frame id="S04" beat="A" valid={pace !== undefined} onContinue={p.next}>
-      <Box>
+    <Frame id="S04" beat="A" valid={pace !== undefined} onContinue={p.next}
+      summary={L.desk ? (shown ? `Set: ${shown}` : 'Not set yet') : undefined}
+      invalidReason="Move the climber, or choose 'When proven'">
+      <Box side={L.desk ? <Readout label="Your answer" value={shown} size={L.compact ? 36 : 44} reduced={p.reduced} /> : undefined}>
         {/* the drawn track (mirrored: trailhead and tag on the right) */}
         <div className="pointer-events-none absolute" aria-hidden
           style={{ left: pct(OX, W), top: pct(OY, H), width: pct(AW, W), height: pct(SWITCHBACK.viewBox[1], H), transform: 'scaleX(-1)' }}>
@@ -216,6 +262,7 @@ function BeatA(p: BeatProps) {
             stopHit={28}
             trackHit={40}
             testId="s04-range"
+            onEnter={L.desk ? () => { pressPanelPrimary() } : undefined}
             onChange={(id, m) => { const mo = monthsOf(id); if (mo) place(mo, m.via, m.reversals) }}
             renderTrack={(s) => (
               <g>
@@ -353,6 +400,8 @@ function BeatB(p: BeatProps) {
   const order: ReadyAt[] = ['notYet', ...MONTHS]
   const cur = has && mine !== null ? order.indexOf(mine!) : -1
   const onKey = (e: React.KeyboardEvent) => {
+    // desk: Enter on a focused radio walks on (the radio is already chosen by click)
+    if (e.key === 'Enter' && L.desk && has) { e.preventDefault(); pressPanelPrimary(); return }
     const up = e.key === 'ArrowUp' || e.key === 'ArrowRight'
     const down = e.key === 'ArrowDown' || e.key === 'ArrowLeft'
     if (!up && !down && e.key !== 'Home' && e.key !== 'End') return
@@ -368,6 +417,22 @@ function BeatB(p: BeatProps) {
   const rather = has && mine === null
   const NOT_YET = { x: TRAIL.x - 178, y: TRAIL.y - 16, w: 112, h: 44 }
 
+  /* desk: keys without focusing the radios (same order and values), and the readout */
+  const L = useLayoutInfo()
+  const keyPick = (e: KeyboardEvent) => {
+    // as the radios' own keys: from unset, up lands on 12 months, down on 'Not yet'
+    const up = e.key === 'ArrowUp' || e.key === 'ArrowRight'
+    const i = cur < 0 && (e.key.startsWith('Arrow')) ? (up ? 1 : 0) : stepIndex(cur, order.length, e.key)
+    if (i === null) return false
+    choose(order[i], 'key')
+  }
+  useHotkeys({
+    ArrowUp: keyPick, ArrowDown: keyPick, ArrowRight: keyPick, ArrowLeft: keyPick, Home: keyPick, End: keyPick,
+    n: () => choose('notYet', 'key'),
+    r: () => choose(null, 'key'),
+  }, { enabled: L.desk && !p.covered })
+  const shown = !has ? null : mine === null ? 'Rather not say' : mine === 'notYet' ? p.labels.notyet : stopText(mine)
+
   return (
     <Frame
       id="S04"
@@ -376,7 +441,9 @@ function BeatB(p: BeatProps) {
       scene={null}
       valid={has}
       onContinue={p.next}
-      footnote={
+      summary={L.desk ? (shown ? `You: ${shown}` : 'Not chosen yet') : undefined}
+      invalidReason="Choose a point, 'Not yet', or 'Rather not say'"
+      footnote={L.desk ? undefined :
         <button type="button" onClick={() => choose(null, 'tap')} aria-pressed={rather} disabled={p.covered}
           className={`-my-[14px] py-[14px] pr-4 font-[family-name:var(--font-ui)] text-[12px] leading-[16px] underline underline-offset-2 ${rather ? 'font-semibold text-ink' : 'text-muted'}`}
           style={{ textShadow: '0 0 3px #F8F7F4, 0 0 3px #F8F7F4, 0 0 2px #F8F7F4' }}
@@ -387,7 +454,7 @@ function BeatB(p: BeatProps) {
     >
       {/* no scene on the self beat, so nothing holds the track to the
           ground: it sits in the middle of the stage, with no empty band */}
-      <Box center>
+      <Box center side={L.desk ? <Readout label="You" tone="you" value={shown} empty="Not chosen yet" size={L.compact ? 36 : 44} reduced={p.reduced} /> : undefined}>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" className="absolute inset-0" style={{ overflow: 'visible' }} aria-hidden>
           <PlainTrack />
           <Prints to={rookieAt} />
@@ -449,6 +516,17 @@ function BeatB(p: BeatProps) {
             {p.labels.notyet}
           </button>
         </div>
+        {/* desk: 'Rather not say' just left of 'Not yet' (the other non-point answer), clear of the walk trail */}
+        {L.desk && (
+          <button type="button" onClick={() => choose(null, 'tap')} aria-pressed={rather} disabled={p.covered}
+            className={`absolute inline-flex items-center justify-center gap-2 whitespace-nowrap font-[family-name:var(--font-ui)] text-[14px] leading-[18px] ${rather ? 'font-semibold text-ink' : 'text-ink-2'}`}
+            style={{ right: `calc(${pct(W - NOT_YET.x, W)} + 20px)`, top: pct(NOT_YET.y, H), height: pct(NOT_YET.h, H), minHeight: 36 }}
+            data-under-sheet="hide"
+            data-testid="s04-rather">
+            <span className="underline underline-offset-2">Rather not say</span>
+            <KeyCap k="R" />
+          </button>
+        )}
       </Box>
     </Frame>
   )

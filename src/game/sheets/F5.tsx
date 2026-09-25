@@ -13,10 +13,17 @@
    Space, arrows, Enter. A clipped tag dragged back to the tray unclips.
    The tray order is randomised per respondent (seeded) and logged as an
    'order' event (there is no store key for it).
-     stores guarantee ('mentor'|'debrief'|'hypothesis'|'speakingRole'|'ecm'|'protectedTime') */
+     stores guarantee ('mentor'|'debrief'|'hypothesis'|'speakingRole'|'ecm'|'protectedTime')
+
+   DESK (design 6): a card 880 wide at k = 1. The rope 720 wide with its one
+   clip and a 300 x 80 slot hanging from it; the six tags 280 x 64 in a 3 x 2
+   tray below, in the same seeded order, each with its number key. Keys 1-6
+   clip that tag (logged as a drop via 'key'). The panel question is the A/B
+   wording verbatim (Sheet), with no why line. */
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
 import Sheet from '../Sheet'
+import { CARD_DW, NumBadge, SheetCanvas, numberKeys, useSheetFit, useSheetKeys } from './desk'
 import { useDrag } from '../useDrag'
 import { useGameCtx } from '../context'
 import { buzz, sfx } from '../feel'
@@ -48,6 +55,18 @@ export default function F5(p: StepProps) {
 
   useEffect(() => { p.log('order', { key: 'guarantee.order', order }) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const clip = (item: G, via: 'key') => {
+    if (item !== cur) {
+      p.set('guarantee', item)
+      buzz()
+      sfx('click', ctx.sound)
+    }
+    setPicks((n) => n + 1)
+    p.log('drop', { item, zone: 'clip', via, swapped: cur && cur !== item ? cur : undefined })
+  }
+  const fit = useSheetFit(CARD_DW, 356)
+  useSheetKeys(numberKeys(order.length, (i) => clip(order[i] as G, 'key')))
+
   const d = useDrag({
     labelOf,
     disabled: p.covered,
@@ -73,11 +92,57 @@ export default function F5(p: StepProps) {
     },
   })
 
-  const tag = (id: G, where: 'tray' | 'clip') => (
-    <div {...d.item(id)} className="h-full w-full" data-testid={`f5-tag-${id}`}>
-      <Tag label={labelOf(id)} clipped={where === 'clip'} />
+  const tag = (id: G, where: 'tray' | 'clip', size?: number, n?: number) => (
+    <div {...d.item(id)} className="relative h-full w-full" data-testid={`f5-tag-${id}`}>
+      <Tag label={labelOf(id)} clipped={where === 'clip'} size={size} />
+      {n !== undefined && <NumBadge n={n} className="absolute right-[12px] top-1/2 -translate-y-1/2" />}
     </div>
   )
+
+  if (fit.desk) {
+    const RW = 720, RH = (RW * ROPE_VB[1]) / ROPE_VB[0]
+    const rx = (CARD_DW - RW) / 2
+    return (
+      <Sheet id="F5" variant={p.variant} valid={!!cur} onDone={p.next} auto value={cur} picks={picks} deskBody cardHeight={fit.cardHeight}>
+        <SheetCanvas fit={fit}>
+          <div {...d.stageProps} className="absolute inset-0" data-testid="f5-stage">
+            <div {...d.zone('clip')} className="group absolute" style={{ left: rx, top: 0, width: RW, height: 196 }} data-testid="f5-clip">
+              <Art id="rope-clips" value={1} data={{ filled: [!!cur] }} width={RW} height={RH} />
+              <div className="absolute" style={{ left: (RW - 300) / 2, top: (CLIP_BOTTOM / ROPE_VB[1]) * RH - 4, width: 300, height: 80 }}>
+                {cur ? (
+                  <motion.div
+                    key={cur}
+                    className="h-full w-full"
+                    style={{ transformOrigin: '50% 0%' }}
+                    initial={p.reduced ? false : { rotate: -7, y: -6 }}
+                    animate={{ rotate: 0, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 9, mass: 0.6 }}
+                  >
+                    {tag(cur, 'clip', 19)}
+                  </motion.div>
+                ) : (
+                  <div className="h-full w-full rounded-[4px] border-2 border-dashed border-rule transition-colors group-data-[valid=true]:border-forest group-data-[over=true]:border-solid group-data-[over=true]:border-forest" aria-hidden />
+                )}
+              </div>
+            </div>
+            <div {...d.zone('tray')} className="group absolute" style={{ left: 0, top: 212, width: CARD_DW, height: 144 }} data-testid="f5-tray">
+              {order.map((id, i) => {
+                const box = { left: (i % 3) * 300, top: Math.floor(i / 3) * 80, width: 280, height: 64 }
+                return (
+                  <div key={id} className="absolute" style={box}>
+                    {cur === id
+                      ? <div className="h-full w-full rounded-[4px] border border-dashed border-rule-soft group-data-[valid=true]:border-forest" aria-hidden />
+                      : tag(id as G, 'tray', 17, i + 1)}
+                  </div>
+                )
+              })}
+            </div>
+            {d.liveRegion}
+          </div>
+        </SheetCanvas>
+      </Sheet>
+    )
+  }
 
   return (
     <Sheet id="F5" variant={p.variant} valid={!!cur} onDone={p.next} auto value={cur} picks={picks}>
@@ -120,7 +185,7 @@ export default function F5(p: StepProps) {
 
 /** A card tag with a brass-less eyelet at the top: the carabiner takes it
     there. All six share one finish, so none looks like the better answer. */
-function Tag({ label, clipped }: { label: string; clipped: boolean }) {
+function Tag({ label, clipped, size = 13 }: { label: string; clipped: boolean; size?: number }) {
   return (
     <div className="relative h-full w-full">
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 170 48" preserveAspectRatio="none" aria-hidden style={{ overflow: 'visible' }}>
@@ -132,7 +197,8 @@ function Tag({ label, clipped }: { label: string; clipped: boolean }) {
       <svg className="absolute left-1/2 top-[-4px] -translate-x-1/2" width={12} height={12} viewBox="-6 -6 12 12" aria-hidden>
         <circle r={3.6} fill={PAPER} stroke={INK} strokeWidth={1.3} />
       </svg>
-      <span className={`absolute inset-x-[16px] inset-y-0 flex items-center justify-center text-center font-[family-name:var(--font-ui)] text-[13px] leading-[16px] ${clipped ? 'font-semibold text-ink' : 'text-ink'}`}>
+      <span className={`absolute inset-y-0 flex items-center justify-center text-center font-[family-name:var(--font-ui)] ${clipped ? 'font-semibold text-ink' : 'text-ink'}`}
+        style={{ fontSize: size, lineHeight: `${size + 3}px`, left: 16, right: size > 13 && !clipped ? 40 : 16 }}>
         {label}
       </span>
     </div>

@@ -1,14 +1,19 @@
 /* Preview mode (?preview=1): starting fresh and answering NOTHING, pressing
    only the move-on button must visit every screen and beat and every
    follow-up version (F1, F2a, F2b, F3a, F3b, F3c, F4, F5 A and B), then finish.
-   Usage: BASE=http://localhost:3000 node e2e/game-preview.mjs */
+   Usage: BASE=http://localhost:3000 node e2e/game-preview.mjs
+          DESK=1 node e2e/game-preview.mjs      (1440x790; DESK=1280x600 etc.) */
 import puppeteer from 'puppeteer-core'
 const BASE = process.env.BASE || 'http://localhost:3000'
 // PREVIEW_PATH=/preview checks the short link; the default checks ?preview=1
 const START = BASE + (process.env.PREVIEW_PATH || '/?preview=1')
 const br = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' })
 const p = await br.newPage()
-await p.setViewport({ width: 390, height: 660, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
+const DESK = process.env.DESK ? (/^\d+x\d+$/.test(process.env.DESK) ? process.env.DESK : '1440x790') : ''
+if (DESK) {
+  const [w, h] = DESK.split('x').map(Number)
+  await p.setViewport({ width: w, height: h, deviceScaleFactor: 1 })
+} else await p.setViewport({ width: 390, height: 660, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
 const errs = []; p.on('pageerror', (e) => errs.push(String(e).slice(0, 200)))
 await p.goto(START, { waitUntil: 'networkidle2' })
 await p.evaluate(() => localStorage.clear())

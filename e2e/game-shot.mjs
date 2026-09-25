@@ -1,4 +1,7 @@
 /* Screenshot The Ascent (game) at 390x660 (DPR 2), or 390x844 with --tall.
+   Desk: --desk (1440x790, a 1440x900 laptop less the browser chrome, no touch,
+   a fine pointer) or --size=WxH (any viewport; the layout rule picks phone /
+   deskCompact / desk, and --layout=desk forces one via ?layout=).
 
    node e2e/game-shot.mjs S05                 one screen (dev jump, earlier answers filled)
    node e2e/game-shot.mjs "S04 B" "S05 A F3a"  beat, and a sheet over its parent
@@ -7,6 +10,7 @@
    node e2e/game-shot.mjs --art               /art/game, full page
    flags: --tall  --reduced  --empty (fill=0)  --wait=900  --url=/path?x=y
           --out=/dir  --touch (a touch viewport; default on)
+          --desk  --size=1280x600  --layout=phone|desk|deskCompact
 
    Saves to /tmp/ascent-game-shots/<name>.png and prints, per shot, whether
    the page scrolls (scrollHeight > innerHeight), anything clipped below the
@@ -23,7 +27,12 @@ const shots = args.filter((a) => !a.startsWith('--'))
 const BASE = process.env.BASE || 'http://localhost:3000'
 const OUT = opt('out', '/tmp/ascent-game-shots')
 const tall = flag('tall')
-const H = tall ? 844 : 660
+const size = opt('size', flag('desk') ? '1440x790' : '')
+const desk = !!size
+const [DW, DH] = size ? size.split('x').map(Number) : [390, tall ? 844 : 660]
+const W = DW
+const H = DH
+const layout = opt('layout', '')
 const wait = Number(opt('wait', '900'))
 fs.mkdirSync(OUT, { recursive: true })
 
@@ -45,7 +54,7 @@ for (const spec of shots) {
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text().slice(0, 300)}`) })
   const isArt = spec === '--art'
-  await page.setViewport({ width: isArt ? 1200 : 390, height: isArt ? 900 : H, deviceScaleFactor: 2, isMobile: !isArt, hasTouch: !isArt })
+  await page.setViewport({ width: isArt ? 1200 : W, height: isArt ? 900 : H, deviceScaleFactor: 2, isMobile: !isArt && !desk, hasTouch: !isArt && !desk })
   if (flag('reduced')) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
 
   let url, name
@@ -59,10 +68,13 @@ for (const spec of shots) {
     if (sheet) q.set('sheet', sheet)
     if (variant) q.set('variant', variant)
     if (flag('empty')) q.set('fill', '0')
+    if (layout) q.set('layout', layout)
     url = `${BASE}/?${q}`
     name = [screen, beat, sheet, variant].filter(Boolean).join('-')
   }
+  if (desk && layout && spec === 'title') url += `?layout=${layout}`
   if (tall) name += '-tall'
+  if (desk) name += `-${W}x${H}`
   if (flag('reduced')) name += '-reduced'
 
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 })

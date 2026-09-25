@@ -24,6 +24,9 @@
 
    node e2e/game-walk.mjs [A|B|C ...] [--tall] [--reduced] [--shots]
      --tall     390x844 instead of 390x660
+     DESK=1     the same routes at desktop size (1440x790: a 1440x900 laptop
+                less the browser chrome; mouse, no touch). DESK=1280x600 for
+                any other size (the layout rule picks desk / deskCompact).
      --shots    a PNG per step: /tmp/ascent-game-shots/walk-<route>-NN-<step>.png */
 import puppeteer from 'puppeteer-core'
 import fs from 'node:fs'
@@ -34,7 +37,8 @@ const args = process.argv.slice(2)
 const flag = (n) => args.includes(`--${n}`)
 const BASE = process.env.BASE || 'http://localhost:3000'
 const OUT = '/tmp/ascent-game-shots'
-const H = flag('tall') ? 844 : 660
+const DESK = process.env.DESK ? (/^\d+x\d+$/.test(process.env.DESK) ? process.env.DESK : '1440x790') : ''
+const [W, H] = DESK ? DESK.split('x').map(Number) : [390, flag('tall') ? 844 : 660]
 fs.mkdirSync(OUT, { recursive: true })
 const here = path.dirname(fileURLToPath(import.meta.url))
 const SPEC = JSON.parse(fs.readFileSync(path.join(here, '../src/game/spec.json'), 'utf8'))
@@ -128,7 +132,7 @@ for (const name of routes) {
   const errors = []
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text().slice(0, 300)}`) })
-  await page.setViewport({ width: 390, height: H, deviceScaleFactor: 1 })
+  await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 })
   if (flag('reduced')) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
 
   const fail = (msg) => { failures.push(`[${name}] ${msg}`); console.log(`  FAIL ${msg}`) }
@@ -227,7 +231,19 @@ for (const name of routes) {
   /* ---- drivers, one per step key */
   const campWalk = async () => {
     await page.waitForSelector('[data-camp-walk][data-enabled="true"]', { timeout: 3000 }).catch(() => fail('camp walk never enabled'))
-    if (R.campWalk === 'drag') {
+    if (R.campWalk === 'drag' && DESK) {
+      // the desk trail is long: walk the pointer along the path itself
+      const pts = await page.evaluate(() => {
+        const p = document.querySelector('[data-camp-walk] path[data-rs-track]')
+        const m = p.ownerSVGElement.getScreenCTM()
+        const L = p.getTotalLength()
+        const out = []
+        for (let i = 0; i <= 20; i++) { const q = p.getPointAtLength((L * i) / 20); const s = new DOMPoint(q.x, q.y).matrixTransform(m); out.push({ x: s.x, y: s.y }) }
+        return out
+      })
+      pts[0] = await center('[data-camp-walk] [data-rs-thumb] > circle')
+      await walk(pts, 4)
+    } else if (R.campWalk === 'drag') {
       const th = await center('[data-camp-walk] [data-rs-thumb] > circle')
       const svg = await page.$eval('[data-camp-walk] svg', (e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height } })
       await drag(th, { x: svg.x + svg.w * 0.74, y: svg.y + svg.h * 0.24 }, 20)
@@ -525,5 +541,5 @@ for (const name of routes) {
 await browser.close()
 console.log('')
 for (const s of summary) console.log(s)
-console.log(failures.length ? `\n${failures.length} FAILED:\n${failures.join('\n')}` : `\nALL ROUTES PASS at 390x${H}${flag('reduced') ? ' (reduced motion)' : ''}`)
+console.log(failures.length ? `\n${failures.length} FAILED:\n${failures.join('\n')}` : `\nALL ROUTES PASS at ${W}x${H}${flag('reduced') ? ' (reduced motion)' : ''}`)
 process.exitCode = failures.length ? 1 : 0

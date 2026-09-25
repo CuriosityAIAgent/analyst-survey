@@ -23,38 +23,23 @@
    Layout at 390x660 (design budget): zones 2x2 of ~180x68 = 142, a flexible
    gap showing the camp, tray 4x3 of 64px tiles + two-line 12px labels
    = 276, the camp-walk strip (Frame) replaces Continue. */
-import { useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Frame from '../Frame'
 import { Art } from '../art'
-import { items, label, zones } from '../content'
-import { useDrag, type DropVia } from '../useDrag'
-import { useOrder } from '../store'
-import { useGameCtx } from '../context'
-import { buzz, sfx, SPRING } from '../feel'
+import { label, plainOf } from '../content'
+import { useLayout } from '../layout'
 import { NameTip } from '../Chips'
 import type { GearId, StepProps } from '../types'
+import {
+  ART_OF, CAP, COLOR, COPY, FULL_STATE, ZONE_ART, ZONE_IDS, homeOf, useS02Board,
+  type Board, type ZoneId,
+} from './boards/useS02Board'
+import S02Desk from './boards/S02Desk'
 
-/* ------------------------------------------------------------ spec */
-
-type ZoneId = 'rucksack' | 'hand' | 'out' | 'rerig'
-type Board = Record<ZoneId, GearId[]>
-
-const ITEMS = items('S02')
-const ZONES = zones('S02')
-const GEAR_IDS = ITEMS.map((i) => i.id as GearId)
-const ART_OF: Record<string, string> = Object.fromEntries(ITEMS.map((i) => [i.id, String(i.art)]))
-const ZONE_IDS = ZONES.map((z) => z.id as ZoneId)
-const CAP = Object.fromEntries(ZONES.map((z) => [z.id, Number(z.slots ?? 1)])) as Record<ZoneId, number>
-const ZONE_ART = Object.fromEntries(ZONES.map((z) => [z.id, String(z.art)])) as Record<ZoneId, string>
-/** Deck vote colours: forest (Green), navy (Blue), ink (Red), bronze (Amber). */
-const COLOR: Record<ZoneId, string> = { rucksack: '#1F4B3A', hand: '#14233B', out: '#0D0C0B', rerig: '#7A3E12' }
-/** The art state each zone takes when it is full. */
-const FULL_STATE: Record<ZoneId, string> = { rucksack: 'zipped', hand: 'closed', out: 'folded', rerig: 'spliced' }
-const PACKS: ZoneId[] = ['rucksack', 'out', 'rerig'] // zones a tile can live in (the hand holds a copy)
-const COPY = 'copy:'
-
+// the pure board model lives with the hook; re-exported for board.test.ts
+export { applyDrop, boardOf } from './boards/useS02Board'
+export type { DropResult } from './boards/useS02Board'
 
 /* Tile and slot sizes: 64px tiles at 660 tall, down to 48px on short phones;
    slots 44px, narrower on 360px-wide phones so the rucksack's three fit. */
@@ -63,193 +48,17 @@ const BOARD_VARS = {
   '--slot': 'min(44px, calc((min(100vw, 480px) - 126px) / 6))',
 } as CSSProperties
 
-/* ------------------------------------------------------------ board model (pure) */
-
-export function boardOf(a: StepProps['answers']): Board {
-  return {
-    rucksack: [...(a['vote.green'] ?? [])],
-    hand: a['vote.blue'] ? [a['vote.blue']] : [],
-    out: [...(a['vote.red'] ?? [])],
-    rerig: [...(a['vote.amber'] ?? [])],
-  }
-}
-const homeOf = (b: Board, id: GearId): ZoneId | null => PACKS.find((z) => b[z].includes(id)) ?? null
-
-export type DropResult = { board: Board; swapped?: GearId; noop?: boolean } | null
-
-/** Apply a drop to the board. null = refused (bounce). Pure, for tests. */
-export function applyDrop(b0: Board, item: string, zone: string | null): DropResult {
-  const b: Board = { rucksack: [...b0.rucksack], hand: [...b0.hand], out: [...b0.out], rerig: [...b0.rerig] }
-  // the hand's copy: back to the tray (or off the board) clears the hand;
-  // it can't be packed anywhere else
-  if (item.startsWith(COPY)) {
-    if (zone === null || zone === 'tray') { b.hand = []; return { board: b } }
-    if (zone === 'hand' || zone === 'hand:0') return { board: b, noop: true }
-    return null
-  }
-  const id = item as GearId
-  const from = homeOf(b, id)
-  if (zone === null || zone === 'tray') {
-    if (!from) return { board: b, noop: true }
-    b[from] = b[from].filter((x) => x !== id)
-    return { board: b }
-  }
-  const [zs, ss] = zone.split(':')
-  const z = zs as ZoneId
-  if (!ZONE_IDS.includes(z)) return null
-  const slot = ss === undefined ? null : Number(ss)
-
-  if (z === 'hand') {
-    if (b.hand[0] === id) return { board: b, noop: true }
-    if (slot === null && b.hand.length >= CAP.hand) return null // full body: bounce
-    const swapped = b.hand[0]
-    b.hand = [id] // a copy: the original stays where it is
-    return { board: b, swapped }
-  }
-
-  const list = b[z]
-  if (slot === null) {
-    if (from === z) return { board: b, noop: true }
-    if (list.length >= CAP[z]) return null // full body: bounce
-    if (from) b[from] = b[from].filter((x) => x !== id)
-    b[z] = [...list, id]
-    return { board: b }
-  }
-  const occupant = list[slot] as GearId | undefined
-  if (occupant === id) return { board: b, noop: true }
-  if (from === z) {
-    // reorder inside one zone: swap the two positions
-    if (!occupant) return { board: b, noop: true }
-    const i = list.indexOf(id)
-    const next = [...list]
-    next[i] = occupant; next[slot] = id
-    b[z] = next
-    return { board: b, swapped: occupant }
-  }
-  if (!occupant) {
-    if (list.length >= CAP[z]) return null
-    if (from) b[from] = b[from].filter((x) => x !== id)
-    b[z] = [...list, id]
-    return { board: b }
-  }
-  // swap across zones (or with the tray): the occupant goes where the tile came from
-  const next = [...list]
-  next[slot] = id
-  if (from) {
-    const fl = [...b[from]]
-    fl[fl.indexOf(id)] = occupant
-    b[from] = fl
-  }
-  b[z] = next
-  return { board: b, swapped: occupant }
-}
-
 /* ------------------------------------------------------------ screen */
 
 export default function S02(p: StepProps) {
-  const ctx = useGameCtx()
-  const order = useOrder('tray.order', GEAR_IDS)
-  const a = p.answers
-  const board = boardOf(a)
-  const valid = PACKS.every((z) => board[z].length === CAP[z]) && board.hand.length === 1
+  const layout = useLayout()
+  const B = useS02Board(p, { desk: layout !== 'phone' })
+  if (layout !== 'phone') return <S02Desk p={p} B={B} />
+  return <S02Phone p={p} B={B} />
+}
 
-  const stage = useRef<HTMLDivElement | null>(null)
-  const before = useRef<Map<string, DOMRect> | null>(null)
-  const [flip, setFlip] = useState(0)
-  /** How the current lift began: a pointer drag may be let go over the tray
-      (a quiet put-back), which the keyboard never needs to offer. */
-  const liftVia = useRef<DropVia | null>(null)
-
-  /* snapshot every tile icon (including a lifted tile's drag offset) */
-  const snapshot = () => {
-    const m = new Map<string, DOMRect>()
-    stage.current?.querySelectorAll<HTMLElement>('[data-tile-icon]').forEach((el) => {
-      m.set(el.dataset.tileIcon!, el.getBoundingClientRect())
-    })
-    return m
-  }
-
-  /* FLIP: after a drop, every tile that moved springs from where it was */
-  useLayoutEffect(() => {
-    const prev = before.current
-    before.current = null
-    if (!prev || p.reduced || !stage.current) return
-    stage.current.querySelectorAll<HTMLElement>('[data-tile]').forEach((wrap) => {
-      const key = wrap.dataset.tile!
-      const icon = wrap.querySelector<HTMLElement>('[data-tile-icon]')
-      const from = prev.get(key) ?? (key.startsWith(COPY) ? prev.get(key.slice(COPY.length)) : undefined)
-      if (!icon || !from) return
-      const to = icon.getBoundingClientRect()
-      const w = wrap.getBoundingClientRect()
-      const dx = from.left - to.left, dy = from.top - to.top, s = from.width / (to.width || 1)
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(s - 1) < 0.02) return
-      wrap.style.transformOrigin = `${to.left - w.left}px ${to.top - w.top}px`
-      wrap.animate(
-        [{ transform: `translate(${dx}px, ${dy}px) scale(${s})` }, { transform: 'none' }],
-        { duration: 180, easing: SPRING },
-      )
-    })
-  }, [flip, p.reduced])
-
-  const commit = (b: Board) => {
-    const green = b.rucksack
-    const prevOrder = (a['vote.greenOrder'] ?? []).filter((x) => green.includes(x))
-    const greenOrder = [...prevOrder, ...green.filter((x) => !prevOrder.includes(x))]
-    const blue = b.hand[0] ?? null
-    p.setMany({
-      'vote.green': green,
-      'vote.greenOrder': greenOrder,
-      'vote.blue': blue,
-      'vote.blueAlsoGreen': blue !== null && green.includes(blue),
-      'vote.red': b.out,
-      'vote.amber': b.rerig,
-    })
-  }
-
-  const labelOf = (id: string): string => {
-    if (id === 'tray') return 'Back to the tray'
-    if (id.startsWith(COPY)) return `${label('S02', id.slice(COPY.length))}, the copy in the hand`
-    const [z, s] = id.split(':')
-    if (ZONE_IDS.includes(z as ZoneId)) {
-      const zl = label('S02', z)
-      if (s === undefined) return zl
-      const occ = board[z as ZoneId][Number(s)]
-      return `${zl}, slot ${Number(s) + 1}${occ ? `, holding ${label('S02', occ)}` : ', empty'}`
-    }
-    return label('S02', id)
-  }
-
-  const d = useDrag({
-    labelOf,
-    disabled: p.covered,
-    zones: ['rucksack', 'hand', 'out', 'rerig', 'tray'],
-    canDrop: (item, zone) => {
-      if (item.startsWith(COPY)) return zone === 'tray' || zone.startsWith('hand')
-      if (zone === 'tray') return homeOf(board, item as GearId) !== null || liftVia.current === 'pointer'
-      return true
-    },
-    onDrop: (item, zone, via: DropVia) => {
-      const r = applyDrop(board, item, zone)
-      if (!r) {
-        p.log('bounce', { item, zone, via })
-        sfx('bounce', ctx.sound)
-        return false
-      }
-      before.current = snapshot()
-      setFlip((n) => n + 1)
-      if (r.noop) return true
-      const wasFull = board.rucksack.length === CAP.rucksack
-      commit(r.board)
-      buzz()
-      sfx(!wasFull && r.board.rucksack.length === CAP.rucksack ? 'zip' : 'drop', ctx.sound)
-      p.log('drop', { item, zone, via, swapped: r.swapped ?? null })
-      return true
-    },
-    onLift: (item, via) => { liftVia.current = via; p.log('lift', { item, via }) },
-  })
-
-  const trayLit = d.lifted !== null && (d.lifted.startsWith(COPY) || homeOf(board, d.lifted as GearId) !== null)
-  const liftedLabel = d.lifted ? labelOf(d.lifted).replace(', the copy in the hand', ' (copy)') : null
+function S02Phone({ p, B }: { p: StepProps; B: ReturnType<typeof useS02Board> }) {
+  const { order, board, valid, d, stage, trayLit, liftedLabel } = B
 
   return (
     <Frame
@@ -299,7 +108,7 @@ export default function S02(p: StepProps) {
 
 /* ------------------------------------------------------------ zone */
 
-type DragApiT = ReturnType<typeof useDrag>
+type DragApiT = ReturnType<typeof useS02Board>['d']
 
 function ZoneBox({ z, d, board, reduced }: { z: ZoneId; d: DragApiT; board: Board; reduced: boolean }) {
   const list = board[z]
@@ -335,8 +144,11 @@ function ZoneBox({ z, d, board, reduced }: { z: ZoneId; d: DragApiT; board: Boar
           {Array.from({ length: CAP[z] }, (_, i) => (
             <Slot key={i} z={z} i={i} id={list[i] ?? null} d={d} />
           ))}
+          {/* the hand's copy rule, in the spec's words (zones[].plain, the
+              same gloss desk shows); the other three glosses have no room in
+              a 68px zone at 390x660, so on phone they are a covariate */}
           {z === 'hand' && (
-            <span className="ml-2 font-[family-name:var(--font-ui)] text-[12px] leading-[14px] text-ink-2">Can also be packed</span>
+            <span className="ml-[6px] font-[family-name:var(--font-ui)] leading-[1.1] text-ink-2" style={{ fontSize: "min(12px, 3vw)" }} data-zone-plain>{plainOf('S02', 'hand')}</span>
           )}
           <FullMark z={z} full={full} reduced={reduced} />
         </div>

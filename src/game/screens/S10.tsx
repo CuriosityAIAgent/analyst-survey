@@ -19,7 +19,18 @@
    above 300px at 390x660), so the keyboard never covers it. One line, 80
    characters, optional: 'Leave it blank' (quiet) until something is
    written, then 'Tie it on' (ink). Stores oneChange.text,
-   oneChange.skipped, oneChange.keystrokes. */
+   oneChange.skipped, oneChange.keystrokes.
+
+   The ruler (CairnRuler, both channels): all five labels, 1 Rebuild it to
+   5 Don't touch it, the current level in ink. On the phone the rows stack
+   above the loose pile; on desk they sit at the stones' own heights.
+
+   Desk (design 5, S10): the same composition scaled up by f (about 1.8x at
+   1440x790), laid out as a centred group: cairn, ruler, pile, rookie. Keys:
+   1-5 set the height, Backspace/Delete lift the top stone (both via 'key',
+   through the same setCount as a tap). Beat B: the rookie on the crest with
+   a larger tag (Source Serif italic 22), the field focused, Enter ties it
+   on. The phone composition is unchanged apart from the ruler. */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -32,6 +43,10 @@ import { copy, items } from '../content'
 import { useDrag } from '../useDrag'
 import { useGameCtx } from '../context'
 import { buzz, sfx } from '../feel'
+import { useLayoutInfo } from '../layout'
+import { useHotkeys } from '../useHotkeys'
+import CairnRuler, { type RulerRow } from '../CairnRuler'
+import { pressPanelPrimary } from '../deskKeys'
 
 import type { Mark, StepProps } from '../types'
 
@@ -50,7 +65,7 @@ const CAIRN = CAIRN_STONES
    stage and map it. */
 const SCENE_GROUND = SCENE_ANCHORS['scene-camp3'].ground
 function useGround(ref: React.RefObject<HTMLElement | null>) {
-  const [g, setG] = useState<{ g: number; sc: number } | null>(null)
+  const [g, setG] = useState<{ g: number; sc: number; ox: number; w: number } | null>(null)
   useLayoutEffect(() => {
     const el = ref.current
     const frame = el?.closest('[data-frame]') as HTMLElement | null
@@ -58,7 +73,8 @@ function useGround(ref: React.RefObject<HTMLElement | null>) {
     const measure = () => {
       const a = frame.getBoundingClientRect(), b = el.getBoundingClientRect()
       const sc = Math.min(a.width / 390, a.height / 660)
-      setG({ g: a.height - (660 - SCENE_GROUND) * sc - (b.top - a.top), sc })
+      // ox: where scene x 0 falls in the stage (xMidYMax meet); w: stage width
+      setG({ g: a.height - (660 - SCENE_GROUND) * sc - (b.top - a.top), sc, ox: (a.width - 390 * sc) / 2 - (b.left - a.left), w: b.width })
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -155,12 +171,22 @@ export default function S10(p: StepProps) {
   const ground = useGround(stageRef)
   const [focused, setFocused] = useState(false)
 
-  /* ---- composition (390 wide; ground G from the top of the scene box) */
+  /* ---- composition (390 wide; ground G from the top of the scene box).
+     Desk: the phone's geometry times f, as a centred group of cairn, ruler
+     (RULER_W), pile and rookie. */
+  const L = useLayoutInfo()
+  const desk = L.desk
   const G = ground?.g ?? 430
   const SC = ground?.sc ?? 1
-  const cairnSize = inB ? 108 : 166
+  const SW = ground?.w ?? 390
+  const RULER_W = desk ? (L.compact ? 150 : 170) : 0
+  const f = desk ? Math.max(1.1, Math.min(2.4, (SW - 80 - RULER_W - 116) / 352, (G - 60) / 190)) : 1
+  const groupW = 166 * f + 16 + RULER_W + 40 + 126 * f + 40 + 60 * f
+  const cairnSize = (inB ? 108 : 166) * f
   const k = cairnSize / 64
-  const cairnLeft = 8
+  const cairnLeft = desk ? Math.max(24, (SW - groupW) / 2) : 8
+  const rulerX = cairnLeft + 166 * f + 16
+  const pileLeft = desk ? rulerX + RULER_W + 40 : 178
   const top = n > 0 ? CAIRN[n - 1] : null
   const lifting = d.lifted === 'top' && d.dragging
   const shownCount = lifting ? n - 1 : n
@@ -175,28 +201,66 @@ export default function S10(p: StepProps) {
   const pile = MAX - n
   // loose stones: a small heap, three on the ground and two on top
   const HEAP = [{ x: 0, y: 0 }, { x: 38, y: 0 }, { x: 76, y: 0 }, { x: 19, y: -18 }, { x: 57, y: -18 }]
-  const ROOKIE_X = 316 // feet; the rookie faces right, up the route, pack on the left
-  const RSIZE = 104
+  const RSIZE = 104 * f
   const RS = RSIZE / 26 // Figure px per unit
-  // Beat B: the rookie has walked up onto the crest above the camp
-  const CREST_X = 318
-  const crestY = G - (SCENE_GROUND - camp3Crest(CREST_X) + 1) * SC
+  const ROOKIE_X = desk ? pileLeft + 126 * f + 40 + 9 * RS : 316 // feet; the rookie faces right, up the route, pack on the left
+  // Beat B: the rookie has walked up onto the crest above the camp (desk:
+  // at about 62% of the stage, wherever the crest is there)
+  const crestScene = desk && ground ? Math.max(-280, Math.min(660, (SW * 0.62 - ground.ox) / SC)) : 318
+  const CREST_X = desk && ground ? ground.ox + crestScene * SC : 318
+  const crestY = G - (SCENE_GROUND - camp3Crest(crestScene) + 1) * SC
   const rx = inB ? CREST_X : ROOKIE_X
   const ry = inB ? crestY : G
+
+  // the ruler: all five labels (Beat A)
+  const rulerRows: RulerRow[] = STONES_SPEC.map((st, i) => {
+    if (!desk) return { n: i + 1, label: st.label, y: G - 84 - 22 * i }
+    const kA = (166 * f) / 64
+    const stone = CAIRN[i]
+    return {
+      n: i + 1, label: st.label,
+      y: G - 166 * f + (53.4 - i * STONE_STEP - STONE_STEP / 2) * kA,
+      from: cairnLeft + (32 + stone.dx + stone.w / 2) * kA + 6,
+    }
+  })
 
   // the tag: flipped so its strap runs up the right edge, over the pack;
   // big enough to write 80 characters on (three lines of about 29)
   const TW = 290, TH = 140, tk = TH / 64
+  const tagFont = desk ? 19 : 16
+  const tagLine = desk ? 24 : 16.5
   const packX = rx - 3.9 * RS // the pack's centre
   const tagRight = packX + 7 * tk
   // the tag's string loops round the pack at mid-height (art y 21)
   const tagTop = ry - 15 * RS - 21 * tk
-  const tagText = {
+  const phoneText = {
     left: TAG_TEXT.x1 * tk + 4, width: TW - (TAG_TEXT.x0 + TAG_TEXT.x1) * tk - 8,
     top: TAG_TEXT.y0 * tk + 1, height: (TAG_TEXT.y1 - TAG_TEXT.y0) * tk - 2,
   }
+  /* desk: the 3D tag (430x459 render: belt across the top, a portrait tag
+     face below), flipped so the belt runs to the pack, drawn about 420px
+     tall; the field lies on its face */
+  const DS = desk ? Math.min(430, G * 0.82) / 459 : 0
+  const tagBox = desk
+    ? { left: packX - 400 * DS - 14, top: ry - 15 * RS - 80 * DS, w: 430 * DS, h: 459 * DS, origin: `${395 * DS}px ${80 * DS}px` }
+    : { left: tagRight - TW, top: tagTop, w: TW, h: TH, origin: `${TW - 7 * tk}px 0px` }
+  const tagText = desk ? { left: 122 * DS, top: 254 * DS, width: 150 * DS, height: 168 * DS } : phoneText
+  const tagLines = desk ? Math.floor(tagText.height / tagLine) : 3
 
   const continueLabel = inB ? (text.trim() ? 'Tie it on' : 'Leave it blank') : 'Continue'
+
+  /* desk keys: 1-5 set the height, Backspace/Delete lift the top stone */
+  const height = (c: number) => () => { if (!active) return false; setCount(c, 'key') }
+  const lift = () => { if (!active || n === 0) return false; setCount(n - 1, 'key') }
+  useHotkeys({ 1: height(1), 2: height(2), 3: height(3), 4: height(4), 5: height(5), Backspace: lift, Delete: lift },
+    { enabled: desk && beat === 'A' && !p.covered })
+  // desk Beat B: the field is focused once the tag has swung on
+  const tagRef = useRef<HTMLTextAreaElement | null>(null)
+  useEffect(() => {
+    if (!desk || !inB || p.covered) return
+    const t = window.setTimeout(() => tagRef.current?.focus({ preventScroll: true }), p.reduced ? 150 : 700)
+    return () => clearTimeout(t)
+  }, [desk, inB, p.covered, p.reduced])
 
   return (
     <Frame
@@ -208,8 +272,17 @@ export default function S10(p: StepProps) {
       onContinue={inB ? finishB : p.next}
       continueLabel={continueLabel}
       continueQuiet={inB && !text.trim()}
+      summary={desk ? (inB ? `${text.length}/${MAX_TEXT}` : n ? `${n} ${n === 1 ? 'stone' : 'stones'} · ${labelFor(n)}` : 'No stones yet') : undefined}
+      invalidReason={inB ? undefined : 'Stack at least one stone'}
     >
-      <div {...d.stageProps} ref={(el: HTMLDivElement | null) => { stageRef.current = el; d.stageProps.ref(el) }} className="relative h-full w-full" data-s10={beat}>
+      <div {...d.stageProps} ref={(el: HTMLDivElement | null) => { stageRef.current = el; d.stageProps.ref(el) }} className="relative h-full w-full" data-s10={beat}
+        onKeyDownCapture={(e) => {
+          // desk: Enter continues (the panel primary) even with a stone focused;
+          // Space still adds or lifts a stone (design 3.7)
+          if (!desk || beat !== 'A' || e.key !== 'Enter' || d.lifted) return
+          e.preventDefault(); e.stopPropagation()
+          pressPanelPrimary()
+        }}>
         <style>{`
           [data-s10] [data-zone="cairn"][data-valid="true"] { outline: 1.5px dashed #0D0C0B; outline-offset: -2px; border-radius: 4px; }
           [data-s10] [data-zone="cairn"][data-over="true"] { outline-style: solid; background: rgba(13,12,11,0.04); }
@@ -256,7 +329,7 @@ export default function S10(p: StepProps) {
           {/* the count label */}
           <motion.div
             className="absolute text-center"
-            animate={{ left: cairnLeft - 10, width: cairnSize + 20, top: G + 8 }}
+            animate={{ left: cairnLeft - 10 - (desk && inB ? 60 : 0), width: cairnSize + 20 + (desk && inB ? 120 : 0), top: G + 8 }}
             initial={false}
             transition={{ duration: p.reduced ? 0 : 0.45, ease: [0.16, 1, 0.3, 1] }}
             aria-hidden
@@ -269,21 +342,31 @@ export default function S10(p: StepProps) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: p.reduced ? 0.08 : 0.16 }}
                 className={`${n
-                  ? `font-[family-name:var(--font-text)] font-semibold ${inB ? 'text-[17px] leading-[20px]' : 'text-[22px] leading-[26px]'} text-ink`
-                  : 'font-[family-name:var(--font-text)] text-[14px] italic text-muted'}`}
+                  ? `font-[family-name:var(--font-text)] font-semibold ${desk ? (inB ? 'text-[20px] leading-[24px]' : 'text-[28px] leading-[32px]') : inB ? 'text-[17px] leading-[20px]' : 'text-[22px] leading-[26px]'} text-ink`
+                  : `font-[family-name:var(--font-text)] ${desk ? 'text-[17px]' : 'text-[14px]'} italic text-muted`}`}
                 data-testid="cairn-label"
               >
-                {n ? labelFor(n) : 'No stones yet'}
+                {n ? (desk && inB ? `Your mark: ${labelFor(n)}` : labelFor(n)) : 'No stones yet'}
               </motion.p>
             </AnimatePresence>
           </motion.div>
+
+          {/* the ruler: all five anchors (Beat A) */}
+          <AnimatePresence>
+            {!inB && ground && (
+              <motion.div className="pointer-events-none absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: p.reduced ? 0.1 : 0.2 } }}>
+                <CairnRuler rows={rulerRows} current={shownCount} x={desk ? rulerX + 8 : 184} size={desk ? Math.round(Math.max(15, Math.min(20, 16 * f / 1.8))) : 12} gap={desk ? 10 : 8} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* the loose stones (Beat A) */}
           <AnimatePresence>
             {!inB && (
               <motion.div
                 className="absolute"
-                style={{ left: 178, top: G - 40, width: 126, height: 44 }}
+                style={{ left: pileLeft, top: G - 40 * f, width: 126 * f, height: 44 * f }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: p.reduced ? 0.1 : 0.25 } }}
@@ -292,15 +375,22 @@ export default function S10(p: StepProps) {
                 {HEAP.slice(0, pile).map((h, i) => (
                   <div
                     key={`stone-${i}`}
-                    {...direct(`stone-${i}`, { position: 'absolute', left: h.x, top: h.y, width: 50, height: 44 })}
+                    {...direct(`stone-${i}`, { position: 'absolute', left: h.x * f, top: h.y * f, width: 50 * f, height: 44 * f })}
                     aria-label={`A stone. Put it on the cairn. ${n} on the cairn.`}
                     data-testid={`stone-${i}`}
                   >
-                    <div className="pointer-events-none absolute" style={{ left: -3, top: -15, width: 56, height: 56 }}>
+                    <div className="pointer-events-none absolute" style={{ left: -3 * f, top: -15 * f, width: 56 * f, height: 56 * f }}>
                       <Art id="cairn-stone" width="100%" height="100%" />
                     </div>
                   </div>
                 ))}
+                {/* desk: the pile says what it is (the how-line names it) */}
+                {desk && (
+                  <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap font-[family-name:var(--font-text)] italic leading-[1.3] text-ink-2"
+                    style={{ top: 44 * f + 12, fontSize: Math.round(Math.max(15, Math.min(20, 9 * f))) }} aria-hidden data-pile-label>
+                    {pile ? 'The pile of stones' : 'Pile empty'}
+                  </span>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -315,23 +405,23 @@ export default function S10(p: StepProps) {
             {inB && (
               <motion.div
                 className="absolute z-20"
-                style={{ left: tagRight - TW, top: tagTop, width: TW, height: TH, transformOrigin: `${TW - 7 * tk}px 0px` }}
+                style={{ left: tagBox.left, top: tagBox.top, width: tagBox.w, height: tagBox.h, transformOrigin: tagBox.origin }}
                 initial={p.reduced ? { opacity: 0 } : { rotate: 38, opacity: 0 }}
                 animate={{ rotate: 0, opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={p.reduced ? { duration: 0.12 } : { type: 'spring', stiffness: 170, damping: 7, mass: 0.9, delay: 0.25 }}
                 data-testid="tag"
               >
-                <div className="pointer-events-none" style={{ transform: 'scaleX(-1)', width: TW, height: TH }}>
-                  <Art id="luggage-tag" width={TW} height={TH} data={{ strap: false }} />
+                <div className="pointer-events-none" style={{ transform: 'scaleX(-1)', width: tagBox.w, height: tagBox.h }}>
+                  <Art id="luggage-tag" width={tagBox.w} height={tagBox.h} data={{ strap: false }} />
                 </div>
                 {/* flipped: the text area runs from x1 on the left to x0 on
                     the right. Faint ruled lines say 'write here'; on focus
                     they darken a little. */}
                 <div aria-hidden className="pointer-events-none absolute" style={tagText}>
-                  {[1, 2, 3].map((i) => (
+                  {Array.from({ length: tagLines }, (_, i) => i + 1).map((i) => (
                     <span key={i} className="absolute inset-x-0 border-b border-dashed transition-colors duration-150"
-                      style={{ top: i * 16.5 - 1, borderColor: focused ? '#7A3E12' : 'rgba(140,133,122,0.55)' }} />
+                      style={{ top: i * tagLine - 1, borderColor: focused ? '#7A3E12' : 'rgba(140,133,122,0.55)' }} />
                   ))}
                 </div>
                 <label htmlFor="s10-tag" className="sr-only">One change before they set off</label>
@@ -339,20 +429,28 @@ export default function S10(p: StepProps) {
                   id="s10-tag"
                   value={text}
                   onChange={(e) => onText(e.target.value.replace(/\n/g, ' '))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLTextAreaElement).blur() } }}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return
+                    e.preventDefault()
+                    // desk: Enter ties it on (a blank tag just blurs; Enter then presses 'Leave it blank')
+                    if (desk && text.trim() && !ctx.busy) { finishB(); return }
+                    ;(e.target as HTMLTextAreaElement).blur()
+                  }}
+                  ref={tagRef}
                   onFocus={() => setFocused(true)}
                   onBlur={() => setFocused(false)}
                   maxLength={MAX_TEXT}
                   rows={3}
                   enterKeyHint="done"
                   autoCapitalize="sentences"
-                  placeholder="Write it on their tag"
+                  placeholder="Write it here"
                   className="absolute resize-none overflow-hidden border-0 bg-transparent p-0 font-[family-name:var(--font-text)] italic text-ink placeholder:text-muted"
-                  style={{ ...tagText, fontSize: 16, lineHeight: '16.5px', outline: 'none', caretColor: '#7A3E12' }}
+                  style={{ ...tagText, fontSize: tagFont, lineHeight: `${tagLine}px`, outline: 'none', caretColor: '#7A3E12' }}
                   data-testid="tag-input"
                 />
-                <p className="pointer-events-none absolute font-[family-name:var(--font-ui)] text-[11px] leading-[13px] text-muted" aria-hidden
-                  style={{ left: tagText.left, top: TH - 2 }}>
+                {/* the count (desk: in the panel's status instead) */}
+                <p className={`pointer-events-none absolute font-[family-name:var(--font-ui)] text-[11px] leading-[13px] text-muted ${desk ? 'hidden' : ''}`} aria-hidden
+                  style={desk ? { left: tagText.left, top: tagBox.h + 6 } : { left: tagText.left, top: TH - 2 }}>
                   {text.length}/{MAX_TEXT}
                 </p>
               </motion.div>
