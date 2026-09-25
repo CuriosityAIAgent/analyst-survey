@@ -32,7 +32,17 @@
      move together. On tall phones the world is lifted before the climb so
      the summit sits near 45% of the height, not under empty sky.
    - Until the first touch, a pulse ring at the rookie's boots and chevrons
-     up the path say 'drag me'. */
+     up the path say 'drag me'.
+
+   Desk (design 5, S11): the world is drawn larger than the stage (a
+   'virtual frame' 660*scD tall, scD chosen so the plateau sits just under
+   the caption), so the last pitch runs about 650px at 1440x790 and the
+   climber is about 80px tall. End or Enter walks them up (as the slider's
+   own End key). At the top the camera moves in 1.6x around the table, the
+   closing line appears in the stage in Source Serif 4 italic 32 (no
+   Bodoni), and 'Their kit' goes into the panel (Frame panelSlot) with a
+   small 3D image per line, then "Thank you. You can close this tab." Same
+   summit.dragMs and t.complete. */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Frame from '../Frame'
@@ -40,23 +50,28 @@ import Figure from '../Figure'
 import RouteSlider from '../RouteSlider'
 import { Art } from '../art'
 import { SCENE_ANCHORS, sceneToBox } from '../art/scenes'
-import { copy, items, routePrecision } from '../content'
+import { ask, copy, items, routePrecision } from '../content'
+import { useLayoutInfo } from '../layout'
+import { useHotkeys } from '../useHotkeys'
 import type { BrickId, GearId, PitchId, StepProps } from '../types'
 
 const LINE = 'They came to meet you, not the map.'
 /** The camera's zoom at the top, and how long it takes to move in. */
 const ZOOM = 2.15
 const CAMERA_MS = 600
+/** Desk: the stage is bigger than a phone, so the camera moves in less. */
+const DESK_ZOOM = 1.6
 /** Roughly how tall the kit card is at 390 wide (it rises after the camera). */
 const CARD_H = 272
 const INK = '#0D0C0B', NAVY = '#14233B', RULE = '#8C857A', PAPER = '#F8F7F4'
 
 const GEAR = items('S02') as { id: GearId; label: string; art: string }[]
-const BRICKS = items('S05') as { id: BrickId; label: string; rung: number }[]
-const PITCHES = items('S06') as { id: PitchId; label: string }[]
+const BRICKS = items('S05') as { id: BrickId; label: string; rung: number; art: string }[]
+const PITCHES = items('S06') as { id: PitchId; label: string; art: string }[]
 const gear = (id: string) => GEAR.find((g) => g.id === id)
 
 const A = SCENE_ANCHORS['scene-summit']
+const HOW = ask('S11').how
 const ROUTE = A.route.slice(1) // the first point is off the left edge
 
 /** Smooth path through points (Catmull-Rom as cubic Beziers). */
@@ -108,7 +123,14 @@ export default function S11(p: StepProps) {
   const timers = useRef<number[]>([])
   const raf = useRef<number | null>(null)
   const stageRef = useRef<HTMLDivElement | null>(null)
-  const box = useBox(stageRef)
+  const box0 = useBox(stageRef)
+  /* desk: a virtual frame, taller than the stage, so the scene draws larger
+     (scD px per scene unit); wy lifts it so its foot stays at the stage foot */
+  const L = useLayoutInfo()
+  const desk = L.desk
+  const scD = desk && box0 ? Math.max(box0.fh / 660, Math.min(box0.fw / 400, (box0.fh - 96) / 440)) : 0
+  const box = box0 && desk ? { ...box0, fh: 660 * scD } : box0
+  const wy = box0 && desk ? box0.fh - 660 * scD : 0
 
   useEffect(() => () => {
     timers.current.forEach(clearTimeout)
@@ -128,7 +150,7 @@ export default function S11(p: StepProps) {
   const S = (x: number, y: number) => {
     if (!box) return { x, y, s: 1 }
     const q = sceneToBox(x, y, box.fw, box.fh)
-    return { x: q.x - box.left, y: q.y - box.top, s: q.scale }
+    return { x: q.x - box.left, y: q.y - box.top + wy, s: q.scale }
   }
   const sc = box ? sceneToBox(0, 0, box.fw, box.fh).scale : 1
   const routePts = useMemo(() => ROUTE.map(([x, y]) => S(x, y)), [box]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -140,7 +162,8 @@ export default function S11(p: StepProps) {
   const towered = day1.filter((b) => b.id !== 'map')
   const clientAt = S(A.chairs[1].x, A.chairs[1].y)
   const meetX = S(A.meet.x, A.ground).x
-  const figSize = 58 * sc
+  // desk: never below 72px, so the climber reads on a stage 1000px wide
+  const figSize = desk ? Math.max(58 * sc, 72) : 58 * sc
   const U = figSize / 26 // px per figure unit
 
   /* ---- arrival and the finale */
@@ -190,6 +213,15 @@ export default function S11(p: StepProps) {
   /* ---- the camera (world layer transform, origin top-left) */
   const camera = (() => {
     if (!box) return { x: 0, y: 0, scale: 1 }
+    if (desk && box0) {
+      // desk: no lift; at the top, 1.6x around the table, mid-stage (the kit
+      // card goes to the panel, not over the stage)
+      if (climbing) return { x: 0, y: 0, scale: 1, opacity: 1 }
+      const fd = sceneToBox(318, A.ground, box.fw, box.fh)
+      const tgt = { x: box0.fw * (L.compact ? 0.7 : 0.5), y: box0.fh * 0.56 }
+      const mv = { x: tgt.x - DESK_ZOOM * fd.x, y: tgt.y - wy - DESK_ZOOM * fd.y, scale: DESK_ZOOM }
+      return p.reduced ? { ...mv, opacity: [1, 0, 1] } : { ...mv, opacity: 1 }
+    }
     const { fw, fh } = box
     // before the top: on tall phones, lift the world so the summit sits
     // near 45% of the height (never lower it on short ones)
@@ -307,6 +339,8 @@ export default function S11(p: StepProps) {
     const walking = phase === 'walk'
     return (
       <g data-rookie={phase}>
+        {/* desk: the whole (larger) figure is the grab area, not just the boots */}
+        {desk && climbing && <rect x={-figSize * 0.45} y={-figSize - 4} width={figSize * 0.9} height={figSize + 12} fill="transparent" />}
         <Figure
           as="g"
           variant="rookie"
@@ -337,6 +371,34 @@ export default function S11(p: StepProps) {
   const c = copy('S11')
   const showLine = at(phase, 'line')
 
+  /* desk: End or Enter walks them up (the slider's own End key path) */
+  useHotkeys({
+    End: () => { if (!climbing) return false; onProgress(1, { via: 'key', done: true }) },
+    Enter: () => { if (!climbing) return false; onProgress(1, { via: 'key', done: true }) },
+  }, { enabled: desk && climbing && !p.covered })
+
+  /* desk: 'Their kit' in the panel once the finale is done (deskCompact: the
+     panel is too short, so it sits at the stage's lower left instead) */
+  const kitCard = desk && phase === 'card' ? (
+    <motion.div
+      className="rounded-[3px] border border-rule-soft px-4 pb-3 pt-3"
+      style={{ background: '#FFFFFF' }}
+      initial={p.reduced || finishedBefore ? { opacity: 0 } : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: p.reduced ? 0.15 : 0.5, ease: [0.16, 1, 0.3, 1] }}
+      data-testid="kit-card"
+    >
+      <p className="font-[family-name:var(--font-ui)] text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">Their kit</p>
+      <ul className="mt-2 flex flex-col gap-[10px]">
+        <KitLine k="In hand" arts={blue ? [blue.art] : []} v={blue ? blue.label : 'Nothing'} />
+        <KitLine k="Packed" arts={packed.map((g) => g.art)} v={packed.length ? packed.map((g) => g.label).join(' · ') : 'Nothing'} />
+        <KitLine k="Day-one kit" arts={day1.map((b) => b.art)} v={day1.length ? day1.map((b) => b.label).join(' · ') : 'None on day one'} />
+        <KitLine k="On their own feet" arts={own.map((x) => x.art)} v={own.length ? own.map((x) => x.label).join(' · ') : 'None'} />
+      </ul>
+      <p className="mt-3 font-[family-name:var(--font-text)] text-[18px] font-semibold leading-[24px] text-ink">Thank you. You can close this tab.</p>
+    </motion.div>
+  ) : undefined
+
   return (
     <Frame
       id="S11"
@@ -344,7 +406,14 @@ export default function S11(p: StepProps) {
       onContinue={() => {}}
       footer={null}
       scene={null}
-      prompt={
+      panelSlot={L.compact ? undefined : kitCard}
+      captionAlign="right"
+      // desk: the prompt caption gives way to the closing line (one caption at a time)
+      prompt={desk ? (
+        <motion.span className="block" initial={false} animate={{ opacity: showLine ? 0 : 1 }} transition={{ duration: p.reduced ? 0.12 : 0.5 }}>
+          {c.prompt}
+        </motion.span>
+      ) : 
         <AnimatePresence mode="wait" initial={false}>
           <motion.span key={showLine ? 'line' : 'prompt'} className="block"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -358,12 +427,34 @@ export default function S11(p: StepProps) {
           {c.helper}
         </motion.span>
       }
+      // the how line goes once they have arrived: nothing is left to drag
+      // (desk: the panel keeps the question and the kit card; phone: it fades)
+      how={desk ? (climbing ? undefined : null) : (
+        <motion.span className="block" animate={{ opacity: climbing ? 1 : 0 }} transition={{ duration: 0.3 }}>
+          {HOW}
+        </motion.span>
+      )}
     >
       <div ref={stageRef} className="absolute inset-0" data-s11={phase}>
+        {L.compact && kitCard && <div className="absolute bottom-4 left-6 z-10 w-[380px]">{kitCard}</div>}
+        {/* desk: the closing line, large, in the stage (Source Serif 4 italic; no Bodoni) */}
+        <AnimatePresence>
+          {desk && showLine && (
+            <motion.p
+              className="halo-text pointer-events-none absolute inset-x-8 top-[4%] z-10 text-center font-[family-name:var(--font-text)] italic text-ink"
+              style={{ fontSize: L.compact ? 28 : 32, lineHeight: 1.25 }}
+              initial={{ opacity: 0, y: p.reduced ? 0 : 6 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: p.reduced ? 0.12 : 0.6 }}
+              data-line="true"
+            >
+              {LINE}
+            </motion.p>
+          )}
+        </AnimatePresence>
         {box && (
           <motion.div
             className="absolute"
-            style={{ left: -box.left, top: -box.top, width: box.fw, height: box.fh, transformOrigin: '0 0' }}
+            style={{ left: -box.left, top: -box.top + wy, width: box.fw, height: box.fh, transformOrigin: '0 0' }}
             initial={false}
             animate={camera}
             transition={p.reduced
@@ -376,7 +467,7 @@ export default function S11(p: StepProps) {
             <div className="pointer-events-none absolute inset-0" aria-hidden>
               <Art id="scene-summit" width="100%" height="100%" />
             </div>
-            <div className="absolute" style={{ left: box.left, top: box.top, width: box.w, height: box.h }}>
+            <div className="absolute" style={{ left: box.left, top: box.top - wy, width: box.w, height: box.h }}>
               <RouteSlider
                 d={d}
                 viewBox={[box.w, box.h]}
@@ -419,7 +510,7 @@ export default function S11(p: StepProps) {
 
         {/* their kit, and thank you */}
         <AnimatePresence>
-          {phase === 'card' && (
+          {phase === 'card' && !desk && (
             <motion.div
               className="absolute inset-x-4 bottom-4 px-5 pb-4 pt-4"
               style={{ background: PAPER, border: `1px solid ${RULE}`, borderRadius: 3, boxShadow: '0 1px 0 #DDD9D2, 0 12px 28px rgba(13,12,11,0.12)' }}
@@ -441,6 +532,22 @@ export default function S11(p: StepProps) {
         </AnimatePresence>
       </div>
     </Frame>
+  )
+}
+
+/** Desk kit card line: one small 3D image (the first item), then the label
+    and the names. */
+function KitLine({ k, v, arts }: { k: string; v: string; arts: string[] }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span className="flex h-[36px] w-[40px] shrink-0 items-center justify-center">
+        {arts[0] ? <Art id={arts[0]} size={36} /> : <span className="h-[1px] w-[16px] bg-rule-soft" aria-hidden />}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-[family-name:var(--font-ui)] text-[11px] font-semibold uppercase leading-[14px] tracking-[0.12em] text-muted">{k}</span>
+        <span className="block font-[family-name:var(--font-text)] text-[14px] leading-[18px] text-ink">{v}</span>
+      </span>
+    </li>
   )
 }
 

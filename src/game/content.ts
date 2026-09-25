@@ -2,7 +2,7 @@
    items and zones comes from here, so no string is retyped in a component. */
 import specJson from './spec.json'
 import type {
-  AnswerKey, Answers, BeatId, BeatSpec, CampName, ItemSpec, ScreenId, SheetId, Spec,
+  AnswerKey, AnswerMap, Answers, AskSpec, BeatId, BeatSpec, CampName, ItemSpec, ScreenId, SheetId, Spec,
   StepId, StepSpec, ZoneSpec,
 } from './types'
 
@@ -44,6 +44,66 @@ export function copy(id: StepId, beat: BeatId = 'A', variant?: 'A' | 'B'): { pro
   if (b) return { prompt: b.prompt, helper: b.helper }
   if (variant && s.promptVariants) return { prompt: s.promptVariants[variant], helper: s.helper }
   return { prompt: s.prompt, helper: s.helper }
+}
+
+/* ---------------------------------------------------------------- the plain ask
+
+   Design section 4: one plain-English copy source for both channels. */
+
+/** frame.plainAsk: the phone shows ask.question and ask.how as well. */
+export const PLAIN_ASK: boolean = SPEC.frame.plainAsk === true
+
+/** The filled ask block: question and how. `question` is always set: F5 (no
+    ask.question) gets its A/B wording verbatim, and a step without an ask
+    block falls back to its prompt and helper. {stop} and {leadTrait} are
+    filled like the prompt (pass askVars(answers)). */
+export type Ask = Required<Pick<AskSpec, 'kicker' | 'question' | 'how'>> &
+  Pick<AskSpec, 'keys' | 'why' | 'list' | 'kickerAlone'> & {
+    /** The camp name ('Base camp'), or '' for kickerAlone. */
+    camp: string
+    /** The spec prompt, filled: the world line (the stage caption on desk). */
+    caption: string
+    /** An about-you (self) question: the bronze ABOUT YOU pill. */
+    self: boolean
+    followup: boolean
+  }
+
+export function ask(id: StepId, beat: BeatId = 'A', variant?: 'A' | 'B', vars: { stop?: unknown; leadTrait?: string } = {}): Ask {
+  const s = step(id)
+  const b = beatSpec(id, beat)
+  const c = copy(id, beat, variant)
+  const a: AskSpec | undefined = b?.ask ?? s.ask
+  const question = id === 'F5' || !a?.question ? c.prompt : a.question
+  return {
+    kicker: a?.kicker ?? s.title,
+    kickerAlone: a?.kickerAlone,
+    question: fill(question, vars),
+    how: fill(a?.how ?? c.helper, vars),
+    keys: a?.keys,
+    why: a?.why,
+    list: a?.list,
+    camp: a?.kickerAlone ? '' : s.camp,
+    caption: fill(c.prompt, vars),
+    self: !!(b?.self ?? s.self),
+    followup: s.kind === 'followup',
+  }
+}
+
+/** The {stop} and {leadTrait} a question may name, from the answers so far. */
+export function askVars(a: AnswerMap): { stop?: unknown; leadTrait?: string } {
+  const lead = a['traits.top3']?.[0]
+  return {
+    stop: a['pace.months'],
+    leadTrait: lead ? label('S09', lead) : 'The lead trait',
+  }
+}
+
+/** A plain label (spec `plain`) for an item or zone, or undefined. */
+export function plainOf(id: StepId, itemId: string): string | undefined {
+  const s = step(id)
+  const all = [...s.items, ...s.zones, ...(s.beats ?? []).flatMap((b) => [...(b.items ?? []), ...(b.zones ?? [])])]
+  const p = all.find((x) => x.id === itemId)?.plain
+  return typeof p === 'string' ? p : undefined
 }
 
 /** Items for a screen (or a beat's own items where the beat defines them). */

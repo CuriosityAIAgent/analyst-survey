@@ -35,7 +35,7 @@
    A control inside an item (the S05 'i' peek) must stopPropagation on
    pointerdown and keydown so it does not start a drag. */
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CSSProperties, KeyboardEvent as RKeyboardEvent, MouseEvent as RMouseEvent, PointerEvent as RPointerEvent, ReactElement } from 'react'
+import type { CSSProperties, FocusEvent, KeyboardEvent as RKeyboardEvent, MouseEvent as RMouseEvent, PointerEvent as RPointerEvent, ReactElement } from 'react'
 
 export type DropVia = 'pointer' | 'tap' | 'key'
 
@@ -66,6 +66,15 @@ export type DragOptions = {
   labelOf?: (id: string) => string
   /** Stop every input path (e.g. while a sheet covers the screen). */
   disabled?: boolean
+  /** Desk number keys (design 3.7): key -> zone, e.g. { '1': 'rucksack' }.
+      A key sends the lifted, focused or hovered item to that zone through the
+      same path as a keyboard Enter (capacity, swaps, refusals, via 'key').
+      'Delete' / 'Backspace' entries are take-back keys: ignored (not refused)
+      when the item can't go there, e.g. Delete on a tile still in the tray.
+      Listens on document (so window-level useHotkeys sees defaultPrevented),
+      and stays quiet in text fields, with Ctrl/Meta/Alt, mid pointer drag,
+      and while `disabled`. */
+  hotkeys?: Record<string, string>
 }
 
 export type ItemExtra = {
@@ -102,6 +111,18 @@ export type DragApi = {
   cancel: () => void
   /** Shake a zone 2px (e.g. when a full zone's body is hit). */
   shake: (zone: string) => void
+  /** Drop the lifted (or else the focused or hovered) item on `zone` through
+      the keyboard Enter path: onLift(item, 'key') if it was not lifted, then
+      canDrop / onDrop / onRefuse exactly as Space-then-Enter would, logged
+      via 'key'. Returns false when there was no item to drop. */
+  drop: (zone: string) => boolean
+  /** The item under a mouse pointer (hover-capable pointers only), or null. */
+  hovered: string | null
+  /** The item with keyboard focus, or null. */
+  focused: string | null
+  /** What the desk panel's 'Holding: …' line names: the lifted item, else
+      the most recently hovered or focused one. */
+  active: string | null
 }
 
 export const LONG_PRESS_MS = 450
@@ -135,6 +156,14 @@ export function useDrag(opts: DragOptions): DragApi {
   const [dragging, setDragging] = useState(false)
   const [over, setOver] = useState<string | null>(null)
   const [announce, setAnnounce] = useState('')
+  const [hovered, setHovered] = useState<string | null>(null)
+  const [focused, setFocused] = useState<string | null>(null)
+  /** Which of hover / focus happened last (the one 'active' reports). */
+  const [recent, setRecent] = useState<'hover' | 'focus'>('hover')
+  const hoveredRef = useRef<string | null>(null)
+  hoveredRef.current = hovered
+  const recentRef = useRef(recent)
+  recentRef.current = recent
 
   const liftedRef = useRef<string | null>(null)
   const overRef = useRef<string | null>(null)
@@ -203,7 +232,7 @@ export function useDrag(opts: DragOptions): DragApi {
 
   const shake = useCallback((zone: string) => shakeEl(zoneEls.current.get(zone)), [])
 
-  const drop = (item: string, zone: string | null, via: DropVia) => {
+  const drop = (item: string, zone: string | null, via: DropVia, noRefocus = false) => {
     const el = itemEls.current.get(item)
     let ok: boolean | void = false
     if (zone !== null && !valid(item, zone)) { ok = false; o.current.onRefuse?.(item, zone, via) }
@@ -215,7 +244,7 @@ export function useDrag(opts: DragOptions): DragApi {
     } else {
       clearVars(el, false)
       say(zone ? `${name(item)} placed: ${name(zone)}.` : `${name(item)} put back.`)
-      if (via === 'key') refocus.current = item
+      if (via === 'key' && !noRefocus) refocus.current = item
     }
     end()
   }
@@ -378,6 +407,65 @@ export function useDrag(opts: DragOptions): DragApi {
     }
   }
 
+  /* ------------------------------------------------ hotkeys and drop(zone) */
+
+  /** The item a key acts on: lifted, else focused (in this hook), else hovered. */
+  const keyTarget = (): { id: string; from: 'lifted' | 'focus' | 'hover' } | null => {
+    if (liftedRef.current) return { id: liftedRef.current, from: 'lifted' }
+    // keyboard focus counts only when visible (a mouse press also focuses
+    // an item, and must not steal the keys from what the mouse is over)
+    const a = typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null
+    const it = a?.closest?.('[data-item]') as HTMLElement | null
+    const fid = it && itemEls.current.get(it.dataset.item!) === it && (a === it ? it.matches(':focus-visible') : true) ? it.dataset.item! : null
+    const h = hoveredRef.current
+    const hel = h ? itemEls.current.get(h) : null
+    const hid = h && hel?.isConnected && hel.matches(':hover') ? h : null
+    if (fid && hid) return recentRef.current === 'hover' ? { id: hid, from: 'hover' } : { id: fid, from: 'focus' }
+    if (fid) return { id: fid, from: 'focus' }
+    return hid ? { id: hid, from: 'hover' } : null
+  }
+
+  const dropOn = (zone: string, quietIfInvalid = false): boolean => {
+    if (o.current.disabled) return false
+    if (press.current?.moved) return false // mid pointer drag: the pointer owns it
+    const t = keyTarget()
+    if (!t) return false
+    const id = t.id
+    if (itemEls.current.get(id)?.getAttribute('aria-disabled') === 'true') return false
+    if (quietIfInvalid && !valid(id, zone)) return false
+    if (liftedRef.current !== id) {
+      if (liftedRef.current) clearVars(itemEls.current.get(liftedRef.current))
+      liftedRef.current = id
+      o.current.onLift?.(id, 'key')
+    }
+    // a hovered item keeps the mouse's context: focus does not jump to it
+    drop(id, zone, 'key', t.from === 'hover')
+    return true
+  }
+  const dropRef = useRef(dropOn)
+  dropRef.current = dropOn
+  const dropApi = useCallback((zone: string) => dropRef.current(zone), [])
+
+  const hasKeys = !!opts.hotkeys && Object.keys(opts.hotkeys).length > 0
+  useEffect(() => {
+    if (!hasKeys || typeof document === 'undefined') return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.isComposing || e.ctrlKey || e.metaKey || e.altKey) return
+      const map = o.current.hotkeys
+      if (!map) return
+      const zone = map[e.key] ?? (e.key.length === 1 ? map[e.key.toLowerCase()] : undefined)
+      if (!zone) return
+      const a = document.activeElement as HTMLElement | null
+      if (a && (a.isContentEditable || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' ||
+        (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'submit'].includes((a as HTMLInputElement).type)))) return
+      if (document.querySelector('[aria-modal="true"]')) return
+      const takeBack = e.key === 'Delete' || e.key === 'Backspace'
+      if (dropRef.current(zone, takeBack)) e.preventDefault()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [hasKeys])
+
   /* ------------------------------------------------ props */
   const itemRef = (id: string) => {
     let fn = itemRefFns.current.get(id)
@@ -440,6 +528,14 @@ export function useDrag(opts: DragOptions): DragApi {
       onKeyDown: onItemKey(id, extra),
       onContextMenu: (e: RMouseEvent) => e.preventDefault(),
       onDragStart: (e: RMouseEvent) => e.preventDefault(),
+      // hover and focus feed `active` (the desk 'Holding' line) and the hotkeys
+      onPointerEnter: (e: RPointerEvent) => { if (e.pointerType === 'mouse') { setHovered(id); setRecent('hover') } },
+      onPointerLeave: (e: RPointerEvent) => { if (e.pointerType === 'mouse') setHovered((h) => (h === id ? null : h)) },
+      onFocus: (e: FocusEvent<HTMLElement>) => {
+        if (e.target !== e.currentTarget || !safeMatches(e.currentTarget, ':focus-visible')) return
+        setFocused(id); setRecent('focus')
+      },
+      onBlur: (e: FocusEvent<HTMLElement>) => { if (e.target === e.currentTarget) setFocused((f) => (f === id ? null : f)) },
     }
   }
 
@@ -477,7 +573,15 @@ export function useDrag(opts: DragOptions): DragApi {
     liveRegion,
     cancel,
     shake,
+    drop: dropApi,
+    hovered,
+    focused,
+    active: lifted ?? (recent === 'focus' ? focused ?? hovered : hovered ?? focused),
   }
+}
+
+function safeMatches(el: Element, sel: string) {
+  try { return el.matches(sel) } catch { return true }
 }
 
 /** A visually hidden polite live region. */

@@ -24,75 +24,35 @@
    Stores kit.lane, kit.cut, kit.unsupported, kit.peeks, kit.events live on
    every move, so Back never loses the board; kit.order logs the tray order.
    Continue reads "Start walking"; the store then opens F3a/F3b/F3c. */
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import type { CSSProperties, KeyboardEvent as RKeyboardEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Frame from '../Frame'
-import Figure from '../Figure'
 import { Art } from '../art'
-import { BRICK, CRATE, PLATE, routePoint } from '../art/nav'
-import { items, zones, routePrecision } from '../content'
-import { buzz, campPaper, sfx, useSnap } from '../feel'
-import { useDrag, type DropVia } from '../useDrag'
-import { useOrder } from '../store'
-import { useGameCtx } from '../context'
+import { BRICK, CRATE, PLATE } from '../art/nav'
+import { campPaper } from '../feel'
+import { useLayout } from '../layout'
 import GroundBand from '../GroundBand'
-import type { BrickId, KitEvent, Lane, StepProps } from '../types'
+import { PeekButton, RouteStrip, tilt } from './boards/s05Bits'
+import type { StepProps } from '../types'
+import {
+  BRICKS, BY_ID, BRICK_IDS, LANE_LABEL, occupied, useS05Plate, type Brick, type S05Plate,
+} from './boards/useS05Plate'
+import S05Desk from './boards/S05Desk'
 
-/* ------------------------------------------------------------------ content */
+// the pure rules live with the hook; re-exported for board.test.ts and S11
+export { available, cutOf, unsupportedOf } from './boards/useS05Plate'
 
-type Brick = { id: BrickId; label: string; art: string; sub: string; peek: string; rung: number }
-const BRICKS: Brick[] = items('S05').map((it) => ({
-  id: it.id as BrickId,
-  label: it.label,
-  art: String(it.art),
-  sub: String(it.sub ?? ''),
-  peek: String(it.peek ?? ''),
-  rung: Number(it.rung),
-}))
-const BY_ID = new Map(BRICKS.map((b) => [b.id, b]))
-const BRICK_IDS = BRICKS.map((b) => b.id)
-const ZONE = new Map(zones('S05').map((z) => [z.id, z]))
 /** The camp's warmed paper: label backings sit on it, so the scene's lines
     never run through text. */
 const CAMP2_PAPER = campPaper('S05')
-const LANE_LABEL = (id: string) => ZONE.get(id)?.label ?? (id === 'tray' ? 'the tray' : id)
-
-type LaneMap = Partial<Record<BrickId, Lane>>
-
-/* ------------------------------------------------------------------ pure rules
-   Exported so tests (and S11, which draws the route "as sharp as those bricks
-   allow") can share them. */
-
-/** Rungs available in a lane: its own bricks plus every earlier lane's. */
-export function available(lanes: LaneMap, lane: 'day1' | 'proven'): Set<number> {
-  const s = new Set<number>()
-  for (const b of BRICKS) {
-    const l = lanes[b.id]
-    if (l === 'day1' || (lane === 'proven' && l === 'proven')) s.add(b.rung)
-  }
-  return s
-}
-/** kit.cut: how many contiguous rungs from the bottom each lane has. */
-export function cutOf(lanes: LaneMap): { day1: number; proven: number } {
-  const run = (s: Set<number>) => { let k = 0; while (s.has(k + 1)) k++; return k }
-  return { day1: run(available(lanes, 'day1')), proven: run(available(lanes, 'proven')) }
-}
-/** kit.unsupported: bricks in a lane with a missing rung somewhere below. */
-export function unsupportedOf(lanes: LaneMap): BrickId[] {
-  const cut = cutOf(lanes)
-  return BRICKS.filter((b) => {
-    const l = lanes[b.id]
-    return (l === 'day1' || l === 'proven') && b.rung > cut[l] + 1
-  }).map((b) => b.id)
-}
 
 /* ------------------------------------------------------------------ geometry
    From the art (src/game/art/nav.tsx): the base plate is 270x224, a 20px
    lane-head strip then six 34px rung rows; lanes day1 x4 w128 and proven
    x138 w128; a brick on rung r sits at rowTop(r) + 2. The crate is 72x224.
    Everything is drawn at one scale k, so bricks sit on the art's studs. */
-const PLATE_W = PLATE.w, PLATE_H = PLATE.h, HEAD = PLATE.head, ROW = PLATE.row, CRATE_W = CRATE.w, GAP = 10
+const PLATE_W = PLATE.w, PLATE_H = PLATE.h, ROW = PLATE.row, CRATE_W = CRATE.w, GAP = 10
 const BRICK_W = BRICK.w, BRICK_H = BRICK.h
 /** The drop zones split the plate down its seam. */
 const ZONE_X = { day1: 0, proven: PLATE_W / 2 } as const
@@ -102,16 +62,14 @@ const rowTop = (rung: number) => PLATE.rowTop(rung)
 /* ------------------------------------------------------------------ screen */
 
 export default function S05(p: StepProps) {
-  const ctx = useGameCtx()
-  const order = useOrder('kit.order', BRICK_IDS)
-  const lanes: LaneMap = useMemo(() => p.answers['kit.lane'] ?? {}, [p.answers])
-  const unsupported = useMemo(() => unsupportedOf(lanes), [lanes])
-  const precision = routePrecision(lanes)
-  const placedAll = BRICK_IDS.every((id) => !!lanes[id])
+  const layout = useLayout()
+  const K = useS05Plate(p, { desk: layout !== 'phone' })
+  if (layout !== 'phone') return <S05Desk p={p} K={K} />
+  return <S05Phone p={p} K={K} />
+}
 
-  const t0 = useRef(typeof performance !== 'undefined' ? performance.now() : 0)
-  const stageRef = useRef<HTMLDivElement | null>(null)
-  const capture = useSnap(stageRef, p.reduced)
+function S05Phone({ p, K }: { p: StepProps; K: S05Plate }) {
+  const { order, lanes, unsupported, precision, placedAll, stageRef, d, peek, setPeek, openPeek, caption, crateOrder } = K
 
   /* ---- fit: scale the plate to the stage (no scroll at any height) */
   const [box, setBox] = useState({ w: 390, h: 468 })
@@ -123,7 +81,7 @@ export default function S05(p: StepProps) {
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [stageRef])
   const STRIP = 60, TRAY_ROW = 66, TRAY_GAP = 2
   const trayH = TRAY_ROW * 2 + TRAY_GAP
   const k = Math.max(0.72, Math.min(
@@ -136,93 +94,6 @@ export default function S05(p: StepProps) {
   const fullW = plateW + GAP + CRATE_W * k
   const vgap = Math.max(6, Math.min(26, (box.h - STRIP - plateH - trayH) / 3))
 
-  /* ---- peek card */
-  const [peek, setPeek] = useState<BrickId | null>(null)
-  const openPeek = (id: BrickId, via: string) => {
-    setPeek(id)
-    p.set('kit.peeks', [...(p.answers['kit.peeks'] ?? []), id].slice(-100))
-    p.log('peek', { brick: id, via })
-  }
-  useEffect(() => {
-    if (!peek) return
-    const t = window.setTimeout(() => setPeek(null), 5200)
-    return () => clearTimeout(t)
-  }, [peek])
-
-  /* ---- wobble + the one-time caption */
-  const wobbleNext = useRef<BrickId[]>([])
-  const captionShown = useRef(false)
-  const [caption, setCaption] = useState<{ lane: 'day1' | 'proven'; row: number } | null>(null)
-  useEffect(() => {
-    if (!caption) return
-    const t = window.setTimeout(() => setCaption(null), 3200)
-    return () => clearTimeout(t)
-  }, [caption])
-  useLayoutEffect(() => {
-    if (!wobbleNext.current.length) return
-    const ids = wobbleNext.current
-    wobbleNext.current = []
-    if (p.reduced) return
-    for (const id of ids) {
-      const el = stageRef.current?.querySelector<HTMLElement>(`[data-item="${id}"] [data-wobble]`)
-      el?.animate?.(
-        [
-          { transform: 'rotate(-2deg)' }, { transform: 'rotate(3.5deg)' }, { transform: 'rotate(-4deg)' },
-          { transform: 'rotate(2.5deg)' }, { transform: 'rotate(-2deg)' },
-        ],
-        { duration: 620, delay: 170, easing: 'ease-in-out' },
-      )
-    }
-  })
-
-  /* ---- placing */
-  const occupied = (m: LaneMap, lane: 'day1' | 'proven', rung: number) => {
-    const b = BRICKS.find((x) => x.rung === rung)!
-    const l = m[b.id]
-    return l === 'day1' || (lane === 'proven' && l === 'proven')
-  }
-
-  const place = (id: BrickId, lane: Lane | null, via: DropVia) => {
-    const before = lanes[id] ?? null
-    capture(id)
-    if (before === lane) return
-    const next: LaneMap = { ...lanes }
-    if (lane) next[id] = lane
-    else delete next[id]
-    const uns = unsupportedOf(next)
-    const newly = uns.filter((x) => !unsupported.includes(x))
-    const ev: KitEvent = { t: Math.round(performance.now() - t0.current), brick: id, to: lane, via }
-    p.setMany({
-      'kit.lane': next,
-      'kit.cut': cutOf(next),
-      'kit.unsupported': uns,
-      'kit.events': [...(p.answers['kit.events'] ?? []), ev].slice(-500),
-    })
-    p.log('drop', { item: id, zone: lane ?? 'tray', from: before ?? 'tray', via, unsupported: uns.includes(id) })
-    if (lane) { buzz(); sfx('stud', ctx.sound, { pitch: lane === 'none' ? 0.6 : 1 }) }
-    wobbleNext.current = newly
-    // the caption, once: in the empty row under the first newly floating brick
-    if (!captionShown.current && newly.length) {
-      const b = BY_ID.get(newly.includes(id) ? id : newly[0])!
-      const l = next[b.id] as 'day1' | 'proven'
-      let r = b.rung - 1
-      while (r >= 1 && occupied(next, l, r)) r--
-      if (r >= 1) { captionShown.current = true; setCaption({ lane: l, row: r }) }
-    }
-  }
-
-  const d = useDrag({
-    disabled: p.covered,
-    zones: ['day1', 'proven', 'none', 'tray'],
-    labelOf: (id) => BY_ID.get(id as BrickId)?.label ?? LANE_LABEL(id),
-    onLongPress: (item) => openPeek(item as BrickId, 'longpress'),
-    onLift: () => setPeek(null),
-    onDrop: (item, zone, via) => {
-      if (zone === null) return false
-      place(item as BrickId, zone === 'tray' ? null : (zone as Lane), via)
-    },
-  })
-
   /* ---- one brick (tray, lane or crate) */
   const brick = (b: Brick, where: 'tray' | 'lane' | 'crate', style?: CSSProperties, tiltDeg = 0) => {
     const floating = where === 'lane' && unsupported.includes(b.id)
@@ -234,7 +105,7 @@ export default function S05(p: StepProps) {
       <div
         key={b.id}
         {...d.item(b.id, { onKeyDown, style })}
-        aria-label={`${b.label}, ${b.sub}${lanes[b.id] ? `. In ${LANE_LABEL(lanes[b.id]!)}` : ''}${floating ? '. Nothing under it yet' : ''}`}
+        aria-label={`${b.sub}, ${b.label}${lanes[b.id] ? `. In ${LANE_LABEL(lanes[b.id]!)}` : ''}${floating ? '. Nothing under it yet' : ''}`}
         data-testid={`brick-${b.id}`}
         data-where={where}
         data-floating={floating ? 'true' : undefined}
@@ -243,14 +114,14 @@ export default function S05(p: StepProps) {
           <div data-wobble style={{ transform: floating ? 'rotate(-2deg)' : tiltDeg ? `rotate(${tiltDeg}deg)` : undefined, transformOrigin: '50% 100%' }}>
             <div className="relative" style={{ width: bw * scale, height: bh * scale }}>
               <Art id={b.art} width={bw * scale} height={bh * scale} state={where === 'lane' ? 'label' : undefined} />
-              <PeekButton label={b.label} onOpen={(via) => openPeek(b.id, via)} inside={where === 'crate'} />
+              <PeekButton label={`${b.sub}, ${b.label}`} onOpen={(via) => openPeek(b.id, via)} inside={where === 'crate'} />
             </div>
           </div>
           {where === 'tray' && (
             <span className="mt-[3px] flex flex-col items-center whitespace-nowrap rounded-[2px] px-[4px] font-[family-name:var(--font-ui)] text-[12px] leading-[14px]"
               style={{ background: CAMP2_PAPER }}>
-              <span className="font-medium text-ink">{b.label}</span>
-              <span className="text-muted">{b.sub}</span>
+              <span className="font-medium text-ink">{b.sub}</span>
+              <span className="text-muted">{b.label}</span>
             </span>
           )}
         </div>
@@ -264,17 +135,8 @@ export default function S05(p: StepProps) {
     'data-[over=true]:bg-[rgba(20,35,59,0.07)] data-[over=true]:shadow-[inset_0_0_0_2px_#14233B]'
   const plaque = 'pointer-events-none absolute flex items-center justify-center border border-ink bg-rule-soft font-[family-name:var(--font-ui)] font-semibold tracking-[0.04em] text-ink'
 
-  const crate = BRICK_IDS.filter((id) => lanes[id] === 'none')
-  // the crate keeps the order bricks went in
-  const events = p.answers['kit.events'] ?? []
-  const crateOrder = [...crate].sort((a, b) => lastIndex(events, a) - lastIndex(events, b))
-
   return (
-    <Frame id="S05" valid={placedAll} continueLabel="Start walking" onContinue={() => {
-      // kit.peeks is a list: record the empty one when no card was opened
-      if (!p.answers['kit.peeks']) p.set('kit.peeks', [])
-      p.next()
-    }}>
+    <Frame id="S05" valid={placedAll} continueLabel="Start walking" onContinue={K.onContinue}>
       <div
         {...d.stageProps}
         ref={(el) => { d.stageProps.ref(el); stageRef.current = el }}
@@ -298,11 +160,11 @@ export default function S05(p: StepProps) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.16 }}
                 aria-live="polite"
-                aria-label={`${BY_ID.get(peek)!.label}. ${BY_ID.get(peek)!.peek} Tap to close.`}
+                aria-label={`${BY_ID.get(peek)!.sub}, ${BY_ID.get(peek)!.label}. ${BY_ID.get(peek)!.peek} Tap to close.`}
                 data-testid="peek"
               >
                 <span className="font-[family-name:var(--font-ui)] text-[12px] leading-[15px] tracking-[0.04em] text-navy">
-                  <b className="font-semibold">{BY_ID.get(peek)!.label}</b> · {BY_ID.get(peek)!.sub}
+                  <b className="font-semibold">{BY_ID.get(peek)!.sub}</b> · {BY_ID.get(peek)!.label}
                 </span>
                 <span className="mt-[2px] font-[family-name:var(--font-text)] text-[14px] leading-[18px] text-ink">
                   {BY_ID.get(peek)!.peek}
@@ -418,89 +280,5 @@ export default function S05(p: StepProps) {
         {d.liveRegion}
       </div>
     </Frame>
-  )
-}
-
-function lastIndex(events: KitEvent[], id: BrickId) {
-  for (let i = events.length - 1; i >= 0; i--) if (events[i].brick === id) return i
-  return -1
-}
-/** A small fixed tilt per brick in the crate (tossed in, not stacked). */
-function tilt(id: string, i: number) {
-  let h = 0
-  for (const c of id) h = (h * 31 + c.charCodeAt(0)) | 0
-  return ((Math.abs(h) % 7) - 3) + (i % 2 ? 1.5 : -1.5)
-}
-
-/* ------------------------------------------------------------------ the "i" corner */
-
-/** A 26px 'i' glyph with a 44px hit area, on the brick's right edge (not
-    its top corner, so it never overlaps the brick above's hit area). In the
-    crate, at the screen's edge, it sits just inside the brick. */
-function PeekButton({ label, onOpen, inside = false }: { label: string; onOpen: (via: string) => void; inside?: boolean }) {
-  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation()
-  return (
-    <button
-      type="button"
-      aria-label={`About ${label}`}
-      onPointerDown={stop}
-      onPointerUp={stop}
-      onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('key') } }}
-      onClick={(e) => { e.stopPropagation(); onOpen('tap') }}
-      className={`absolute top-1/2 z-10 flex h-[44px] w-[44px] -translate-y-1/2 items-center justify-center ${inside ? '-right-[8px]' : '-right-[26px]'}`}
-      data-peek-button
-    >
-      <span className="flex h-[17px] w-[17px] items-center justify-center rounded-full border border-ink bg-paper font-[family-name:var(--font-text)] text-[12px] italic leading-none text-ink">
-        i
-      </span>
-    </button>
-  )
-}
-
-/* ------------------------------------------------------------------ the route strip
-
-   <Art id="route-layers" value={precision}> (drawn in code by the art: pencil,
-   dotted, waypoints, weather and timings), set a little to the right so the
-   rookie can stand at its start. The rock underfoot follows the same path
-   (routePoint). The rookie and the bootprints behind them are the screen's
-   own and never move here: only steps draw that line. */
-const R = { dx: 30, dy: 3, s: 0.9 } // where the 360x60 route art sits in the strip
-const at = (t: number) => {
-  const q = routePoint(t)
-  return { x: R.dx + q.x * R.s, y: R.dy + q.y * R.s }
-}
-const START = at(0)
-/** A short rock ledge under the rookie; the camp scene carries the terrain. */
-const GROUND = `M 0 ${START.y + 5.5} L ${START.x + 6} ${START.y + 5.5} l 5 2.5`
-const INK = '#0D0C0B'
-const ROUTE_WORDS = [
-  'The route ahead is blank.',
-  'The route ahead: a pencil line.',
-  'The route ahead: dotted.',
-  'The route ahead: dotted, with waypoints.',
-  'The route ahead: waypoints, weather and timings.',
-]
-
-function RouteStrip({ precision, n }: { precision: number; n: number }) {
-  return (
-    <svg viewBox="0 0 360 60" width="100%" height={60} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 overflow-visible"
-      role="img" aria-label={ROUTE_WORDS[precision]} data-testid="route-strip" data-precision={precision}>
-      {/* the rock underfoot */}
-      <path d={GROUND} fill="none" stroke={INK} strokeWidth={1.2} strokeLinecap="round" />
-      {/* the route ahead, redrawn as Day-one bricks go on */}
-      <g transform={`translate(${R.dx} ${R.dy}) scale(${R.s})`} aria-hidden>
-        <g key={precision} className="motion-safe:animate-[route-in_280ms_ease-out]">
-          <Art id="route-layers" value={precision} data={{ n, halo: CAMP2_PAPER }} width={360} height={60} />
-        </g>
-      </g>
-      {/* bootprints behind: solid ink, drawn only by steps, unchanged here */}
-      <g fill={INK} data-bootprints aria-hidden>
-        {[2, 9, 16].map((x, i) => (
-          <ellipse key={x} cx={x} cy={START.y + (i % 2 ? 3.4 : 5.6)} rx={2} ry={1} />
-        ))}
-      </g>
-      <Figure as="g" x={START.x - 6} y={START.y + 5.5} size={40} pose="stand" />
-      <style>{'@keyframes route-in{from{opacity:.15}to{opacity:1}}'}</style>
-    </svg>
   )
 }

@@ -12,11 +12,23 @@
    leaves and on its ticket in the row above; after the last card the storm
    clears the same way whatever the calls were. Filters first: F4 can only
    rise after all four (the store evaluates it on Continue). A called card can
-   be tapped to call it again. */
-import { useRef } from 'react'
+   be tapped to call it again.
+
+   Desk (design 5, S07; a 936x640 DeskCanvas): the ticket row on top (four
+   tickets 200x72: a called one shows its title and stamp and is clickable to
+   call it again; an uncalled one stays blank, so the cards are still met one
+   at a time), the card centred at 400x400, and three EQUAL buttons under it
+   (200x56, each with its key). No side pads: they would make Drop and Policy
+   bigger targets than Unsure. While a card is dragged, two faint halos (no
+   labels) show the swipe exits. Arrow keys call the card without focusing
+   the stack (the same key path). Same order, same stored calls. */
+import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import Frame from '../Frame'
-import SwipeStack, { type SwipeExit, type SwipeDir } from '../SwipeStack'
+import Frame, { DeskCanvas } from '../Frame'
+import SwipeStack, { type SwipeApi, type SwipeExit, type SwipeDir } from '../SwipeStack'
+import KeyCap from '../KeyCap'
+import { useLayoutInfo } from '../layout'
+import { useHotkeys } from '../useHotkeys'
 import { Art } from '../art'
 import { items, zones } from '../content'
 import { useOrder } from '../store'
@@ -104,6 +116,12 @@ export default function S07(p: StepProps) {
     delete next[id]
     p.set('calls', next)
     p.log('recall', { card: id, was })
+  }
+
+  const L = useLayoutInfo()
+  if (L.desk) {
+    return <Desk p={p} order={order} calls={calls} deck={deck} density={density} cleared={cleared}
+      disabled={disabled} onExit={onExit} recall={recall} sound={ctx.sound} fine={L.fine} />
   }
 
   return (
@@ -258,6 +276,197 @@ export default function S07(p: StepProps) {
           </motion.div>
         )}
       </div>
+    </Frame>
+  )
+}
+
+/* ------------------------------------------------------------ desk */
+
+const KEY_OF: Record<string, string> = { drop: 'ArrowLeft', unsure: 'ArrowDown', policy: 'ArrowRight' }
+const DW = 936, DH = 624
+const DCARD = 400
+const TICKET = { w: 200, h: 72 }
+
+function Desk({ p, order, calls, deck, density, cleared, disabled, onExit, recall, sound, fine }: {
+  p: StepProps
+  order: CardId[]
+  calls: Partial<Record<CardId, Call>>
+  deck: Card[]
+  density: number
+  cleared: boolean
+  disabled: boolean
+  onExit: (cardId: string, exitId: string, meta: { via: 'button' | 'swipe' | 'key'; ms: number }) => void
+  recall: (id: CardId) => void
+  sound: boolean
+  fine: boolean
+}) {
+  const api = useRef<SwipeApi | null>(null)
+  const [lean, setLean] = useState(0)
+  const answered = order.length - deck.length
+  const current = deck[0]?.id
+
+  // arrow keys call the top card without focusing the stack (the stack's own
+  // keys preventDefault, so a focused stack never calls twice)
+  const call = (id: string) => () => {
+    if (disabled || cleared) return false
+    sfx('stamp', sound)
+    api.current?.leave(id)
+  }
+  useHotkeys({ ArrowLeft: call('drop'), ArrowDown: call('unsure'), ArrowRight: call('policy') }, { enabled: !p.covered })
+
+  const halo = (side: 'left' | 'right') => {
+    const on = side === 'left' ? Math.max(0, -lean) : Math.max(0, lean)
+    const dragging = Math.abs(lean) > 0.02
+    return (
+      <div aria-hidden className="pointer-events-none absolute top-[88px] h-[480px] w-[260px]"
+        style={{
+          [side]: -40,
+          background: `radial-gradient(closest-side, rgba(13,12,11,${0.05 + on * 0.1}), rgba(13,12,11,0))`,
+          opacity: dragging ? 1 : 0, transition: 'opacity 160ms ease',
+        }} data-halo={side} />
+    )
+  }
+
+  return (
+    <Frame
+      id="S07"
+      host="native"
+      valid={cleared}
+      onContinue={p.next}
+      summary={cleared ? 'All four called' : `Card ${answered + 1} of ${order.length}`}
+      invalidReason={cleared ? undefined : `Call ${deck.length} more ${deck.length === 1 ? 'card' : 'cards'}`}
+    >
+      {/* the storm, over the whole stage (behind the caption) */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 top-[-80px]"
+        style={{ background: 'linear-gradient(to bottom, rgba(20,35,59,0) 0, #14233B 120px)', opacity: density * 0.03,
+          transition: `opacity ${p.reduced ? 150 : cleared ? 900 : 500}ms ease` }} />
+      <AnimatePresence>
+        {density > 0 && (
+          <motion.div key={density} aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 top-[-80px] overflow-hidden"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: p.reduced ? 0.15 : cleared ? 0.9 : 0.4 } }}
+            transition={{ duration: p.reduced ? 0.15 : 0.4 }} data-snow={density}>
+            <Art id="snow-overlay" value={density} width="100%" height="100%" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <DeskCanvas w={DW} h={DH}>
+        <div className="relative h-full w-full" data-storm={cleared ? 'clear' : density} data-s07-desk>
+          {!cleared && (
+            <>
+              {/* the ticket row: called cards show title and stamp (click to call again) */}
+              <div className="absolute inset-x-0 top-[12px] flex justify-center gap-4" role="list" aria-label="Calls made" data-tickets>
+                {order.map((id, i) => {
+                  const c = calls[id]
+                  const card = byId(id)
+                  const now = id === current
+                  if (!c) {
+                    return (
+                      <div key={id} role="listitem" aria-label={now ? 'On the table now' : 'Still to call'}
+                        className="flex items-center justify-center rounded-[2px] font-[family-name:var(--font-ui)] text-[12px] uppercase tracking-[0.14em]"
+                        style={{ width: TICKET.w, height: TICKET.h, border: `1px dashed ${now ? '#0D0C0B' : '#C9C4BA'}`, background: PAPER3, color: now ? '#0D0C0B' : '#8C857A' }}>
+                        {now ? 'On the table' : `Card ${i + 1}`}
+                      </div>
+                    )
+                  }
+                  return (
+                    <button key={id} type="button" role="listitem" onClick={() => recall(id)} disabled={disabled}
+                      className="group relative flex items-center gap-3 rounded-[2px] bg-white px-3 text-left transition-shadow hover:shadow-[0_4px_14px_rgba(13,12,11,0.10)]"
+                      style={{ width: TICKET.w, height: TICKET.h, border: '1px solid #8C857A' }}
+                      title="Click to call it again"
+                      aria-label={`${card.label}: ${STAMP[c.answer].toLowerCase()}. Click to call it again.`}
+                      data-testid={`ticket-${id}`}>
+                      <Art id={card.art} size={48} />
+                      <span className="min-w-0 flex-1 font-[family-name:var(--font-text)] text-[14px] font-semibold leading-[17px] text-ink">{card.label}</span>
+                      <span className="absolute -right-2 -top-3"><Stamp answer={c.answer} size="sm" reduced={p.reduced} /></span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {halo('left')}
+              {halo('right')}
+
+              <div className="absolute inset-x-0 top-[108px] flex justify-center">
+                <SwipeStack<Card>
+                  cards={deck}
+                  exits={EXITS}
+                  width={DCARD}
+                  height={DCARD}
+                  depth={2}
+                  apiRef={api}
+                  onLean={(l) => setLean(l)}
+                  label="Storm calls. Left arrow: drop it. Down arrow: unsure. Right arrow: make it policy."
+                  disabled={disabled}
+                  onExit={onExit}
+                  holdMs={190}
+                  style={{ width: 3 * 200 + 2 * 16, gap: 22 }}
+                  renderCard={(card, s) => {
+                    const leanAns = s.toward ? VALUE[s.toward] : null
+                    return (
+                      <div className="relative flex h-full w-full flex-col items-center overflow-hidden px-6 pt-4"
+                        style={{ background: '#FFFFFF', border: '1px solid #8C857A', borderRadius: 3,
+                          boxShadow: s.top ? '0 2px 0 #DDD9D2, 0 14px 32px rgba(13,12,11,0.12)' : '0 1px 0 #DDD9D2' }}
+                        data-testid={s.top ? `card-${card.id}` : undefined}>
+                        <Art id={card.art} size={220} title={card.label} />
+                        <p className="mt-3 text-center font-[family-name:var(--font-text)] text-[26px] font-semibold leading-[30px] tracking-[-0.01em] text-ink">{card.label}</p>
+                        <p className="mt-2 text-center font-[family-name:var(--font-text)] text-[17px] leading-[23px] text-muted">{card.sub}</p>
+                        {s.top && !s.leaving && leanAns && Math.abs(s.lean) > 0.15 && (
+                          <div className="pointer-events-none absolute top-6" style={{ [s.dx > 0 ? 'left' : 'right']: 20 }}>
+                            <Stamp answer={leanAns} ghost={Math.min(0.85, Math.abs(s.lean) * 0.85)} />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }}
+                  renderStamp={(exitId) => <Stamp answer={VALUE[exitId]} reduced={p.reduced} />}
+                  renderButton={(ex, press, off) => {
+                    const key = KEY_OF[ex.id]
+                    const cap = fine && key ? <KeyCap k={key} /> : null
+                    return (
+                      <button type="button" className="btn-quiet flex items-center justify-center gap-3" disabled={off}
+                        onClick={() => { if (off) return; sfx('stamp', sound); press() }}
+                        data-testid={`call-${ex.id}`}
+                        style={{ width: 200, height: 56, flex: '0 0 200px', padding: '0 12px', fontSize: 16, background: '#FFFFFF', whiteSpace: 'nowrap' }}>
+                        {ex.dir !== 'right' && cap}
+                        <span>{ex.label}</span>
+                        {ex.dir === 'right' && cap}
+                      </button>
+                    )
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          {cleared && (
+            <motion.div className="absolute inset-0 flex flex-col items-center justify-center"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ duration: p.reduced ? 0.15 : 0.6, delay: p.reduced ? 0 : 0.25 }} data-cleared>
+              <div className="flex gap-4">
+                {order.map((id) => {
+                  const c = calls[id]
+                  const card = byId(id)
+                  if (!c) return null
+                  return (
+                    <button key={id} type="button" onClick={() => recall(id)} disabled={disabled}
+                      className="relative flex h-[260px] w-[210px] flex-col items-center justify-start gap-2 px-3 pt-4 transition-shadow hover:shadow-[0_6px_18px_rgba(13,12,11,0.12)]"
+                      style={{ background: '#FFFFFF', border: '1px solid #8C857A', borderRadius: 3 }}
+                      aria-label={`${card.label}: ${STAMP[c.answer].toLowerCase()}. Click to call it again.`}
+                      data-testid={`recall-${id}`}>
+                      <Art id={card.art} size={130} />
+                      <span className="text-center font-[family-name:var(--font-text)] text-[18px] font-semibold leading-[22px] text-ink">{card.label}</span>
+                      <span className="absolute right-3 top-3"><Stamp answer={c.answer} size="sm" reduced /></span>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="mt-6 font-[family-name:var(--font-ui)] text-[15px] text-ink-2">The storm has passed. Click a card to call it again.</p>
+            </motion.div>
+          )}
+        </div>
+      </DeskCanvas>
     </Frame>
   )
 }

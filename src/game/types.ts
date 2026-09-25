@@ -7,10 +7,29 @@
 
 /* ---------------------------------------------------------------- spec shape */
 
+/** The plain-English copy for a step or beat (design section 4). One source
+    for both channels: the phone shows `question` and `how` (frame.plainAsk);
+    the desk panel shows all of it. `kicker` is a plain title; the camp name is
+    put in front of it unless `kickerAlone`. `keys` marks keys as [X] and shows
+    only with a fine pointer. `why` is optional, desk only, and neutral: it says
+    what the answer is used for, never argues for an option. `list` is S01's
+    "What you'll do". F5 has no `question` (its A/B wording stays verbatim). */
+export type AskSpec = {
+  kicker: string
+  kickerAlone?: boolean
+  question?: string
+  how: string
+  keys?: string
+  why?: string
+  list?: string[]
+}
+
 export type ItemSpec = {
   id: string
   label: string
   art?: string | null
+  /** A plain-English label or gloss, shown with (or before) the metaphor label. */
+  plain?: string
   [k: string]: unknown // area, pairs, sub, peek, rung, ladder, value, note, group, position ...
 }
 export type ZoneSpec = {
@@ -18,6 +37,8 @@ export type ZoneSpec = {
   label: string
   art?: string | null
   slots?: number
+  /** A plain-English label or gloss (S02: what the box means; S06: who does it). */
+  plain?: string
   [k: string]: unknown // vote, ladder, deck, value, key, note ...
 }
 export type BeatSpec = {
@@ -27,6 +48,7 @@ export type BeatSpec = {
   helper: string
   capacity?: string
   self?: boolean
+  ask?: AskSpec
   items?: ItemSpec[]
   zones?: ZoneSpec[]
   stores: string[]
@@ -44,6 +66,7 @@ export type StepSpec = {
   prompt: string
   promptVariants?: { A: string; B: string }
   helper: string
+  ask?: AskSpec
   items: ItemSpec[]
   zones: ZoneSpec[]
   beats?: BeatSpec[]
@@ -61,7 +84,11 @@ export type RuleTest = { rule: RulePoint; given: Record<string, unknown>; expect
 export type Spec = {
   title: string
   version: string
-  frame: { viewport: string; stage: string; logging: string; camps: CampName[] }
+  frame: {
+    viewport: string; stage: string; logging: string; camps: CampName[]
+    /** Show ask.question / ask.how on the phone too (same question on both channels). */
+    plainAsk?: boolean
+  }
   screens: StepSpec[]
   ruleTests: RuleTest[]
   timing: Record<string, unknown>

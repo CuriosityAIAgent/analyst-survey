@@ -15,7 +15,13 @@
 
    Geometry: the track-ridge drawing exports its crest path, stop fractions
    and the parked ledge (RIDGE in art/tracks.tsx); the slider lies on it. One
-   340x236 box holds every layer, scaled to the stage with container units. */
+   340x236 box holds every layer, scaled to the stage with container units.
+
+   Desk (design 5, S08): the same box hosted as-is (container units make it
+   larger; same stops, labels and no pictures), a Readout under the ridge
+   that names the chosen point, and keys without focusing the slider:
+   Left/Right step, Home/End jump, 1-5 pick a stop. They store what the
+   slider's own keys store (via 'key'). The phone is unchanged. */
 import { useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { motion } from 'motion/react'
@@ -27,6 +33,11 @@ import { Art } from '../art'
 import { RIDGE } from '../art/tracks'
 import { items } from '../content'
 import { campPaper } from '../feel'
+import { useLayoutInfo } from '../layout'
+import { useHotkeys } from '../useHotkeys'
+import Readout from '../Readout'
+import { pressPanelPrimary } from '../deskKeys'
+import KeyCap, { KeyText } from '../KeyCap'
 import type { Rope, StepProps } from '../types'
 
 const W = 340 // narrower than the drawing, so the ridge fills the width
@@ -87,6 +98,26 @@ export default function S08(p: StepProps) {
     if (v !== null) setPuff((n) => n + 1)
   }
 
+  /* desk: keys without focusing the slider, and a readout under the ridge */
+  const L = useLayoutInfo()
+  const cur = typeof rope === 'number' ? stops.findIndex((s) => s.value === rope) : -1
+  const keyStep = (e: KeyboardEvent) => {
+    const k = e.key
+    let i: number
+    if (k === 'Home') i = 0
+    else if (k === 'End') i = stops.length - 1
+    else if (cur < 0) i = 0
+    else i = Math.max(0, Math.min(stops.length - 1, cur + (k === 'ArrowRight' || k === 'ArrowUp' ? 1 : -1)))
+    place(stops[i].value, 'key')
+  }
+  const keyN = (n: number) => () => { const s = stops[n - 1]; if (s) place(s.value, 'key') }
+  useHotkeys({
+    ArrowLeft: keyStep, ArrowRight: keyStep, ArrowUp: keyStep, ArrowDown: keyStep, Home: keyStep, End: keyStep,
+    1: keyN(1), 2: keyN(2), 3: keyN(3), 4: keyN(4), 5: keyN(5),
+    r: () => place(null, 'key'),
+  }, { enabled: L.desk && !p.covered })
+  const shown = !has ? null : rope === null ? 'Rather not say' : stops[cur]?.label ?? null
+
   return (
     <Frame
       id="S08"
@@ -95,6 +126,9 @@ export default function S08(p: StepProps) {
       scene={null}
       valid={has}
       onContinue={p.next}
+      summary={L.desk ? (shown ? `You: ${shown}` : 'Not chosen yet') : undefined}
+      invalidReason="Choose a point on the ridge, or 'Rather not say'"
+      hotkeysHint={L.desk ? <KeyText text="[←][→] or [1]–[5] move, [R] Rather not say, [Enter] confirms." /> : undefined}
     >
       {/* the ridge sits a little above the middle (about 45% of the screen),
           with 'Rather not say' just under the starting ledge */}
@@ -117,45 +151,74 @@ export default function S08(p: StepProps) {
               stopHit={26}
               trackHit={44}
               testId="s08-range"
+              onEnter={L.desk ? () => { pressPanelPrimary() } : undefined}
               onChange={(id, m) => { const s = stops.find((x) => x.id === id); if (s) place(s.value, m.via, m.reversals) }}
               renderTrack={() => (
                 <g>
                   {stops.map((s) => {
                     const on = s.id === value
-                    const [a, b] = twoLines(s.label)
                     return (
                       <g key={s.id}>
                         <line x1={s.x} y1={s.y + 12} x2={s.x} y2={LABEL_Y - 16} stroke={RULE} strokeWidth={0.8} strokeDasharray="1 3" aria-hidden />
                         <g data-rs-stop={s.id} style={{ cursor: 'pointer' }}>
                           <rect x={s.x - 34} y={LABEL_Y - 18} width={68} height={48} fill="transparent" />
-                          <text x={s.x} y={LABEL_Y} textAnchor="middle" fontSize={12} fill={on ? INK : MUTED} {...HALO}
-                            style={{ ...UI, fontWeight: on ? 600 : 400 }}>
-                            <tspan x={s.x}>{a}</tspan>
-                            <tspan x={s.x} dy={14}>{b}</tspan>
-                          </text>
-                          {on && <rect x={s.x - 14} y={LABEL_Y + 21} width={28} height={1.6} fill={BRONZE} />}
+                          <StopLabel x={s.x} label={s.label} on={on} />
                         </g>
                       </g>
                     )
                   })}
                 </g>
               )}
-              renderThumb={(s) => <You s={s} puff={puff} reduced={p.reduced} unset={!has || rope === null} />}
+              renderThumb={(s) => <You s={s} puff={puff} reduced={p.reduced} unset={!has || rope === null}
+                labels={stops.map((x) => ({ x: x.x, label: x.label, on: x.id === value }))} />}
             />
           </div>
         </div>
-        <button type="button" onClick={() => place(null, 'tap')} aria-pressed={rather} disabled={p.covered}
-          className={`mt-[2px] min-h-[44px] self-start px-5 font-[family-name:var(--font-ui)] text-[12px] leading-[16px] underline underline-offset-2 ${rather ? 'font-semibold text-ink' : 'text-muted'}`}
-          data-testid="s08-rather">
-          Rather not say
-        </button>
+        {L.desk ? (
+          /* desk: 'Rather not say' sits under the readout, where the answer is read */
+          <div className="absolute bottom-8 right-12 flex min-w-[260px] flex-col items-start" data-under-sheet="hide">
+            <Readout label="You" tone="you" value={shown} empty="Not chosen yet" size={L.compact ? 32 : 40} reduced={p.reduced} />
+            <button type="button" onClick={() => place(null, 'tap')} aria-pressed={rather} disabled={p.covered}
+              className={`mt-3 inline-flex min-h-[36px] items-center gap-2 font-[family-name:var(--font-ui)] text-[14px] leading-[18px] ${rather ? 'font-semibold text-ink' : 'text-ink-2'}`}
+              data-testid="s08-rather">
+              <span className="underline underline-offset-2">Rather not say</span>
+              <KeyCap k="R" />
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => place(null, 'tap')} aria-pressed={rather} disabled={p.covered}
+            className={`mt-[2px] min-h-[44px] self-start px-5 font-[family-name:var(--font-ui)] text-[12px] leading-[16px] underline underline-offset-2 ${rather ? 'font-semibold text-ink' : 'text-muted'}`}
+            data-testid="s08-rather">
+            Rather not say
+          </button>
+        )}
       </div>
     </Frame>
   )
 }
 
 /** You, in bronze, roped to someone off to the left who is never drawn. */
-function You({ s, puff, reduced, unset }: { s: ThumbState; puff: number; reduced: boolean; unset: boolean }) {
+/** A stop's label on two balanced lines, with a paper halo. */
+function StopLabel({ x, label, on, halo = 4 }: { x: number; label: string; on: boolean; halo?: number }) {
+  const [a, b] = twoLines(label)
+  return (
+    <>
+      <text x={x} y={LABEL_Y} textAnchor="middle" fontSize={12} fill={on ? INK : MUTED} {...HALO} strokeWidth={halo}
+        style={{ ...UI, fontWeight: on ? 600 : 400 }}>
+        <tspan x={x}>{a}</tspan>
+        <tspan x={x} dy={14}>{b}</tspan>
+      </text>
+      {on && <rect x={x - 14} y={LABEL_Y + 21} width={28} height={1.6} fill={BRONZE} />}
+    </>
+  )
+}
+
+function You({ s, puff, reduced, unset, labels }: {
+  s: ThumbState; puff: number; reduced: boolean; unset: boolean
+  /** The stop labels, drawn again over the rope (halo and all), so the rope
+      passes behind them and never looks like it strikes an option out. */
+  labels: { x: number; label: string; on: boolean }[]
+}) {
   const facing: 1 | -1 = s.moving && Math.cos((s.angle * Math.PI) / 180) < 0 ? -1 : 1
   // the rope: from the harness to off-screen left, with a gentle sag
   const ex = ROPE_END.x - s.x, ey = ROPE_END.y - s.y
@@ -167,6 +230,10 @@ function You({ s, puff, reduced, unset }: { s: ThumbState; puff: number; reduced
       <g pointerEvents="none" aria-hidden>
         <path d={rope} fill="none" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
         <path d={rope} fill="none" stroke={PAPER} strokeWidth={0.6} strokeDasharray="1.5 2.5" strokeLinecap="round" />
+        <g transform={`translate(${-s.x} ${-s.y})`}>
+          {/* a wide paper halo: the rope reads as passing behind the words */}
+          {labels.map((l) => <StopLabel key={l.x} x={l.x} label={l.label} on={l.on} halo={10} />)}
+        </g>
       </g>
       <rect x={-26} y={-58} width={52} height={66} fill="transparent" />
       <ellipse cx={0} cy={0.5} rx={9} ry={2} fill={INK} opacity={0.14} />

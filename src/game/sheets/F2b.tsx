@@ -4,13 +4,17 @@
    Fires when the pace is 36 or 48 months. One tap: the sheet finishes itself
    500ms later (Sheet auto), so a mis-tap can still be changed. The rookie is
    in the sheet header at their stop (beside their camp's tent).
-     stores pace.cantRush ('cycle'|'trust'|'breadth'|'confidence') */
+     stores pace.cantRush ('cycle'|'trust'|'breadth'|'confidence')
+
+   DESK (design 6): the rookie at their camp (2x) over four tag chips
+   200 x 88 in one row; keys 1-4 pick. */
 import { useState } from 'react'
 import { motion } from 'motion/react'
 import Sheet from '../Sheet'
 import { buzz } from '../feel'
 import Figure from '../Figure'
 import { TagChip } from '../Chips'
+import { PICK_DH, PickRow, CARD_DW, useSheetFit } from './desk'
 import { copy, fill, items } from '../content'
 import type { Answers, StepProps } from '../types'
 
@@ -26,9 +30,10 @@ export default function F2b(p: StepProps) {
   const stop = p.answers['pace.months']
 
   const [picks, setPicks] = useState(0)
-  const pick = (id: Pick) => {
+  const fit = useSheetFit(CARD_DW, PICK_DH)
+  const pick = (id: Pick, via: 'tap' | 'key' = 'tap') => {
     buzz()
-    p.log('pick', { value: id, via: 'tap' })
+    p.log('pick', { value: id, via })
     p.set('pace.cantRush', id)
     setPicks((n) => n + 1)
   }
@@ -37,13 +42,20 @@ export default function F2b(p: StepProps) {
     <Sheet
       id="F2b"
       prompt={fill(copy('F2b').prompt, { stop })}
-      header={<AtCamp />}
+      header={fit.desk ? null : <AtCamp />}
       valid={!!cur}
       auto
       value={cur}
       picks={picks}
       onDone={p.next}
+      deskBody={fit.desk}
+      cardHeight={fit.desk ? fit.cardHeight : undefined}
     >
+      {fit.desk ? (
+        <PickRow fit={fit} header={<div style={{ transform: 'scale(2)', transformOrigin: '0 100%' }}><AtCamp /></div>}
+          options={opts} value={cur} onPick={(id, via) => pick(id as Pick, via)} role="group" groupLabel="What can't be rushed"
+          testId="f2b-options" optTestId={(id) => `f2b-${id}`} disabled={p.covered} />
+      ) : (
       <div className="grid grid-cols-2 gap-3 pb-2 pt-2" role="group" aria-label="What can't be rushed" data-testid="f2b-options">
         {opts.map((o) => {
           const on = cur === o.id
@@ -64,6 +76,7 @@ export default function F2b(p: StepProps) {
           )
         })}
       </div>
+      )}
     </Sheet>
   )
 }

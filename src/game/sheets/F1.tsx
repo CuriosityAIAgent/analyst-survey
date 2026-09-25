@@ -14,9 +14,19 @@
    label, or Left/Right on the slider's native range.
 
    Until the respondent moves it the door is drawn faint and the navy knob
-   waits off the arc, so no position is the default. */
+   waits off the arc, so no position is the default.
+
+   DESK (design 6): a card 880 wide at k = 1. Left 300: the same door slider
+   at 276 x 298 (the door about 230px, fu-door re-rendered at 1024). Right:
+   three option rows 440 x 76, each with its number key, a plan-view glyph of
+   the door state, the state word and the label. Keys: 1-3 pick (and finish,
+   like a tap); Left/Right step the door (like the slider's own keys: then
+   the panel's Continue finishes). */
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import Sheet from '../Sheet'
+import KeyCap from '../KeyCap'
+import { CARD_DW, NumBadge, SheetCanvas, numberKeys, useSheetFit, useSheetKeys } from './desk'
 import RouteSlider from '../RouteSlider'
 import { Art } from '../art'
 import { items } from '../content'
@@ -52,9 +62,11 @@ export default function F1(p: StepProps) {
   const [byKey, setByKey] = useState(false)
   const stops = OPTIONS.map((o) => ({ id: o.id, at: AT[o.position], label: WORD[o.position], valueText: `${WORD[o.position]}: ${o.label}` }))
 
-  const choose = (id: string, via: string) => {
-    setByKey(via === 'key')
-    if (via !== 'key') setPicks((n) => n + 1)
+  // step: a key that steps through the stops (no auto-finish); a desk number
+  // key is logged as 'key' but picks outright, like a tap
+  const choose = (id: string, via: string, step = via === 'key') => {
+    setByKey(step)
+    if (!step) setPicks((n) => n + 1)
     if (id === value) return
     const pos = OPTIONS.find((o) => o.id === id)?.position ?? 'shut'
     p.set('classroom.mandatory', id as Pos)
@@ -62,15 +74,12 @@ export default function F1(p: StepProps) {
     sfx('creak', ctx.sound, { pitch: AT[pos] })
   }
 
-  return (
-    <Sheet id="F1" valid={value !== null} onDone={p.next} auto value={picks && !byKey ? value : undefined} picks={picks} showDone={byKey}>
-      <div className="flex items-stretch gap-3" data-testid="f1-body">
-        <div className="relative h-[190px] w-[176px] shrink-0">
+  const door = (width: number, height: number): ReactNode => (
           <RouteSlider
             d={ARC}
             viewBox={VB}
-            width={176}
-            height={190}
+            width={width}
+            height={height}
             stops={stops}
             value={value}
             parked={PARKED}
@@ -118,6 +127,52 @@ export default function F1(p: StepProps) {
               </g>
             )}
           />
+  )
+
+  // desk: number keys pick (a definitive pick, so it finishes like a tap);
+  // arrows step the door like the slider's own keys
+  const fit = useSheetFit(CARD_DW, 300)
+  const at = OPTIONS.findIndex((o) => o.id === value)
+  useSheetKeys({
+    ...numberKeys(OPTIONS.length, (i) => choose(OPTIONS[i].id, 'key', false)),
+    ArrowRight: () => choose(OPTIONS[Math.min(OPTIONS.length - 1, at + 1)].id, 'key'),
+    ArrowLeft: () => choose(OPTIONS[Math.max(0, at < 0 ? 0 : at - 1)].id, 'key'),
+  })
+
+  return (
+    <Sheet id="F1" valid={value !== null} onDone={p.next} auto value={picks && !byKey ? value : undefined} picks={picks} showDone={byKey}
+      deskBody={fit.desk} cardHeight={fit.desk ? fit.cardHeight : undefined}>
+      {fit.desk ? (
+        <SheetCanvas fit={fit} testId="f1-body">
+          <div className="absolute" style={{ left: 40, top: 0, width: 276, height: 298 }}>{door(276, 298)}</div>
+          <div className="absolute flex flex-col justify-center gap-[14px]" style={{ left: 380, top: 0, width: 440, height: 298 }}
+            role="radiogroup" aria-label="Classroom">
+            {OPTIONS.map((o, i) => {
+              const on = value === o.id
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  data-on={on}
+                  onClick={() => choose(o.id, 'tap')}
+                  className="choice flex !h-[76px] !min-h-0 w-full items-center gap-4 !px-4 !py-0 text-left"
+                  data-testid={`door-${o.id}`}
+                >
+                  {on ? <KeyCap k={String(i + 1)} quiet className="pointer-events-none shrink-0" /> : <NumBadge n={i + 1} className="shrink-0" />}
+                  <DoorGlyph open={AT[o.position]} on={on} />
+                  <span className="w-[52px] shrink-0 font-[family-name:var(--font-ui)] text-[12px] uppercase tracking-[0.12em] opacity-75">{WORD[o.position]}</span>
+                  <span className="min-w-0 font-[family-name:var(--font-ui)] text-[18px] leading-[22px]">{o.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </SheetCanvas>
+      ) : (
+      <div className="flex items-stretch gap-3" data-testid="f1-body">
+        <div className="relative h-[190px] w-[176px] shrink-0">
+          {door(176, 190)}
         </div>
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-2" role="radiogroup" aria-label="Classroom">
           {OPTIONS.map((o) => (
@@ -137,6 +192,25 @@ export default function F1(p: StepProps) {
           ))}
         </div>
       </div>
+      )}
     </Sheet>
+  )
+}
+
+/** The door state in plan view: the wall, the frame and the leaf swung
+    shut (0), ajar (0.5) or open (1). */
+function DoorGlyph({ open, on }: { open: number; on: boolean }) {
+  const a = (open * 80 * Math.PI) / 180
+  const c = on ? '#F8F7F4' : '#0D0C0B'
+  const hx = 8, y = 24, L = 20
+  const tip = `${hx + L * Math.cos(a)} ${y - L * Math.sin(a)}`
+  return (
+    <svg width={36} height={30} viewBox="0 0 36 30" className="shrink-0" aria-hidden>
+      {/* the wall either side of the doorway, the leaf swung from its hinge */}
+      <path d={`M0 ${y} H${hx} M${hx + L} ${y} H36`} stroke={c} strokeWidth={3.5} />
+      {open > 0 && <path d={`M${hx + L} ${y} A ${L} ${L} 0 0 0 ${tip}`} fill="none" stroke={c} strokeWidth={0.9} strokeDasharray="1.5 2" opacity={0.8} />}
+      <path d={`M${hx} ${y} L ${tip}`} stroke={c} strokeWidth={2.4} strokeLinecap="round" />
+      <circle cx={hx} cy={y} r={1.8} fill={c} />
+    </svg>
   )
 }

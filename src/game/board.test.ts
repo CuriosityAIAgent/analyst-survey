@@ -78,3 +78,67 @@ describe('route precision (S05 strip and S11 summit)', () => {
     expect(routePrecision({ map: 'day1', compass: 'day1', guidebook: 'day1', gps: 'day1', radio: 'day1', brief: 'day1' })).toBe(4)
   })
 })
+
+/* ---------------------------------------------------------------- desk boards
+   The phone and desk views of S02, S05, S06 and S09 A share one hook each
+   (screens/boards/use*.ts), so a drop sequence stores the same answers on both
+   channels. These pin the pure pieces those hooks store through, and check
+   the desk number keys point at real zones. */
+import { answersOf, S02_KEYS, ZONE_IDS as S02_ZONES } from './screens/boards/useS02Board'
+import { placeAnswers, S05_KEYS, plainName, BY_ID } from './screens/boards/useS05Plate'
+import { S06_KEYS, ZONES as S06_ZONES, nameOf as s06Name } from './screens/boards/useS06Pitches'
+import { ropeDrop, S09_KEYS, CLIPS } from './screens/boards/useS09Rope'
+import { zones } from './content'
+import type { KitEvent } from './types'
+
+describe('desk boards: shared stores', () => {
+  it('S02 stores the same vote keys for a board, with the Blue copy flag', () => {
+    let b = applyDrop(empty(), 'present', 'rucksack:0')!.board
+    b = applyDrop(b, 'present', 'hand:0')!.board
+    b = applyDrop(b, 'admin', 'out')!.board
+    const a = answersOf(b, [])
+    expect(a).toEqual({
+      'vote.green': ['present'], 'vote.greenOrder': ['present'], 'vote.blue': 'present',
+      'vote.blueAlsoGreen': true, 'vote.red': ['admin'], 'vote.amber': [],
+    })
+    // greenOrder keeps the order they first went in
+    b = applyDrop(b, 'meetings', 'rucksack:0')!.board // swaps present out to the tray
+    expect(answersOf(b, ['present'])['vote.greenOrder']).toEqual(['meetings'])
+  })
+
+  it('S05 placement writes lane, cut, unsupported and the event', () => {
+    const ev: KitEvent = { t: 1, brick: 'brief', to: 'day1', via: 'key' }
+    const a = placeAnswers({ map: 'day1' }, 'brief', 'day1', ev)
+    expect(a['kit.lane']).toEqual({ map: 'day1', brief: 'day1' })
+    expect(a['kit.cut']).toEqual({ day1: 1, proven: 1 })
+    expect(a['kit.unsupported']).toEqual(['brief'])
+    expect(a['kit.events']).toEqual([ev])
+    expect(placeAnswers({ map: 'day1' }, 'map', null, { ...ev, brick: 'map', to: null })['kit.lane']).toEqual({})
+  })
+
+  it('S05 names are plain first', () => {
+    expect(plainName(BY_ID.get('map')!)).toBe('LLM chat · Paper map')
+  })
+
+  it('S06 names the plain category first', () => {
+    expect(S06_ZONES.find((z) => z.id === 'own')!.plain).toBe('The Analyst, no AI')
+    expect(s06Name('own:1')).toBe('The Analyst, no AI, slot 2')
+  })
+
+  it('S09 rope: clip, swap between clips, bump from the tray, unclip', () => {
+    let s = ropeDrop([null, null, null], 'calm', 'clip1')!
+    s = ropeDrop(s, 'story', 'clip3')!
+    expect(ropeDrop(s, 'story', 'clip1')).toEqual(['story', null, 'calm'])
+    expect(ropeDrop(s, 'depth', 'clip1')).toEqual(['depth', null, 'story'])
+    expect(ropeDrop(s, 'calm', 'tray')).toEqual([null, null, 'story'])
+    expect(ropeDrop(s, 'depth', 'tray')).toBeNull()
+  })
+
+  it('desk number keys point at real zones, in the spec order', () => {
+    expect([S02_KEYS[1], S02_KEYS[2], S02_KEYS[3], S02_KEYS[4]]).toEqual(S02_ZONES)
+    expect([S05_KEYS[1], S05_KEYS[2], S05_KEYS[3]]).toEqual(zones('S05').map((z) => z.id))
+    expect([S06_KEYS[1], S06_KEYS[2], S06_KEYS[3], S06_KEYS[4]]).toEqual(S06_ZONES.map((z) => z.id))
+    expect([S09_KEYS[1], S09_KEYS[2], S09_KEYS[3]]).toEqual(CLIPS.map((c) => c.id))
+    for (const k of [S02_KEYS, S05_KEYS, S06_KEYS, S09_KEYS]) expect(k.Delete).toBe('tray')
+  })
+})

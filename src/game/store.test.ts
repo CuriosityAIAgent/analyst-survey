@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useGame, rehydrate, orderFor, stepKey, readToken, beatsFor, seeded, linkId } from './store'
+import { useGame, rehydrate, orderFor, stepKey, readToken, beatsFor, seeded, linkId, response, cleanChannel } from './store'
 import { SCREEN_IDS } from './content'
 
 const G = () => useGame.getState()
@@ -201,5 +201,28 @@ describe('Codex P1: sessions saved under the old class and business lists', () =
     const r = rehydrate({ started: true, screen: 'S03', beat: 'A', answers: { 'segment.cohort': '2024', 'segment.business': 'ipb' } })
     expect(r.started).toBe(true)
     expect(r.answers['segment.cohort' as never]).toBe('2024')
+  })
+})
+
+describe('desktop: the layout is logged as meta.channel, never an answer', () => {
+  const desk = { mode: 'desk' as const, w: 1440, h: 790, pointer: 'fine' as const, dpr: 2 }
+  it('response() carries meta.channel and meta.viewport, and answers are unchanged', () => {
+    const base = { answers: { 'rule.text': 'x' } as never, events: [], timing: {}, seed: 1 }
+    const phone = response({ ...base, channel: { ...desk, mode: 'phone', w: 390, h: 660, pointer: 'coarse' } })
+    const d = response({ ...base, channel: desk })
+    expect(d.meta).toEqual({ channel: 'desk', viewport: { w: 1440, h: 790, pointer: 'fine', dpr: 2 } })
+    expect(phone.meta.channel).toBe('phone')
+    expect(d.answers).toEqual(phone.answers)
+    expect(Object.keys(d.answers)).not.toContain('channel')
+    expect(response(base).meta).toEqual({ channel: null, viewport: null })
+  })
+  it('setChannel never touches answers; a persisted channel is validated', () => {
+    G().setChannel(desk)
+    expect(G().channel).toEqual(desk)
+    expect(G().answers).toEqual({})
+    expect(rehydrate({ channel: desk }).channel).toEqual(desk)
+    expect(cleanChannel({ ...desk, mode: 'tv' })).toBeNull()
+    expect(cleanChannel({ ...desk, w: 'wide' })).toBeNull()
+    expect(rehydrate({}).channel).toBeNull()
   })
 })
