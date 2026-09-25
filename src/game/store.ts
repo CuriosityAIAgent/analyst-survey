@@ -15,6 +15,7 @@ import type {
 } from './types'
 import { SCREEN_IDS, cleanAnswers, isBeatId, isScreenId, isSheetId, specBeats, step } from './content'
 import { followupFor, needsSegment } from './rules'
+import { fillBefore } from './demo'
 
 export type OpenSheet = { id: SheetId; variant?: Variant }
 export type Token = { business?: Answers['segment.business']; cohort?: string; code?: string }
@@ -55,8 +56,20 @@ export type GameState = {
   /** Dev: put the game at any screen/beat/sheet. */
   jump: (screen: ScreenId, beat?: BeatId, sheet?: OpenSheet | null) => void
   setToken: (t: Token) => void
+  /** Review mode (?preview=1): move on without answering, and see every follow-up. Not persisted. */
+  preview: boolean
+  setPreview: (on: boolean) => void
   toggleSound: () => void
   reset: () => void
+}
+
+/** Preview mode shows every follow-up version after its screen, in this order. */
+const PREVIEW_SHEETS: Partial<Record<ScreenId, OpenSheet[]>> = {
+  S02: [{ id: 'F1' }],
+  S04: [{ id: 'F2a' }, { id: 'F2b' }],
+  S05: [{ id: 'F3a' }, { id: 'F3b' }, { id: 'F3c' }],
+  S07: [{ id: 'F4' }],
+  S08: [{ id: 'F5', variant: 'A' }, { id: 'F5', variant: 'B' }],
 }
 
 const MAX_EVENTS = 1500
@@ -138,6 +151,7 @@ export const useGame = create<GameState>()(
           if (from !== undefined && from !== stepKey(s)) return
           if (s.finished) return
           if (!s.started) get().begin()
+          if (s.preview) return previewNext()
           const a = get().answers
 
           // a sheet is done: on to the screen after its parent
@@ -162,7 +176,42 @@ export const useGame = create<GameState>()(
             if (to === 'end' || !isScreenId(to)) {
               return move({ sheet: null, finished: true, answers: { ...get().answers, 't.complete': Date.now() } }, 'finish')
             }
+            if (get().preview) fillMissing(to)
             move({ sheet: null, screen: to, beat: beatsFor(to, get().answers)[0] }, type)
+          }
+
+          /* Preview: every beat, then EVERY follow-up version for the screen in
+             turn, whatever was answered. Anything a later screen needs to draw
+             (a stop for F2a, a kit for the summit) is filled with sample
+             answers, only where the reviewer left it blank. */
+          function previewNext() {
+            const cur = get()
+            const list = PREVIEW_SHEETS[cur.sheet ? step(cur.sheet.id).parent as ScreenId : cur.screen] ?? []
+            if (!cur.sheet) {
+              const beats = beatsFor(cur.screen, cur.answers)
+              const i = beats.indexOf(cur.beat)
+              if (i >= 0 && i < beats.length - 1) {
+                fillMissing(cur.screen, undefined, undefined, beats[i + 1])
+                return move({ beat: beats[i + 1] }, 'beat')
+              }
+              if (list.length) return openPreviewSheet(list[0], cur.screen)
+              return goScreen(step(cur.screen).next, 'screen')
+            }
+            const at = list.findIndex((x) => x.id === cur.sheet!.id && (x.variant ?? null) === (cur.sheet!.variant ?? null))
+            if (at >= 0 && at < list.length - 1) return openPreviewSheet(list[at + 1], cur.screen)
+            return goScreen(step(cur.sheet.id).next, 'sheet-done')
+          }
+          function openPreviewSheet(sh: OpenSheet, parent: ScreenId) {
+            fillMissing(parent, sh.id, sh.variant)
+            const answers = sh.id === 'F5' ? { ...get().answers, 'guarantee.variant': sh.variant ?? 'A' } : get().answers
+            move({ sheet: sh, answers }, 'sheet-open')
+          }
+          function fillMissing(screen: ScreenId, sheet?: SheetId, variant?: Variant, beat?: BeatId) {
+            const sample = fillBefore(screen, sheet ?? null, variant, beat)
+            const a = get().answers
+            const add: AnswerMap = {}
+            for (const [k, v] of Object.entries(sample)) if (a[k as keyof AnswerMap] === undefined) (add as Record<string, unknown>)[k] = v
+            if (Object.keys(add).length) setState({ answers: { ...a, ...add } })
           }
         },
 
@@ -188,6 +237,9 @@ export const useGame = create<GameState>()(
           const b = beat && specBeats(screen).includes(beat) ? beat : beats[0]
           move({ started: true, finished: false, screen, beat: b, sheet: sheet ?? null }, 'jump')
         },
+
+        preview: false,
+        setPreview: (on) => setState({ preview: on }),
 
         setToken: (t) => {
           const id = linkId(t)

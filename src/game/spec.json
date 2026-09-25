@@ -21,7 +21,7 @@
       "camp": "Base camp",
       "mechanic": "scene",
       "prompt": "You made the climb. Now kit out the next one.",
-      "helper": "About six minutes. Held under a code by People Analytics.",
+      "helper": "About six minutes.",
       "items": [],
       "zones": [],
       "capacity": "No answer. One button: 'Start the climb'. Business and class come from the link token; nothing about the respondent is asked here.",
@@ -37,7 +37,7 @@
           "beat": "A",
           "mechanic": "scene",
           "prompt": "You made the climb. Now kit out the next one.",
-          "helper": "About six minutes. Held under a code by People Analytics.",
+          "helper": "About six minutes.",
           "capacity": "No answer. One button: 'Start the climb'.",
           "stores": [
             "t.start",
