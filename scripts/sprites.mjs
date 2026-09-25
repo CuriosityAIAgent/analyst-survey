@@ -11,6 +11,8 @@ const DIR = 'public/game/3d'
 const KEEP_DRAWN = new Set([
   'track-switchback', 'track-ridge', 'bootprints', 'cairn-stone', 'baseplate', 'crate',
   'route-layers', 'snow-overlay', 'strap-kit',
+  // the rope's three clips are drop targets positioned on the drawing
+  'rope-clips',
 ])
 
 function webpSize(file) {

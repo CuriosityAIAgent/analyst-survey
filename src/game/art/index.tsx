@@ -55,7 +55,12 @@ function spriteFor(id: string, state?: string, value?: number): string | null {
     const k = value < 0.34 ? 'fu-door' : value < 0.67 ? 'fu-door-ajar' : 'fu-door-open'
     return SPRITES[k] ? k : null
   }
-  if (state) return SPRITES[`${id}-${state}`] ? `${id}-${state}` : null
+  if (state) {
+    if (SPRITES[`${id}-${state}`]) return `${id}-${state}`
+    // a navigation brick in a lane ('label') or its faded carry-forward ('ghost') is still that brick
+    if (id.startsWith('brick-') && (state === 'label' || state === 'ghost') && SPRITES[id]) return id
+    return null
+  }
   return SPRITES[id] ? id : null
 }
 
@@ -72,7 +77,8 @@ function Sprite({ id, file, ...p }: ArtProps & { id: string; file: string }) {
   return (
     <svg viewBox={`0 0 ${sw} ${sh}`} width={w} height={h} data-art={id} data-sprite={file}
       preserveAspectRatio={scene ? 'xMidYMax slice' : 'xMidYMid meet'}
-      className={p.className} style={{ display: 'block', overflow: 'visible', pointerEvents: 'none', ...p.style }}
+      className={p.className}
+      style={{ display: 'block', overflow: 'visible', pointerEvents: 'none', opacity: p.state === 'ghost' ? 0.35 : undefined, ...p.style }}
       {...a11y}>
       <image href={`/game/3d/${file}.webp`} width={sw} height={sh} />
     </svg>

@@ -269,7 +269,7 @@ export default function S10(p: StepProps) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: p.reduced ? 0.08 : 0.16 }}
                 className={`${n
-                  ? `font-[family-name:var(--font-display)] ${inB ? 'text-[17px] leading-[20px]' : 'text-[22px] leading-[26px]'} text-ink`
+                  ? `font-[family-name:var(--font-text)] font-semibold ${inB ? 'text-[17px] leading-[20px]' : 'text-[22px] leading-[26px]'} text-ink`
                   : 'font-[family-name:var(--font-text)] text-[14px] italic text-muted'}`}
                 data-testid="cairn-label"
               >
