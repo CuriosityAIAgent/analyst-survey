@@ -6,6 +6,7 @@
    fills in as the art lands. See STYLE.md. */
 import type { ArtProps, ArtRegistry } from './kit'
 import { naturalSize, RULE, INK } from './kit'
+import { SPRITES } from './sprites'
 import { SCENES, SCENE_IDS } from './scenes'
 import { PEOPLE, PEOPLE_IDS } from './people'
 import { PROPS, PROP_IDS } from './props'
@@ -38,9 +39,44 @@ export const ART_FILES: Record<string, readonly string[]> = {
 export const hasArt = (id: string) => Object.prototype.hasOwnProperty.call(ART_REGISTRY, id)
 
 export function Art({ id, ...p }: ArtProps & { id: string }) {
+  const sprite = spriteFor(id, p.state, p.value)
+  if (sprite) return <Sprite id={id} file={sprite} {...p} />
   const C = ART_REGISTRY[id]
   if (C) return <C {...p} />
   return <ArtPlaceholder id={id} {...p} />
+}
+
+/* A 3D render replaces the drawing when one exists: <id>.webp, or
+   <id>-<state>.webp for a named state. A state with no render of its own falls
+   back to the drawing, so a piece never shows the wrong state. */
+function spriteFor(id: string, state?: string, value?: number): string | null {
+  // the classroom door is dragged through a continuous angle; show the nearest render
+  if (id === 'fu-door' && !state && typeof value === 'number') {
+    const k = value < 0.34 ? 'fu-door' : value < 0.67 ? 'fu-door-ajar' : 'fu-door-open'
+    return SPRITES[k] ? k : null
+  }
+  if (state) return SPRITES[`${id}-${state}`] ? `${id}-${state}` : null
+  return SPRITES[id] ? id : null
+}
+
+/* Rendered as <svg><image/></svg> so the same element works on a page and
+   nested inside a screen's own SVG (the summit, the door, the route strip). */
+function Sprite({ id, file, ...p }: ArtProps & { id: string; file: string }) {
+  const [sw, sh] = SPRITES[file]
+  const scene = id.startsWith('scene-')
+  const [, vh] = naturalSize(id)
+  // size is a height; otherwise fill the given box, or sit at the drawing's natural height
+  const h = p.height ?? (p.size ?? (scene ? '100%' : vh))
+  const w = p.width ?? (p.size ? (p.size * sw) / sh : scene ? '100%' : (vh * sw) / sh)
+  const a11y = p.title ? { role: 'img' as const, 'aria-label': p.title } : { 'aria-hidden': true as const }
+  return (
+    <svg viewBox={`0 0 ${sw} ${sh}`} width={w} height={h} data-art={id} data-sprite={file}
+      preserveAspectRatio={scene ? 'xMidYMax slice' : 'xMidYMid meet'}
+      className={p.className} style={{ display: 'block', overflow: 'visible', pointerEvents: 'none', ...p.style }}
+      {...a11y}>
+      <image href={`/game/3d/${file}.webp`} width={sw} height={sh} />
+    </svg>
+  )
 }
 
 export function ArtPlaceholder({ id, ...p }: ArtProps & { id: string }) {
