@@ -27,16 +27,24 @@
         "right": "Completely",
         "marks": [
           {
-            "at": 2,
+            "at": 1,
             "label": "Thrown in"
+          },
+          {
+            "at": 3,
+            "label": "Treading water"
           },
           {
             "at": 5,
             "label": "Half ready"
           },
           {
-            "at": 8,
+            "at": 7,
             "label": "Mostly ready"
+          },
+          {
+            "at": 9,
+            "label": "Ready to run"
           }
         ],
         "style": "route"

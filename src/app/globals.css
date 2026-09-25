@@ -123,6 +123,10 @@ body {
   color: var(--color-ink);
 }
 
+/* A heading focused programmatically to announce a new card is not a control;
+   it should not wear a focus ring. */
+h1[tabindex="-1"]:focus, h1[tabindex="-1"]:focus-visible { outline: none; }
+
 :where(button, a, input, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--color-forest);
   outline-offset: 2px;

@@ -29,7 +29,12 @@ export default function Player() {
   // double tap nor a stale timer can skip a question.
   const go = useCallback((from?: string) => advance(from ?? useFlow.getState().path.at(-1)), [advance])
 
-  useEffect(() => { window.scrollTo({ top: 0 }) }, [id])
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+    // announce a new card by moving focus to its question, not by a live region
+    // that would re-read the whole card on every tap
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('main h1[tabindex="-1"]')?.focus({ preventScroll: true }))
+  }, [id])
 
   // progress: how far along the default path this card sits
   const progress = useMemo(() => {
@@ -119,7 +124,6 @@ export default function Player() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: reduce ? 0.12 : 0.24, ease: [0.16, 1, 0.3, 1] }}
           className="panel mt-6 px-1 pb-4"
-          aria-live="polite"
         >
           {card.visual && <Visual id={card.id} brief={card.visual} className="mb-6" />}
           <h1 tabIndex={-1} className="display text-[30px] leading-[1.1] text-ink sm:text-[38px]">{card.prompt}</h1>

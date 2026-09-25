@@ -74,57 +74,93 @@ export function Multi({ card, value = [], set }: P<string[]>) {
   )
 }
 
-/* -------------------------------------------------------------- slider */
-/* The route slider: the track is the climb, the thumb is the climber. A native
-   range input sits on top, transparent, so keyboard and screen readers get a
-   real slider and nothing about the answer depends on the drawing. */
-function RouteTrack({ frac, touched }: { frac: number; touched: boolean }) {
-  const W = 320, H = 96
-  const y = (u: number) => H - 14 - (u * 0.78 + Math.sin(u * 9) * 0.05) * (H - 30)
+/* -------------------------------------------------------------- scale */
+/* Tap-to-place on labelled stops, not a drag slider. The evidence is not close:
+   drag sliders raised break-off (odds ratio 6.9, Funke, Reips & Thomas 2011),
+   lowered response on mobile, and the handle's starting position shifted
+   answers (Maineri et al. 2021). Tap-to-place had none of those problems.
+   So: no handle until you tap, labels carry the meaning (not a 0-10 number),
+   an untouched scale is stored as missing, and it is a radiogroup, which is
+   also a better keyboard and screen-reader control than a range input. */
+function stopsFor(s: NonNullable<Card['slider']>) {
+  if (s.marks && s.marks.length >= 2) return [...s.marks].sort((a, b) => a.at - b.at)
+  const n = 5
+  return Array.from({ length: n }, (_, i) => ({
+    at: Math.round(s.min + ((s.max - s.min) * i) / (n - 1)),
+    label: i === 0 ? s.left : i === n - 1 ? s.right : '',
+  }))
+}
+
+function RouteStops({ stops, value, onPick }: {
+  stops: { at: number; label: string }[]; value: number | undefined; onPick: (v: number) => void
+}) {
+  const W = 320, H = 92
+  const y = (u: number) => H - 16 - (u * 0.74 + Math.sin(u * 9) * 0.05) * (H - 34)
   const pts = Array.from({ length: 41 }, (_, i) => { const u = i / 40; return `${u * W},${y(u)}` }).join(' ')
-  const cx = frac * W, cy = y(frac)
+  const sel = stops.findIndex((s) => s.at === value)
+  const cx = sel >= 0 ? (sel / (stops.length - 1)) * W : -1
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" aria-hidden>
+    <svg viewBox={`-10 -4 ${W + 20} ${H + 8}`} className="block w-full" aria-hidden>
       <polyline points={pts} fill="none" stroke="var(--color-rule)" strokeWidth="2" strokeDasharray="4 5" />
-      <polyline points={pts.split(' ').filter((p) => Number(p.split(',')[0]) <= cx).join(' ')}
-        fill="none" stroke="var(--color-navy)" strokeWidth="3" strokeLinecap="round" />
-      <g transform={`translate(${cx},${cy})`} opacity={touched ? 1 : 0.55}>
-        <path d="M0 0 v-22" stroke="var(--color-ink)" strokeWidth="1.6" />
-        <path d="M0 -22 l12 4 l-12 4 z" fill="var(--color-bronze)" />
-        <circle r="4.5" fill="var(--color-ink)" />
-      </g>
+      {sel >= 0 && (
+        <polyline points={pts.split(' ').filter((p) => Number(p.split(',')[0]) <= cx).join(' ')}
+          fill="none" stroke="var(--color-navy)" strokeWidth="3" strokeLinecap="round" />
+      )}
+      {stops.map((st, i) => {
+        const u = i / (stops.length - 1)
+        const on = i === sel
+        return (
+          <g key={st.at} transform={`translate(${u * W},${y(u)})`}>
+            <circle r={on ? 6 : 4.5} fill={on ? 'var(--color-ink)' : 'var(--color-ground)'}
+              stroke="var(--color-ink)" strokeWidth="1.5" />
+            {on && <><path d="M0 -6 v-18" stroke="var(--color-ink)" strokeWidth="1.6" />
+              <path d="M0 -24 l12 4 l-12 4 z" fill="var(--color-bronze)" /></>}
+          </g>
+        )
+      })}
     </svg>
   )
 }
 
 export function Slider({ card, value, set }: P<number>) {
   const s = card.slider!
-  const mid = Math.round((s.min + s.max) / 2)
-  const v = value ?? mid
-  const touched = value !== undefined
-  const nearest = s.marks?.length
-    ? s.marks.reduce((a, b) => (Math.abs(b.at - v) < Math.abs(a.at - v) ? b : a)).label
-    : String(v)
-  const frac = (v - s.min) / Math.max(1, s.max - s.min)
-  const input = (
-    <input type="range" min={s.min} max={s.max} step={1} value={v}
-      onChange={(e) => set(Number(e.target.value))}
-      aria-label={card.prompt} aria-valuetext={touched ? nearest : 'not answered'}
-      className={s.style === 'route'
-        ? 'absolute inset-0 h-full w-full cursor-grab opacity-0'
-        : 'mt-6 w-full accent-[var(--color-ink)]'}
-      style={s.style === 'route' ? undefined : { height: 44 }} />
-  )
+  const stops = stopsFor(s)
+  const cur = stops.find((st) => st.at === value)
+  const pick = (v: number) => set(v)
+  const onKey = (e: React.KeyboardEvent, i: number) => {
+    const to = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? i + 1
+      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? i - 1 : null
+    if (to === null) return
+    e.preventDefault()
+    const j = Math.max(0, Math.min(stops.length - 1, to))
+    pick(stops[j].at)
+    ;(e.currentTarget.parentElement?.children[j] as HTMLElement | undefined)?.focus()
+  }
   return (
     <div>
-      <div className="display text-[40px] leading-none text-ink" aria-live="polite">
-        {touched ? nearest : <span className="text-muted">Drag to answer</span>}
+      <div className="display min-h-[44px] text-[34px] leading-tight text-ink" aria-live="polite">
+        {cur ? (cur.label || String(cur.at)) : <span className="text-[20px] text-muted">Tap where you&apos;d put it</span>}
       </div>
-      {s.style === 'route'
-        ? <div className="relative mt-4"><RouteTrack frac={frac} touched={touched} />{input}</div>
-        : input}
-      <div className="mt-1 flex justify-between font-[family-name:var(--font-ui)] text-[13px] text-muted">
-        <span>{s.left}</span><span>{s.right}</span>
+      {s.style === 'route' && <div className="mt-3"><RouteStops stops={stops} value={value} onPick={pick} /></div>}
+      <div role="radiogroup" aria-label={card.prompt}
+        className="mt-3 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${stops.length}, minmax(0, 1fr))` }}>
+        {stops.map((st, i) => {
+          const on = st.at === value
+          return (
+            <button key={st.at} type="button" role="radio" aria-checked={on}
+              tabIndex={on || (value === undefined && i === 0) ? 0 : -1}
+              aria-label={st.label || `${st.at}`}
+              onClick={() => pick(st.at)} onKeyDown={(e) => onKey(e, i)}
+              className="flex min-h-[48px] items-center justify-center border px-1 text-center font-[family-name:var(--font-ui)] text-[12px] leading-tight transition-colors"
+              style={{
+                borderColor: on ? 'var(--color-ink)' : 'var(--color-rule)',
+                background: on ? 'var(--color-ink)' : 'var(--color-ground)',
+                color: on ? '#fff' : 'var(--color-ink-2)',
+              }}>
+              {st.label}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
