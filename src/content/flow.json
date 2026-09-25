@@ -1,0 +1,18 @@
+{
+  "name": "placeholder",
+  "thesis": "Exercises every card kind until the designed graph lands.",
+  "start": "hello",
+  "consistencyPairs": [],
+  "mainPathSeconds": 60,
+  "cards": [
+    { "id": "hello", "section": "open", "kind": "show", "prompt": "You made the climb. Help us map the next one.", "sub": "Six minutes. Mostly thumbs.", "next": "prep", "answers": [], "seconds": 5 },
+    { "id": "prep", "section": "pulse", "kind": "slider", "prompt": "How well did A2A prepare you to be an Advisor?", "slider": { "min": 0, "max": 10, "left": "Barely", "right": "Completely", "marks": [{ "at": 2, "label": "Thrown in" }, { "at": 5, "label": "Half ready" }, { "at": 8, "label": "Mostly ready" }] }, "branches": [{ "when": "lte:3", "goto": "gap" }], "next": "fuel", "answers": ["A:mark"], "seconds": 6 },
+    { "id": "gap", "section": "pulse", "kind": "multi", "prompt": "What were you least ready for?", "max": 2, "options": [{ "id": "prospect", "label": "Prospecting" }, { "id": "meetings", "label": "Running meetings" }, { "id": "advice", "label": "Turning analysis into advice" }, { "id": "partners", "label": "Internal partnerships" }], "next": "fuel", "answers": ["D1"], "seconds": 8 },
+    { "id": "fuel", "section": "hindsight", "kind": "rank", "prompt": "What actually taught you the job?", "sub": "Drag your top one to the top.", "options": [{ "id": "meetings", "label": "Sitting in client meetings" }, { "id": "morning", "label": "The morning meeting" }, { "id": "desk", "label": "Watching the desk" }, { "id": "own", "label": "Owning a deliverable" }, { "id": "roleplay", "label": "Role-plays" }], "next": "keep", "answers": ["D2", "A:learned"], "seconds": 12 },
+    { "id": "keep", "section": "ai", "kind": "swipe", "prompt": "If AI did it, would you miss it?", "sides": { "left": "Happy to lose", "right": "It made me" }, "options": [{ "id": "pitchbook", "label": "Building the pitchbook" }, { "id": "review", "label": "The review pack" }, { "id": "kyc", "label": "Onboarding and KYC" }], "branches": [{ "when": "right:pitchbook", "goto": "how" }], "next": "pack", "answers": ["D6"], "seconds": 10 },
+    { "id": "how", "section": "ai", "kind": "pick", "prompt": "So how does the next analyst learn it?", "options": [{ "id": "hand", "label": "By hand first, then AI" }, { "id": "critique", "label": "Critique the AI's draft" }, { "id": "depends", "label": "It depends" }], "next": "pack", "answers": ["D6"], "seconds": 6 },
+    { "id": "pack", "section": "knowing", "kind": "tokens", "prompt": "Pack their rucksack.", "sub": "Green: more of. Red: less of. Gold: the one thing.", "options": [{ "id": "client", "label": "Understand the client" }, { "id": "advice", "label": "Develop advice" }, { "id": "opps", "label": "Create opportunities" }, { "id": "lead", "label": "Lead the relationship" }], "tokens": [{ "id": "green", "label": "More", "count": 2, "colour": "forest" }, { "id": "red", "label": "Less", "count": 1, "colour": "bronze" }, { "id": "gold", "label": "The one", "count": 1, "colour": "gold" }], "next": "cert", "answers": ["D1", "D4"], "seconds": 15 },
+    { "id": "cert", "section": "bold", "kind": "pick", "prompt": "Certify Advisors before they pitch in J.P. Morgan's name?", "sub": "Pilots are. Surgeons are.", "options": [{ "id": "yes", "label": "Yes" }, { "id": "no", "label": "No" }, { "id": "depends", "label": "It depends" }], "next": "one", "answers": ["A:certification"], "seconds": 5 },
+    { "id": "one", "section": "wrap", "kind": "text", "prompt": "No one should graduate without having...", "optional": true, "next": "END", "answers": ["D3"], "seconds": 12 }
+  ]
+}
