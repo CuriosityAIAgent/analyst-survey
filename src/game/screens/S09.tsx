@@ -295,7 +295,7 @@ function BeatB(p: StepProps) {
                   data-testid="lead-card">
                   <p className="font-[family-name:var(--font-ui)] text-[10.5px] font-medium uppercase tracking-[0.16em] text-muted">{CLIPS[0].label}</p>
                   <Art id={trait(c.trait).art} size={120} title={trait(c.trait).label} />
-                  <p className="text-center font-[family-name:var(--font-display)] text-[22px] leading-[26px] text-ink">{trait(c.trait).label}</p>
+                  <p className="text-center font-[family-name:var(--font-text)] font-semibold text-[22px] leading-[26px] text-ink">{trait(c.trait).label}</p>
                 </div>
               )}
               renderButton={(ex, press, off) => (

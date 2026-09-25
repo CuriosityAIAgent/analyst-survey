@@ -184,7 +184,7 @@ export default function S07(p: StepProps) {
                     data-testid={s.top ? `card-${card.id}` : undefined}
                   >
                     <Art id={card.art} size={186} title={card.label} />
-                    <p className="mt-2 text-center font-[family-name:var(--font-display)] text-[22px] leading-[26px] tracking-[-0.01em] text-ink">
+                    <p className="mt-2 text-center font-[family-name:var(--font-text)] font-semibold text-[22px] leading-[26px] tracking-[-0.01em] text-ink">
                       {card.label}
                     </p>
                     <p className="mt-1 text-center font-[family-name:var(--font-text)] text-[14px] leading-[18px] text-muted">
@@ -248,7 +248,7 @@ export default function S07(p: StepProps) {
                     data-testid={`recall-${id}`}
                   >
                     <Art id={card.art} size={72} />
-                    <span className="text-center font-[family-name:var(--font-display)] text-[15px] leading-[18px] text-ink">{card.label}</span>
+                    <span className="text-center font-[family-name:var(--font-text)] font-semibold text-[15px] leading-[18px] text-ink">{card.label}</span>
                     <span className="absolute right-2 top-2"><Stamp answer={c.answer} size="sm" reduced /></span>
                   </button>
                 )

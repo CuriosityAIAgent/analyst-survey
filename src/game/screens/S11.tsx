@@ -435,7 +435,7 @@ export default function S11(p: StepProps) {
                 <Row k="Day-one kit" v={day1.length ? day1.map((b) => b.label).join(' · ') : 'None on day one'} />
                 <Row k="On their own feet" v={own.length ? own.map((x) => x.label).join(' · ') : 'None'} />
               </dl>
-              <p className="mt-4 font-[family-name:var(--font-display)] text-[24px] leading-[28px] text-ink">Thank you.</p>
+              <p className="mt-4 font-[family-name:var(--font-text)] font-semibold text-[24px] leading-[28px] text-ink">Thank you.</p>
             </motion.div>
           )}
         </AnimatePresence>
