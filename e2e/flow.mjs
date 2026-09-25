@@ -11,7 +11,8 @@ const log = async () => { const x = await h1(); seen.push(x); console.log('  ', 
 await log(); await click('Begin the climb')
 await log(); await click('Continue')                       // hello (show)
 await log()                                                // slider: set LOW to fire the branch
-await p.evaluate(()=>{const r=document.querySelector('input[type=range]');const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;s.call(r,'2');r.dispatchEvent(new Event('input',{bubbles:true}))})
+// tap-to-place: a LOW stop should fire the branch
+await p.evaluate(()=>[...document.querySelectorAll('[role=radio]')].find(b=>b.textContent.includes('Treading water'))?.click())
 await new Promise(r=>setTimeout(r,200)); await click('Next')
 await log()                                                // should be the BRANCH card "gap"
 await click('Prospecting'); await click('Next')
