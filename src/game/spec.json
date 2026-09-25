@@ -1,0 +1,2123 @@
+{
+  "title": "The Ascent: Kit Out the Next Climber (final, revised)",
+  "version": "2026-09-25b",
+  "frame": {
+    "viewport": "390x660 (iPhone Safari with toolbars), 100dvh, no scroll on any screen",
+    "stage": "touch-action:none; -webkit-touch-callout:none; user-select:none",
+    "logging": "Every screen logs ms; every randomised order is logged",
+    "camps": [
+      "Base camp",
+      "Camp I",
+      "Camp II",
+      "Camp III",
+      "Summit"
+    ]
+  },
+  "screens": [
+    {
+      "id": "S01",
+      "kind": "screen",
+      "title": "The trailhead",
+      "camp": "Base camp",
+      "mechanic": "scene",
+      "prompt": "You made the climb. Now kit out the next one.",
+      "helper": "About six minutes. Held under a code by People Analytics.",
+      "items": [],
+      "zones": [],
+      "capacity": "No answer. One button: 'Start the climb'. Business and class come from the link token; nothing about the respondent is asked here.",
+      "adaptive": [
+        {
+          "when": "!token.business || !token.cohort",
+          "goto": "S01#B",
+          "note": "Fallback only. People Analytics issues tokens carrying both, so at launch this should never fire."
+        }
+      ],
+      "beats": [
+        {
+          "beat": "A",
+          "mechanic": "scene",
+          "prompt": "You made the climb. Now kit out the next one.",
+          "helper": "About six minutes. Held under a code by People Analytics.",
+          "capacity": "No answer. One button: 'Start the climb'.",
+          "stores": [
+            "t.start",
+            "consent",
+            "variant.seed",
+            "segment.business",
+            "segment.cohort",
+            "segment.source"
+          ]
+        },
+        {
+          "beat": "B",
+          "mechanic": "pick",
+          "prompt": "Your business and class? For grouping only.",
+          "helper": "Two taps. Reported only in groups of ten or more.",
+          "items": [
+            {
+              "id": "uspb",
+              "label": "USPB",
+              "art": null,
+              "group": "Business"
+            },
+            {
+              "id": "ipb",
+              "label": "IPB",
+              "art": null,
+              "group": "Business"
+            },
+            {
+              "id": "solutions",
+              "label": "Solutions",
+              "art": null,
+              "group": "Business"
+            },
+            {
+              "id": "other",
+              "label": "Other",
+              "art": null,
+              "group": "Business"
+            },
+            {
+              "id": "cohort",
+              "label": "Class of 2017 to 2025, Earlier",
+              "art": null,
+              "group": "Class of",
+              "note": "Year chips in one row"
+            }
+          ],
+          "capacity": "Fallback only, shown when the token lacks business or class. One tap per row. Text chips, no art.",
+          "stores": [
+            "segment.business",
+            "segment.cohort",
+            "segment.source"
+          ]
+        }
+      ],
+      "next": "S02",
+      "measures": [
+        "Adam: warm, peer-to-peer opening ('you've been successful; help the next generation')",
+        "Consent and purpose, stated once",
+        "Segments (business, cohort) from the link token, not asked"
+      ],
+      "stores": [
+        "t.start",
+        "consent",
+        "variant.seed",
+        "segment.business",
+        "segment.cohort",
+        "segment.source: token|asked"
+      ],
+      "seconds": 6,
+      "layout": "Full-bleed scene. Prompt and helper over the sky; footnote above the button.",
+      "notes": [
+        "Full-bleed base camp. The rookie (forest jacket) stands at the trailhead beside an open, empty rucksack. The route up the face is a faint pencil line.",
+        "Through the tent flap: six instrument shapes under a canvas cover (the navigation kit, not yet issued). Nothing explains them; it is a promise of what comes at Camp II.",
+        "Footnote in Archivo 12px: 'Your answers are held under a code by People Analytics, not under your name. The working group sees only groups of ten or more.' This is pseudonymous, and the copy says so; it does not claim anonymity.",
+        "Segments are read from the link token, so the respondent is never asked what tools they have or what they did. Tool access by business comes from the AI rollout register at analysis time."
+      ]
+    },
+    {
+      "id": "S02",
+      "kind": "screen",
+      "title": "Kit them out",
+      "camp": "Base camp",
+      "mechanic": "pack",
+      "prompt": "Kit out the next climber. Fill every zone.",
+      "helper": "Drop on a full slot to swap.",
+      "items": [
+        {
+          "id": "meetings",
+          "label": "Sit in client meetings",
+          "art": "gear-binoculars",
+          "area": "1 Understand the client; Adam: observing"
+        },
+        {
+          "id": "present",
+          "label": "Present to clients",
+          "art": "gear-leadrope",
+          "area": "2 Advice / 4 Lead the relationship"
+        },
+        {
+          "id": "portfolio",
+          "label": "Portfolio analysis",
+          "art": "gear-crampons",
+          "area": "2 Develop and communicate advice",
+          "pairs": "p_portfolio"
+        },
+        {
+          "id": "outreach",
+          "label": "Prospect outreach",
+          "art": "gear-flare",
+          "area": "3 Create and convert opportunities",
+          "pairs": "p_outreach"
+        },
+        {
+          "id": "prep",
+          "label": "Prep the meeting brief",
+          "art": "gear-bootlaces",
+          "area": "4 Lead the relationship",
+          "pairs": "p_brief"
+        },
+        {
+          "id": "ops",
+          "label": "Onboarding & ops",
+          "art": "gear-stove",
+          "area": "5 Navigate the franchise; Adam: ops exposure"
+        },
+        {
+          "id": "debrief",
+          "label": "Debrief with Advisor",
+          "art": "gear-logbook",
+          "area": "6 Judgement; deck Coaching"
+        },
+        {
+          "id": "morning",
+          "label": "Morning meeting",
+          "art": "gear-thermos",
+          "area": "Adam: learning source"
+        },
+        {
+          "id": "classroom",
+          "label": "Classroom training",
+          "art": "gear-manual",
+          "area": "Adam: learning source (drives F1)"
+        },
+        {
+          "id": "roleplay",
+          "label": "Role plays",
+          "art": "gear-boulder",
+          "area": "Adam: learning source"
+        },
+        {
+          "id": "admin",
+          "label": "CRM & admin",
+          "art": "gear-forms",
+          "area": "Low-value work (deck Red, wrap-up stem 2)",
+          "pairs": "p_crm"
+        },
+        {
+          "id": "formatting",
+          "label": "Deck formatting",
+          "art": "gear-polish",
+          "area": "Low-value work (deck Red, wrap-up stem 2)"
+        }
+      ],
+      "zones": [
+        {
+          "id": "rucksack",
+          "label": "More of it",
+          "art": "rucksack",
+          "slots": 3,
+          "vote": "GREEN"
+        },
+        {
+          "id": "hand",
+          "label": "Speeds them most",
+          "art": "hand-zone",
+          "slots": 1,
+          "vote": "BLUE",
+          "note": "Takes a copy: a packed item stays packed"
+        },
+        {
+          "id": "out",
+          "label": "Free them of it",
+          "art": "tarp-out",
+          "slots": 2,
+          "vote": "RED"
+        },
+        {
+          "id": "rerig",
+          "label": "Keep, but re-rig",
+          "art": "bench-rerig",
+          "slots": 2,
+          "vote": "AMBER"
+        }
+      ],
+      "capacity": "Exactly 3 in the rucksack (Green), 1 in the hand (Blue), 2 on the tarp (Red), 2 on the bench (Amber). A tile sits in only one of rucksack, tarp or bench. The hand takes a copy of any tile, so Blue may repeat a Green, as in the deck's dot vote. Dropping on an occupied slot swaps the two tiles; dropping on a zone's body when it is full bounces with a 2px shake.",
+      "adaptive": [
+        {
+          "when": "vote.green.includes('classroom') || vote.blue === 'classroom'",
+          "goto": "F1",
+          "note": "Evaluated on Continue, after all eight placements"
+        }
+      ],
+      "next": "S03",
+      "measures": [
+        "Deck vote: GREEN x3, BLUE x1, RED x2, AMBER x2 on one board, as in the deck",
+        "Wrap-up stem 1 'Every Analyst should do more of...' (Green)",
+        "Wrap-up stem 2 '...spend less time on...' (Red)",
+        "D1 (more often or earlier); D2 (Green vs Red on the same tray); D3 (experience and coaching built in); D4 (Red = reduce; Amber = redesign)",
+        "Adam: what could have accelerated the journey (morning meeting, meetings, ops, classroom, role plays), asked forward as best-worst"
+      ],
+      "stores": [
+        "vote.green[3]",
+        "vote.greenOrder",
+        "vote.blue",
+        "vote.blueAlsoGreen",
+        "vote.red[2]",
+        "vote.amber[2]",
+        "tray.order"
+      ],
+      "seconds": 64,
+      "walk": true,
+      "layout": "390x660 budget: top bar 40, prompt and helper 72, zones in a 2x2 grid of 171x68 (placed tiles shrink to 40px) = 144, tray 4x3 of 64px tiles with two-line 12px labels = 276, walk strip 56, margins 32. Total 620.",
+      "notes": [
+        "One board, four zones, one tray: the deck's single dot-vote board. All four zones are visible from the start; each shows its slot outlines (3, 1, 2, 2), so the counts need no words.",
+        "Tray: 12 gear tiles, 64px, 4x3, order randomised per respondent and logged. Every tile is drawn in the forest accent at the same weight; the label (Archivo 12px) carries the meaning.",
+        "The tray mixes developmental work with two plainly low-value tiles (CRM & admin, Deck formatting) and one that reads either way (Onboarding & ops), so the tarp is a real choice, not a forced pick among good activities.",
+        "The rucksack zips as its third item goes in. The rookie's gloved hand closes on the Blue item. The tarp folds over its loads; the bench shows a spliced rope under its two.",
+        "Write-ins are not on this board. 'Missing activities' (deck) are collected in S10's line, which invites 'anything we didn't ask'.",
+        "F1 opens only after all eight placements, on Continue, so packing classroom cannot be seen to cost time mid-board."
+      ]
+    },
+    {
+      "id": "S03",
+      "kind": "screen",
+      "title": "The signpost",
+      "camp": "Camp I",
+      "mechanic": "text",
+      "prompt": "No one reaches the top without having…",
+      "helper": "Finish the line. Seen it, done it, or led it?",
+      "items": [
+        {
+          "id": "rule",
+          "label": "Signpost arm",
+          "art": "signpost"
+        }
+      ],
+      "zones": [],
+      "capacity": "One line, 60 characters, optional ('Leave it blank' stores skipped). Native dictation works.",
+      "adaptive": [],
+      "next": "S04",
+      "measures": [
+        "Wrap-up stem 3 'No one should graduate without having...'",
+        "D3: what every participant should experience, and (from the helper's cue) what counts as sufficient",
+        "Main open text placed in the first third (evidence: position effects)"
+      ],
+      "stores": [
+        "rule.text",
+        "rule.skipped",
+        "rule.keystrokes"
+      ],
+      "seconds": 27,
+      "layout": "Signpost and field in the upper half so the keyboard never covers them (field top at or above 300px).",
+      "notes": [
+        "Each typed word appears carved into the signpost arm, bronze letters settling over 120ms. The ghost text is only '...having ______', with no example answers to anchor on.",
+        "The helper's 'Seen it, done it, or led it?' replaces the old 'how much counts as enough' chips: it asks for sufficiency inside the same line, at no extra tap."
+      ]
+    },
+    {
+      "id": "S04",
+      "kind": "screen",
+      "title": "The climb",
+      "camp": "Camp I",
+      "mechanic": "drag-slider",
+      "prompt": "Drag them up. How long should the climb to Advisor take?",
+      "helper": "Camps from one year to four. Or tap: when proven.",
+      "items": [
+        {
+          "id": "m12",
+          "label": "12 months",
+          "art": "track-switchback"
+        },
+        {
+          "id": "m18",
+          "label": "18 months",
+          "art": "track-switchback"
+        },
+        {
+          "id": "m24",
+          "label": "24 months",
+          "art": "track-switchback"
+        },
+        {
+          "id": "m30",
+          "label": "30 months",
+          "art": "track-switchback"
+        },
+        {
+          "id": "m36",
+          "label": "36 months",
+          "art": "track-switchback",
+          "note": "A small cairn marked 'Today' stands here"
+        },
+        {
+          "id": "m48",
+          "label": "48 months",
+          "art": "track-switchback"
+        },
+        {
+          "id": "proven",
+          "label": "When proven",
+          "art": "track-switchback",
+          "note": "Brass tag beside the track; tapped, not dragged"
+        },
+        {
+          "id": "notyet",
+          "label": "Not yet",
+          "art": null,
+          "note": "Beat B only; text chip, no image"
+        }
+      ],
+      "zones": [],
+      "beats": [
+        {
+          "beat": "A",
+          "mechanic": "drag-slider",
+          "prompt": "Drag them up. How long should the climb to Advisor take?",
+          "helper": "Camps from one year to four. Or tap: when proven.",
+          "capacity": "One stop. The rookie starts on the trailhead ledge, off the scale; Continue stays disabled until they are placed.",
+          "stores": [
+            "pace.months: 12|18|24|30|36|48|'proven'",
+            "pace.reversals"
+          ]
+        },
+        {
+          "beat": "B",
+          "mechanic": "pick",
+          "self": true,
+          "prompt": "And you? Tap where you felt ready.",
+          "helper": "One tap. 'Not yet' is a fine answer.",
+          "capacity": "One tap on a stop, or 'Not yet'. A small 'Rather not say' link stores null. Tap only, no drag, no images.",
+          "stores": [
+            "self.readyAt: 12|18|24|30|36|48|'notYet'|null"
+          ]
+        }
+      ],
+      "capacity": "Beat A: one stop, required. Beat B: one tap, 'Not yet' or 'Rather not say'. Keyboard: Up/Down step between stops, Home/End jump to the ends.",
+      "adaptive": [
+        {
+          "when": "pace.months === 'proven' || pace.months < 36",
+          "goto": "F2a"
+        },
+        {
+          "when": "pace.months >= 36",
+          "goto": "F2b"
+        }
+      ],
+      "next": "S05",
+      "measures": [
+        "Adam: compress the three years? minimum time? compress on skills attained ('When proven'); 'ready after a year, or held back?'",
+        "D1 (earlier); D5 (progression)",
+        "Self-question 1 (Beat B)",
+        "Derived: gap between the pace they set and the pace they lived"
+      ],
+      "stores": [
+        "pace.months",
+        "pace.reversals",
+        "self.readyAt"
+      ],
+      "seconds": 22,
+      "walk": true,
+      "layout": "Vertical track 340px tall on the right two-thirds; stop labels left of the track in Archivo 13px.",
+      "notes": [
+        "A real drag slider, and the climber is the thumb (48px figure, 64px touch target). Dragging walks them up the switchbacks with a stride made of SVG transforms on the one survey.ts figure; on release they snap to the nearest camp with a boot-crunch tick (navigator.vibrate(8) where supported).",
+        "Their footsteps ink the pencil path in behind them. Tapping any camp also places them; a hidden native input[type=range] carries keyboard and screen-reader use (aria-valuetext = '24 months').",
+        "Stops are 12, 18, 24, 30, 36 and 48 months; the helper says 'one year to four' because the last gap is a year, not six months.",
+        "Beat B: the rookie waits at their camp; the respondent's own figure appears at the trailhead as a bronze outline. No other image is on screen (images shift self-ratings).",
+        "F2 rises after Beat B, so the self-answer is given before any follow-up, and F2 names the rookie and their stop so it cannot be read as a question about the respondent."
+      ]
+    },
+    {
+      "id": "S05",
+      "kind": "screen",
+      "title": "The navigation kit",
+      "camp": "Camp II",
+      "mechanic": "lego",
+      "prompt": "Build their navigation kit. When does each piece go on?",
+      "helper": "Snap each brick into a lane. Tap i to read it.",
+      "items": [
+        {
+          "id": "map",
+          "label": "Paper map",
+          "art": "brick-map",
+          "sub": "LLM chat",
+          "rung": 1,
+          "ladder": "assisted",
+          "peek": "A general AI chat. Knows the terrain broadly, not today's."
+        },
+        {
+          "id": "compass",
+          "label": "Compass",
+          "art": "brick-compass",
+          "sub": "AI in your tools",
+          "rung": 2,
+          "ladder": "assisted",
+          "peek": "AI inside email, Excel and slides. Helps while you work."
+        },
+        {
+          "id": "guidebook",
+          "label": "Guidebook",
+          "art": "brick-guidebook",
+          "sub": "Firm research AI",
+          "rung": 3,
+          "ladder": "assisted",
+          "peek": "Grounded in the house view and the product shelf."
+        },
+        {
+          "id": "gps",
+          "label": "GPS",
+          "art": "brick-gps",
+          "sub": "Knows the client",
+          "rung": 4,
+          "ladder": "assisted",
+          "peek": "Reads CRM, holdings and history. Knows where the client stands."
+        },
+        {
+          "id": "radio",
+          "label": "Weather radio",
+          "art": "brick-radio",
+          "sub": "Watch agents",
+          "rung": 5,
+          "ladder": "standing",
+          "peek": "Agents that watch markets, life events and capital calls."
+        },
+        {
+          "id": "brief",
+          "label": "Expedition brief",
+          "art": "brick-brief",
+          "sub": "Agent team",
+          "rung": 6,
+          "ladder": "briefed",
+          "peek": "An agent team drafts the full pack: weather, route, timings."
+        }
+      ],
+      "zones": [
+        {
+          "id": "day1",
+          "label": "Day one",
+          "art": "baseplate",
+          "note": "Lane 1 of the base plate, six rung-height stud rows"
+        },
+        {
+          "id": "proven",
+          "label": "Once proven",
+          "art": "baseplate",
+          "note": "Lane 2"
+        },
+        {
+          "id": "none",
+          "label": "Not for them",
+          "art": "crate",
+          "note": "Narrow fourth column beside the plate"
+        }
+      ],
+      "capacity": "All six bricks placed, each in a lane or the crate. A brick snaps to its own rung height in the lane. Bricks in Day one show as pale carried-forward ghosts in Once proven.",
+      "adaptive": [
+        {
+          "when": "kit.lane.brief === 'day1'",
+          "goto": "F3a"
+        },
+        {
+          "when": "kit.lane.brief === 'proven'",
+          "goto": "F3b"
+        },
+        {
+          "when": "kit.lane.brief === 'none'",
+          "goto": "F3c"
+        }
+      ],
+      "next": "S06",
+      "measures": [
+        "D6 (where they form a view before AI; which instruments come later)",
+        "D5 (when AI access is earned)",
+        "Deck technology: 'Where should Analysts form a view before seeing AI output?'",
+        "Adam: 'managers of agents even at that stage?'"
+      ],
+      "stores": [
+        "kit.lane{brickId: day1|proven|none}",
+        "kit.cut{day1, proven}: 0-6 contiguous rungs available",
+        "kit.unsupported[]",
+        "kit.peeks[]",
+        "kit.events[]"
+      ],
+      "seconds": 52,
+      "layout": "390x660 budget: top bar 40, prompt and helper 72, route strip 60, lane heads 20 + plate 6 rows x 34 = 224, tray two rows of three 72x30 bricks with 12px sub-labels = 100, button 52, margins 60. Total 628. Width: two lanes of 128px + crate column 72px + gaps and margins = 376.",
+      "notes": [
+        "Each builds on the last, felt not told: the base plate has six stud rows per lane, one per rung, map at the bottom and expedition brief at the top. A brick placed where the rungs below it are not yet available sits over empty studs with a dashed shadow and a slight wobble. It is allowed, and it stays. The wobble is the only comment, plus one small caption the first time: 'Nothing under it yet.'",
+        "All six bricks are drawn in the one navy accent at the same weight. The instrument icon and the plate's row height carry the order, so no brick looks better or more advanced by its colour.",
+        "The base plate is a forest-green rock ledge with nothing printed on it. It cannot be moved.",
+        "Above the plate, a 60px route strip redraws as Day-one bricks go on: faint pencil line, then dotted, then waypoints, then weather glyphs and timings. The rookie stands at the strip's left end. Their bootprint line behind them does not move on this screen, and the button reads 'Start walking'.",
+        "Each brick carries a small 'i' corner. Tapping it (or Enter / ? on the keyboard) opens a one-line peek card that says what the AI tool is. It is descriptive, with no 'can't' line. Long-press (450ms) also opens it, but cancels after 8px of movement so it never fights a drag; the stage sets -webkit-touch-callout:none and user-select:none.",
+        "Snap: 180ms spring and a stud-click (sound off by default). Any order is allowed, so a respondent can say 'agents yes, open chat no', and that view is recorded as kit.unsupported."
+      ]
+    },
+    {
+      "id": "S06",
+      "kind": "screen",
+      "title": "Who climbs each pitch",
+      "camp": "Camp II",
+      "mechanic": "pack",
+      "prompt": "Five pitches. Who climbs each one, and how?",
+      "helper": "Their own feet take two at most.",
+      "items": [
+        {
+          "id": "p_portfolio",
+          "label": "Portfolio analysis",
+          "art": "reviewpack",
+          "pairs": "portfolio"
+        },
+        {
+          "id": "p_outreach",
+          "label": "Prospect outreach draft",
+          "art": "clientmail",
+          "pairs": "outreach"
+        },
+        {
+          "id": "p_brief",
+          "label": "Meeting brief",
+          "art": "pitchbook",
+          "pairs": "prep"
+        },
+        {
+          "id": "p_onboard",
+          "label": "Onboarding paperwork",
+          "art": "onboard"
+        },
+        {
+          "id": "p_crm",
+          "label": "Meeting notes & CRM",
+          "art": "pitch-crmnotes",
+          "pairs": "admin"
+        }
+      ],
+      "zones": [
+        {
+          "id": "own",
+          "label": "On their own feet",
+          "art": "zone-ownfeet",
+          "slots": 2,
+          "deck": "Human-owned / human-led",
+          "ladder": "own"
+        },
+        {
+          "id": "withkit",
+          "label": "Walk it with kit",
+          "art": "zone-withkit",
+          "deck": "AI-assisted",
+          "ladder": "assisted"
+        },
+        {
+          "id": "kitdrafts",
+          "label": "Kit drafts, they check",
+          "art": "zone-kitdrafts",
+          "deck": "AI-led with human review",
+          "ladder": "briefed"
+        },
+        {
+          "id": "crew",
+          "label": "Base-camp crew",
+          "art": "zone-crew",
+          "deck": "Reassign, self-serve or eliminate",
+          "ladder": null
+        }
+      ],
+      "capacity": "All five pitches placed. 'On their own feet' holds at most 2; the others are unlimited.",
+      "adaptive": [],
+      "next": "S07",
+      "measures": [
+        "D6 (which reps stay human-led even when AI can do them)",
+        "D4 (automate = kit drafts; reassign, self-serve or eliminate = crew)",
+        "D2 (read against S02: a packed item's pitch handed off is a silent staging check)",
+        "Deck: Overseeing AI and Developing intuition (the four zones are the deck's own four categories)"
+      ],
+      "stores": [
+        "pitch.zone{pitchId: own|withkit|kitdrafts|crew}",
+        "pitch.order",
+        "pitch.firstOwn"
+      ],
+      "seconds": 38,
+      "walk": true,
+      "layout": "390x660 budget: top bar 40, prompt and helper 72, zones 2x2 at 171x100 = 208, tray of five 64px pitch tiles in one row with labels = 90, walk strip 56, margins 48. Total 514.",
+      "notes": [
+        "Four ground zones in a 2x2 grid (171x100). Every pitch is work AI can do, so each placement is a real trade-off.",
+        "The porter is a person from the base-camp crew (ops, service, a specialist), drawn plainly human. It is not the navigation kit. The only things that stand for AI on this screen are instruments: the map and compass in 'Walk it with kit', the expedition-brief clipboard in 'Kit drafts, they check'.",
+        "A pitch dropped on 'On their own feet' makes the rookie shoulder it with a small crouch-and-rise (SVG transform on the survey.ts figure). A third bounces and the strap strains for 200ms.",
+        "Three pitches pair with S02 gear (portfolio, outreach, prep) and one with a low-value tile (CRM & admin). These drive silent staging checks only; nothing is put to the respondent.",
+        "The old 'freed day' beat is gone; where released capacity should go is now one storm call in S07 ('Freed time, bigger books')."
+      ]
+    },
+    {
+      "id": "S07",
+      "kind": "screen",
+      "title": "Storm calls",
+      "camp": "Camp III",
+      "mechanic": "swipe",
+      "prompt": "Storm coming. Four calls. Right: make it policy.",
+      "helper": "Left: drop it. 'Unsure' is a real answer.",
+      "items": [
+        {
+          "id": "certify",
+          "label": "Certify before clients",
+          "art": "card-certify",
+          "sub": "A pass before they pitch or run a review alone."
+        },
+        {
+          "id": "aiclient",
+          "label": "AI clients replace some",
+          "art": "card-aiclient",
+          "sub": "Avatar role plays stand in for some real meetings."
+        },
+        {
+          "id": "agents",
+          "label": "Agents by year two",
+          "art": "card-agents",
+          "sub": "Each Associate runs their own agent team."
+        },
+        {
+          "id": "freedtime",
+          "label": "Freed time, bigger books",
+          "art": "card-freedtime",
+          "sub": "Hours the kit saves go to more clients."
+        }
+      ],
+      "zones": [
+        {
+          "id": "drop",
+          "label": "Drop it",
+          "art": null,
+          "value": "drop",
+          "key": "ArrowLeft / swipe left"
+        },
+        {
+          "id": "unsure",
+          "label": "Unsure",
+          "art": null,
+          "value": "unsure",
+          "key": "ArrowDown / button"
+        },
+        {
+          "id": "policy",
+          "label": "Make it policy",
+          "art": null,
+          "value": "policy",
+          "key": "ArrowRight / swipe right"
+        }
+      ],
+      "capacity": "All four cards, order randomised and logged. Buttons under the stack (Drop it / Unsure / Make it policy) are the primary input; swipe is the enhancement.",
+      "adaptive": [
+        {
+          "when": "calls.certify.answer === 'policy'",
+          "goto": "F4",
+          "note": "Evaluated after all four cards"
+        }
+      ],
+      "next": "S08",
+      "measures": [
+        "Adam: certification (and, through F4, avatar role plays as a way to earn it); managers of agents; training at scale",
+        "Deck: readiness checks before a client; can simulations or AI clients substitute?; Re-focusing released capacity (bigger books vs development)",
+        "D5 (operating model)",
+        "Re-asks: agents vs S05 brief lane; certify vs S04 'When proven'"
+      ],
+      "stores": [
+        "calls{cardId: {answer: 'policy'|'drop'|'unsure', ms, order}}"
+      ],
+      "seconds": 22,
+      "layout": "Card 300x300 centred (art 200px, title in Bodoni 22px, one Source Serif sub-line), three buttons in a row beneath.",
+      "notes": [
+        "Each card has a 3-4 word Bodoni title and one short Source Serif sub-line; the title is what is read.",
+        "The stored answer is the zone's value ('policy', 'drop', 'unsure'), the same vocabulary the F4 rule tests. A unit test asserts F4 fires on certify = 'policy' and not otherwise.",
+        "Snow thickens a little with each card and clears after the last. A small ink stamp ('POLICY' / 'DROPPED' / 'UNSURE') lands as each card leaves; the stamp is set in Archivo, not drawn art.",
+        "Filters first: all four are answered before F4 can appear, so 'no' is never learned as the short way through.",
+        "Card art shows the situation neutrally: no badges, trophies or winning faces."
+      ]
+    },
+    {
+      "id": "S08",
+      "kind": "screen",
+      "title": "Roped to another",
+      "camp": "Camp III",
+      "mechanic": "drag-slider",
+      "self": true,
+      "prompt": "Roped to a different Advisor on day one. Where are you now?",
+      "helper": "Same you, same effort. Drag yourself onto the ridge.",
+      "items": [
+        {
+          "id": "r1",
+          "label": "Nowhere near here",
+          "art": "track-ridge",
+          "value": 1
+        },
+        {
+          "id": "r2",
+          "label": "Well behind",
+          "art": "track-ridge",
+          "value": 2
+        },
+        {
+          "id": "r3",
+          "label": "A bit behind",
+          "art": "track-ridge",
+          "value": 3
+        },
+        {
+          "id": "r4",
+          "label": "About here",
+          "art": "track-ridge",
+          "value": 4
+        },
+        {
+          "id": "r5",
+          "label": "Right here",
+          "art": "track-ridge",
+          "value": 5
+        }
+      ],
+      "zones": [],
+      "capacity": "One stop. 'You' (bronze) start on a ledge below the ridge, unset. Tap a stop or use arrow keys. 'Rather not say' stores null. Labels only, no images at the stops.",
+      "adaptive": [
+        {
+          "when": "self.ropeCounterfactual === null || self.ropeCounterfactual <= 3",
+          "goto": "F5",
+          "variant": "A"
+        },
+        {
+          "when": "self.ropeCounterfactual >= 4",
+          "goto": "F5",
+          "variant": "B"
+        }
+      ],
+      "next": "S09",
+      "measures": [
+        "Self-question 2",
+        "Adam: 'could you have been tagged to someone else and still succeeded?'",
+        "Adam: can we scale, or are there too few amazing people? (derived: the share who would be 'about here' with any Advisor, read with F5 'Protected Advisor time')",
+        "D5 and deck Access: how much depends on luck of assignment"
+      ],
+      "stores": [
+        "self.ropeCounterfactual: 1-5|null (1 = nowhere near, 5 = right here)",
+        "rope.reversals"
+      ],
+      "seconds": 12,
+      "layout": "Horizontal ridge across the middle third; labels under each stop in Archivo 12px.",
+      "notes": [
+        "Second real drag slider, horizontal. The respondent's own bronze figure is the thumb. The rope runs off-screen to the left; the other Advisor is never drawn, so no one is pictured or judged.",
+        "Coding: 1 = 'Nowhere near here' (the result depended most on the Advisor), 5 = 'Right here' (it depended least). The field is named for the counterfactual so no analyst reads it backwards.",
+        "Sensitive in small groups: S08 and F5 breakdowns are suppressed in any business x cohort cell under ten."
+      ]
+    },
+    {
+      "id": "S09",
+      "kind": "screen",
+      "title": "Rope up",
+      "camp": "Camp III",
+      "mechanic": "rank",
+      "prompt": "Rope up the three traits great private bankers lead with.",
+      "helper": "Drag onto the rope. Clip one leads.",
+      "items": [
+        {
+          "id": "reading",
+          "label": "Reading people (EQ)",
+          "art": "trait-reading"
+        },
+        {
+          "id": "hunter",
+          "label": "A hunter's drive",
+          "art": "trait-hunter"
+        },
+        {
+          "id": "calm",
+          "label": "Calm in a storm",
+          "art": "trait-calm"
+        },
+        {
+          "id": "depth",
+          "label": "Market & product depth",
+          "art": "trait-depth"
+        },
+        {
+          "id": "story",
+          "label": "Numbers into a story",
+          "art": "trait-story"
+        },
+        {
+          "id": "bounce",
+          "label": "Bouncing back from no",
+          "art": "trait-bounce"
+        },
+        {
+          "id": "judgement",
+          "label": "Commercial judgement",
+          "art": "trait-judgement"
+        },
+        {
+          "id": "curiosity",
+          "label": "Curiosity",
+          "art": "trait-curiosity"
+        }
+      ],
+      "zones": [
+        {
+          "id": "clip1",
+          "label": "1 Leads",
+          "art": "rope-clips"
+        },
+        {
+          "id": "clip2",
+          "label": "2 Second",
+          "art": "rope-clips"
+        },
+        {
+          "id": "clip3",
+          "label": "3 Anchor",
+          "art": "rope-clips"
+        }
+      ],
+      "beats": [
+        {
+          "beat": "A",
+          "mechanic": "rank",
+          "prompt": "Rope up the three traits great private bankers lead with.",
+          "helper": "Drag onto the rope. Clip one leads.",
+          "capacity": "Exactly three, ordered. Dropping on a filled clip swaps. Tray order randomised and logged.",
+          "stores": [
+            "traits.top3[3]",
+            "traits.order"
+          ]
+        },
+        {
+          "beat": "B",
+          "mechanic": "swipe",
+          "prompt": "{leadTrait}: born with it, or built on the climb?",
+          "helper": "Swipe it, or tap a side.",
+          "items": [
+            {
+              "id": "lead",
+              "label": "The lead trait",
+              "art": null,
+              "note": "Piped from clip 1; its trait art at 120px"
+            }
+          ],
+          "zones": [
+            {
+              "id": "born",
+              "label": "Born with it",
+              "art": "origin-seed"
+            },
+            {
+              "id": "built",
+              "label": "Built on the climb",
+              "art": "origin-bootprint"
+            }
+          ],
+          "capacity": "One card, the lead trait. The two buttons under it are the primary input. Which side is 'born' is randomised per respondent and logged.",
+          "stores": [
+            "traits.leadOrigin: 'born'|'built'",
+            "traits.originSides: 'bornLeft'|'bornRight'"
+          ]
+        }
+      ],
+      "capacity": "Three traits on the rope, then born or built for the lead trait.",
+      "adaptive": [],
+      "next": "S10",
+      "measures": [
+        "Adam: stack-rank the characteristics of a great private banker",
+        "Adam: innate vs learned, EQ, hunter's mentality",
+        "Crossed: is the lead trait one we hire for or one we build?"
+      ],
+      "stores": [
+        "traits.top3[3]",
+        "traits.order",
+        "traits.leadOrigin",
+        "traits.originSides"
+      ],
+      "seconds": 30,
+      "layout": "Rope with three clips 80px tall across the upper third; tray 4x2 of 64px trait tiles with labels = 184.",
+      "notes": [
+        "The rope is strung across the ridge with three numbered carabiners; each clip closes with a click. The born and built glyphs (a seed; a bootprint) are drawn to the same finish so neither looks like the better answer.",
+        "Beat B names the trait, not 'your three', so it reads as a view about bankers, not about the respondent.",
+        "EQ is named on the tile ('Reading people (EQ)') because Adam asked about it by that word."
+      ]
+    },
+    {
+      "id": "S10",
+      "kind": "screen",
+      "title": "Mark the route, tag the change",
+      "camp": "Camp III",
+      "mechanic": "stack+text",
+      "prompt": "Today's A2A route, as the next climber finds it.",
+      "helper": "Stack stones. One: rebuild it. Five: don't touch it.",
+      "items": [
+        {
+          "id": "s1",
+          "label": "Rebuild it",
+          "art": "cairn-stone",
+          "value": 1
+        },
+        {
+          "id": "s2",
+          "label": "Major repairs",
+          "art": "cairn-stone",
+          "value": 2
+        },
+        {
+          "id": "s3",
+          "label": "Re-rig parts",
+          "art": "cairn-stone",
+          "value": 3
+        },
+        {
+          "id": "s4",
+          "label": "Minor tweaks",
+          "art": "cairn-stone",
+          "value": 4
+        },
+        {
+          "id": "s5",
+          "label": "Don't touch it",
+          "art": "cairn-stone",
+          "value": 5
+        }
+      ],
+      "zones": [
+        {
+          "id": "cairn",
+          "label": "Cairn",
+          "art": "cairn-stone"
+        }
+      ],
+      "beats": [
+        {
+          "beat": "A",
+          "mechanic": "stack",
+          "prompt": "Today's A2A route, as the next climber finds it.",
+          "helper": "Stack stones. One: rebuild it. Five: don't touch it.",
+          "capacity": "Drag or tap stones onto the cairn, 1 to 5; tap the top stone to lift it off. The label under the cairn changes with the count. No default.",
+          "stores": [
+            "mark: 1-5"
+          ]
+        },
+        {
+          "beat": "B",
+          "mechanic": "text",
+          "prompt": "One change before they set off. What is it?",
+          "helper": "Or anything we didn't ask. A line is plenty.",
+          "items": [
+            {
+              "id": "oneChange",
+              "label": "Tag on the strap",
+              "art": "luggage-tag"
+            }
+          ],
+          "capacity": "80 characters, optional ('Leave it blank'). Native dictation works.",
+          "stores": [
+            "oneChange.text",
+            "oneChange.skipped",
+            "oneChange.keystrokes"
+          ]
+        }
+      ],
+      "capacity": "Beat A: 1 to 5 stones, required. Beat B: one line, optional. Both on the same screen; the cairn stays in view while the tag is written.",
+      "adaptive": [],
+      "next": "S11",
+      "measures": [
+        "Adam: 'mark to market the quality of our training programme'",
+        "Deck Pulse Check (read as a peak-and-end impression, not a headline metric)",
+        "Wrap-up stem 4 'If we could make only one change...'",
+        "Adam: 'anything else'; deck: missing activities are findings"
+      ],
+      "stores": [
+        "mark",
+        "oneChange.text",
+        "oneChange.skipped",
+        "oneChange.keystrokes"
+      ],
+      "seconds": 32,
+      "layout": "Cairn on the left third, rookie and tag on the right; the tag field sits at or above 300px so the keyboard never covers it.",
+      "notes": [
+        "The cairn is framed as the route the next climber meets, so it rates the programme, not the respondent.",
+        "When the cairn has stones, the prompt line cross-fades to Beat B and the luggage tag swings on the rookie's strap. Typed text appears on it in Source Serif italic.",
+        "This is the only text-and-rating stretch at the end, and it is one screen; the next thing is the payoff."
+      ]
+    },
+    {
+      "id": "S11",
+      "kind": "screen",
+      "title": "The last pitch",
+      "camp": "Summit",
+      "mechanic": "scene",
+      "prompt": "Their brief is perfect. The last pitch is still on foot.",
+      "helper": "Drag them to the top.",
+      "items": [],
+      "zones": [],
+      "capacity": "No answer. The drag follows the path; letting go rests the climber in place (no slide back). Skippable. Reduced motion: a tap moves them to the top.",
+      "adaptive": [],
+      "next": "end",
+      "measures": [
+        "None (payoff). Records completion."
+      ],
+      "stores": [
+        "summit.dragMs",
+        "t.complete"
+      ],
+      "seconds": 12,
+      "layout": "Full-bleed summit; the path runs from bottom-left to the summit table top-right.",
+      "notes": [
+        "The rookie carries exactly what the respondent chose: the three packed items at the top of the rucksack, the Blue item in hand, the Day-one bricks clipped to the shoulder strap.",
+        "The route ahead is drawn as precisely as their Day-one kit allows (pencil line for a map alone, up to a timed dotted line with weather glyphs for the full kit). No instrument moves the climber. Only the respondent's drag does, and each step inks a bootprint.",
+        "At the top the rookie sets the kit down on a flat rock. A client stands up from a small table with two chairs and offers a hand. One line, Bodoni, the only time the point is put into words: 'They came to meet you, not the map.'",
+        "Then a small paper card (CSS, not art), 'Their kit': In hand / Packed / Day-one kit / On their own feet. 'Thank you.' No share button (privacy), no score, no confetti."
+      ]
+    },
+    {
+      "id": "F1",
+      "kind": "followup",
+      "parent": "S02",
+      "title": "The classroom call",
+      "camp": "Base camp",
+      "mechanic": "drag-slider",
+      "trigger": "Classroom training packed (Green) or put in the hand (Blue)",
+      "prompt": "Attendance runs low. Make classroom mandatory?",
+      "helper": "Drag the door: shut, ajar or open.",
+      "items": [
+        {
+          "id": "mandatory",
+          "label": "Mandatory, no exceptions",
+          "art": null,
+          "position": "shut"
+        },
+        {
+          "id": "clientFirst",
+          "label": "Mandatory, client first",
+          "art": null,
+          "position": "ajar"
+        },
+        {
+          "id": "optional",
+          "label": "Optional, on demand",
+          "art": null,
+          "position": "open"
+        }
+      ],
+      "zones": [
+        {
+          "id": "door",
+          "label": "Classroom door",
+          "art": "fu-door",
+          "note": "One drawing; three positions by rotation"
+        }
+      ],
+      "capacity": "One of three door positions. Tap a label or use Left/Right as the fallback.",
+      "adaptive": [],
+      "next": "S03",
+      "measures": [
+        "Adam: 'more classroom? None of you show up; should it be mandatory?'",
+        "D3",
+        "Adam: self-learning and training at scale ('Optional, on demand')"
+      ],
+      "stores": [
+        "classroom.mandatory: 'mandatory'|'clientFirst'|'optional'"
+      ],
+      "seconds": 7
+    },
+    {
+      "id": "F2a",
+      "kind": "followup",
+      "parent": "S04",
+      "title": "Ready to do what",
+      "camp": "Camp I",
+      "mechanic": "pack",
+      "trigger": "Pace under 36 months, or 'When proven'",
+      "prompt": "Ready at {stop}. What do they take on first?",
+      "helper": "Drag them to one.",
+      "items": [
+        {
+          "id": "rookie",
+          "label": "The rookie",
+          "art": "rookie",
+          "note": "Forest jacket, in the sheet header, so the question is plainly about them"
+        }
+      ],
+      "zones": [
+        {
+          "id": "reviewAlone",
+          "label": "Run a review alone",
+          "art": null
+        },
+        {
+          "id": "pitch",
+          "label": "Pitch a prospect",
+          "art": null
+        },
+        {
+          "id": "cold",
+          "label": "Work names cold",
+          "art": null
+        },
+        {
+          "id": "smallBook",
+          "label": "Own a small book",
+          "art": null
+        },
+        {
+          "id": "commitment",
+          "label": "Win a commitment",
+          "art": null
+        }
+      ],
+      "capacity": "One. Text chips as ledges; the rookie is dragged onto one (tap-then-tap and keyboard fallback).",
+      "adaptive": [],
+      "next": "S05",
+      "measures": [
+        "Adam: 'ready after a year: ready to do what? Cold calling, your own book?'",
+        "Deck Hindsight/Surprises (partial): 'Win a commitment' is one of the deck's VP surprises"
+      ],
+      "stores": [
+        "pace.readyFor"
+      ],
+      "seconds": 9
+    },
+    {
+      "id": "F2b",
+      "kind": "followup",
+      "parent": "S04",
+      "title": "What can't be rushed",
+      "camp": "Camp I",
+      "mechanic": "pick",
+      "trigger": "Pace 36 or 48 months",
+      "prompt": "Held to {stop}. What can't be rushed for them?",
+      "helper": "Pick one.",
+      "items": [
+        {
+          "id": "cycle",
+          "label": "A market cycle",
+          "art": null
+        },
+        {
+          "id": "trust",
+          "label": "Client trust",
+          "art": null
+        },
+        {
+          "id": "breadth",
+          "label": "Product breadth",
+          "art": null
+        },
+        {
+          "id": "confidence",
+          "label": "Their own confidence",
+          "art": null
+        }
+      ],
+      "zones": [],
+      "capacity": "One tap. The rookie is in the sheet header at their stop.",
+      "adaptive": [],
+      "next": "S05",
+      "measures": [
+        "Adam: 'is there a minimum amount of time to absorb that you can't skip?'"
+      ],
+      "stores": [
+        "pace.cantRush"
+      ],
+      "seconds": 9
+    },
+    {
+      "id": "F3a",
+      "kind": "followup",
+      "parent": "S05",
+      "title": "Agents on day one",
+      "camp": "Camp II",
+      "mechanic": "pick",
+      "trigger": "Expedition brief placed in Day one",
+      "prompt": "Agents on day one. What must they master first?",
+      "helper": "Pick one.",
+      "items": [
+        {
+          "id": "byHand",
+          "label": "By hand, once",
+          "art": null
+        },
+        {
+          "id": "spotWrong",
+          "label": "Spot a wrong answer",
+          "art": null
+        },
+        {
+          "id": "sharpBrief",
+          "label": "Write a sharp brief",
+          "art": null
+        },
+        {
+          "id": "learnByDoing",
+          "label": "Nothing, learn by doing",
+          "art": null
+        }
+      ],
+      "zones": [],
+      "capacity": "One tap.",
+      "adaptive": [],
+      "next": "S06",
+      "measures": [
+        "D6: form a view before AI",
+        "Deck: Developing intuition (what new skills)",
+        "Adam: managers of agents"
+      ],
+      "stores": [
+        "kit.agentsFirst"
+      ],
+      "seconds": 8
+    },
+    {
+      "id": "F3b",
+      "kind": "followup",
+      "parent": "S05",
+      "title": "Earning the agent team",
+      "camp": "Camp II",
+      "mechanic": "pick",
+      "trigger": "Expedition brief placed in Once proven",
+      "prompt": "What earns them the agent team?",
+      "helper": "Pick one.",
+      "items": [
+        {
+          "id": "cert",
+          "label": "A certification",
+          "art": null
+        },
+        {
+          "id": "signoff",
+          "label": "Advisor's sign-off",
+          "art": null
+        },
+        {
+          "id": "time",
+          "label": "Time served",
+          "art": null
+        },
+        {
+          "id": "record",
+          "label": "A clean track record",
+          "art": null
+        }
+      ],
+      "zones": [],
+      "capacity": "One tap.",
+      "adaptive": [],
+      "next": "S06",
+      "measures": [
+        "D5: how AI access is earned",
+        "Re-ask against S07 certify"
+      ],
+      "stores": [
+        "kit.agentsEarn"
+      ],
+      "seconds": 8
+    },
+    {
+      "id": "F3c",
+      "kind": "followup",
+      "parent": "S05",
+      "title": "No agents",
+      "camp": "Camp II",
+      "mechanic": "pick",
+      "trigger": "Expedition brief put in 'Not for them'",
+      "prompt": "Why keep agents off their kit?",
+      "helper": "Pick one.",
+      "items": [
+        {
+          "id": "stopLearning",
+          "label": "They'd stop learning",
+          "art": null
+        },
+        {
+          "id": "trustOutput",
+          "label": "Can't trust the output",
+          "art": null
+        },
+        {
+          "id": "clients",
+          "label": "Clients won't accept it",
+          "art": null
+        },
+        {
+          "id": "notYet",
+          "label": "Not their job yet",
+          "art": null
+        }
+      ],
+      "zones": [],
+      "capacity": "One tap.",
+      "adaptive": [],
+      "next": "S06",
+      "measures": [
+        "D6",
+        "Adam: managers of agents (the 'no' reasons)"
+      ],
+      "stores": [
+        "kit.agentsWhyNot"
+      ],
+      "seconds": 8
+    },
+    {
+      "id": "F4",
+      "kind": "followup",
+      "parent": "S07",
+      "title": "How to certify",
+      "camp": "Camp III",
+      "mechanic": "pack",
+      "trigger": "S07 certify = 'policy'. On 'drop' or 'unsure' it is skipped, as Adam asked.",
+      "prompt": "How should they earn the pass?",
+      "helper": "Drag one onto the plaque.",
+      "items": [
+        {
+          "id": "avatar",
+          "label": "Avatar role play",
+          "art": null
+        },
+        {
+          "id": "written",
+          "label": "Written test",
+          "art": null
+        },
+        {
+          "id": "practical",
+          "label": "Practical case test",
+          "art": null
+        },
+        {
+          "id": "observed",
+          "label": "Observed live by Advisor",
+          "art": null
+        },
+        {
+          "id": "clientFeedback",
+          "label": "Client feedback",
+          "art": null
+        }
+      ],
+      "zones": [
+        {
+          "id": "plaque",
+          "label": "The plaque",
+          "art": "fu-plaque",
+          "slots": 1
+        }
+      ],
+      "capacity": "One. Dropping a second swaps. Tap-then-tap and keyboard fallback.",
+      "adaptive": [],
+      "next": "S08",
+      "measures": [
+        "Adam: 'what is that certification process? Role play? A test? Practical?'",
+        "Adam: avatar role plays as mandatory (asked, as Adam framed it, after a yes to certification)",
+        "Deck: readiness checks before a client"
+      ],
+      "stores": [
+        "certify.how"
+      ],
+      "seconds": 8
+    },
+    {
+      "id": "F5",
+      "kind": "followup",
+      "parent": "S08",
+      "title": "Guarantee one thing",
+      "camp": "Camp III",
+      "mechanic": "pack",
+      "trigger": "Always, after S08. Variant A when the rope answer is 'A bit behind' or lower, or 'Rather not say'; variant B when 'About here' or 'Right here'. Same options and cost on both.",
+      "prompt": "Then guarantee every climber one thing.",
+      "promptVariants": {
+        "A": "Then guarantee every climber one thing.",
+        "B": "Your rope held. Guarantee that for everyone: one thing."
+      },
+      "helper": "Clip one onto the rope.",
+      "items": [
+        {
+          "id": "mentor",
+          "label": "A named mentor",
+          "art": null
+        },
+        {
+          "id": "debrief",
+          "label": "Debrief after meetings",
+          "art": null
+        },
+        {
+          "id": "hypothesis",
+          "label": "Pre-meeting hypothesis review",
+          "art": null
+        },
+        {
+          "id": "speakingRole",
+          "label": "A set speaking role",
+          "art": null
+        },
+        {
+          "id": "ecm",
+          "label": "A named ECM check-in",
+          "art": null
+        },
+        {
+          "id": "protectedTime",
+          "label": "Protected Advisor time",
+          "art": null
+        }
+      ],
+      "zones": [
+        {
+          "id": "clip",
+          "label": "Rope clip",
+          "art": "rope-clips",
+          "slots": 1
+        }
+      ],
+      "capacity": "One. Tap-then-tap and keyboard fallback.",
+      "adaptive": [],
+      "next": "S09",
+      "measures": [
+        "Deck Access: what to guarantee centrally; what an Early Career Manager should monitor ('A named ECM check-in')",
+        "Deck Coaching: pre-meeting hypothesis review, defined speaking role, post-meeting debrief",
+        "D5 manager routines",
+        "Adam scaling (partial): 'Protected Advisor time' is the 'so much else going on' constraint"
+      ],
+      "stores": [
+        "guarantee",
+        "guarantee.variant: 'A'|'B'"
+      ],
+      "seconds": 8
+    }
+  ],
+  "ruleTests": [
+    {
+      "rule": "F1",
+      "given": {
+        "vote.green": [
+          "classroom",
+          "meetings",
+          "debrief"
+        ],
+        "vote.blue": "present"
+      },
+      "expect": "F1"
+    },
+    {
+      "rule": "F1",
+      "given": {
+        "vote.green": [
+          "meetings",
+          "present",
+          "debrief"
+        ],
+        "vote.blue": "classroom"
+      },
+      "expect": "F1"
+    },
+    {
+      "rule": "F1",
+      "given": {
+        "vote.green": [
+          "meetings",
+          "present",
+          "debrief"
+        ],
+        "vote.blue": "present"
+      },
+      "expect": null
+    },
+    {
+      "rule": "F2",
+      "given": {
+        "pace.months": 18
+      },
+      "expect": "F2a"
+    },
+    {
+      "rule": "F2",
+      "given": {
+        "pace.months": "proven"
+      },
+      "expect": "F2a"
+    },
+    {
+      "rule": "F2",
+      "given": {
+        "pace.months": 36
+      },
+      "expect": "F2b"
+    },
+    {
+      "rule": "F2",
+      "given": {
+        "pace.months": 48
+      },
+      "expect": "F2b"
+    },
+    {
+      "rule": "F3",
+      "given": {
+        "kit.lane.brief": "day1"
+      },
+      "expect": "F3a"
+    },
+    {
+      "rule": "F3",
+      "given": {
+        "kit.lane.brief": "proven"
+      },
+      "expect": "F3b"
+    },
+    {
+      "rule": "F3",
+      "given": {
+        "kit.lane.brief": "none"
+      },
+      "expect": "F3c"
+    },
+    {
+      "rule": "F4",
+      "given": {
+        "calls.certify.answer": "policy"
+      },
+      "expect": "F4"
+    },
+    {
+      "rule": "F4",
+      "given": {
+        "calls.certify.answer": "drop"
+      },
+      "expect": null
+    },
+    {
+      "rule": "F4",
+      "given": {
+        "calls.certify.answer": "unsure"
+      },
+      "expect": null
+    },
+    {
+      "rule": "F5",
+      "given": {
+        "self.ropeCounterfactual": 2
+      },
+      "expect": "F5/A"
+    },
+    {
+      "rule": "F5",
+      "given": {
+        "self.ropeCounterfactual": null
+      },
+      "expect": "F5/A"
+    },
+    {
+      "rule": "F5",
+      "given": {
+        "self.ropeCounterfactual": 5
+      },
+      "expect": "F5/B"
+    }
+  ],
+  "timing": {
+    "mainScreens": 317,
+    "campWalksNet": 3,
+    "alwaysOnSheets": 25,
+    "conditional": {
+      "F1": {
+        "seconds": 7,
+        "expectedShare": 0.3
+      },
+      "F4": {
+        "seconds": 8,
+        "expectedShare": 0.6
+      }
+    },
+    "typical": 352,
+    "longest": 360,
+    "fastest": 306,
+    "longestDefinition": "Every conditional sheet fires and both lines are written (60 and 80 characters). Segments come from the link token.",
+    "tokenFallbackExtra": 8,
+    "status": "Estimates from interaction counts, not measured. Time five Associates on an iPhone in Safari before launch."
+  },
+  "artBudget": {
+    "entries": 69,
+    "newDrawings": 53,
+    "adapt": 1,
+    "derive": 9,
+    "existing": 4,
+    "procedural": 2,
+    "cap": 60
+  },
+  "art": [
+    {
+      "id": "scene-basecamp",
+      "group": "Scenes",
+      "brief": "Base camp at first light: moraine, one canvas tent with the flap open, the mountain.ts ridge as an ink hairline behind the prompt, a faint pencil route up the face. The ground plane holds every object.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "scene-camp1",
+      "group": "Scenes",
+      "brief": "Switchback face carrying the vertical slider track; a wooden signpost at the camp edge. Paper warms slightly toward dawn.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "scene-camp2",
+      "group": "Scenes",
+      "brief": "Rock shelf on a col holding the base-plate ledge; the route strip above it; cloud building on the far ridge.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "scene-camp3",
+      "group": "Scenes",
+      "brief": "Wind-cut ridge for the storm calls, the rope and the cairn.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "scene-summit",
+      "group": "Scenes",
+      "brief": "Narrow summit at dawn (paper warmed to --color-dawn): a flat rock for the kit, a small table with two chairs.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "rookie",
+      "group": "Characters",
+      "brief": "The next climber: faceless, forest jacket, pack, hat: the survey.ts climber at 3x. Stride, crouch-and-rise, open hand and set-down are SVG transforms on this one figure (limb groups rotated), not frame sets.",
+      "status": "adapt survey.ts",
+      "release": "v1"
+    },
+    {
+      "id": "you-bronze",
+      "group": "Characters",
+      "brief": "The respondent: the rookie recoloured to a bronze jacket. Solid (S08 thumb) and outline-only ghost (S04 Beat B). Appears only on the two self-questions.",
+      "status": "derive from rookie",
+      "release": "v1"
+    },
+    {
+      "id": "porter",
+      "group": "Characters",
+      "brief": "Base-camp crew: a plainly human figure with a wooden load frame, ink and forest, faceless. Nothing navigational on it.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "client",
+      "group": "Characters",
+      "brief": "Client at the summit: long navy coat, rising from the table, one hand offered.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "kit-rack-covered",
+      "group": "Props",
+      "brief": "The six brick silhouettes under a canvas cover inside the tent flap (S01).",
+      "status": "derive from bricks",
+      "release": "v1"
+    },
+    {
+      "id": "rucksack",
+      "group": "Props",
+      "brief": "Open rucksack with three pocket slots (forest outline); zipped state.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "hand-zone",
+      "group": "Props",
+      "brief": "The rookie's gloved open hand, one slot (navy outline); closed state.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "tarp-out",
+      "group": "Props",
+      "brief": "Folded canvas tarp on the ground, two slots, ink outline (the deck's Red).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "bench-rerig",
+      "group": "Props",
+      "brief": "Workbench with a spliced rope, two slots, bronze outline (the deck's Amber).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "signpost",
+      "group": "Props",
+      "brief": "Carved wooden signpost with one arm; letters set in bronze.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "luggage-tag",
+      "group": "Props",
+      "brief": "Card luggage tag on a string, tied to the rucksack strap.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-binoculars",
+      "group": "Gear",
+      "brief": "Binoculars (Sit in client meetings).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-leadrope",
+      "group": "Gear",
+      "brief": "A coiled lead rope held out (Present to clients).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-crampons",
+      "group": "Gear",
+      "brief": "Crampons (Portfolio analysis).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-flare",
+      "group": "Gear",
+      "brief": "Signal flare (Prospect outreach).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-bootlaces",
+      "group": "Gear",
+      "brief": "A boot with its laces being tied (Prep the meeting brief).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-stove",
+      "group": "Gear",
+      "brief": "Camp stove and fuel can (Onboarding & ops).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-logbook",
+      "group": "Gear",
+      "brief": "Logbook and pencil (Debrief with Advisor).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-thermos",
+      "group": "Gear",
+      "brief": "Thermos with a small clock face at 7:30 (Morning meeting).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-manual",
+      "group": "Gear",
+      "brief": "Bound field manual (Classroom training).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-boulder",
+      "group": "Gear",
+      "brief": "Practice boulder with two small roped figures (Role plays).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-forms",
+      "group": "Gear",
+      "brief": "A clipboard of forms in a dry bag (CRM & admin).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "gear-polish",
+      "group": "Gear",
+      "brief": "A boot-polish tin and brush (Deck formatting).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "track-switchback",
+      "group": "Tracks",
+      "brief": "Vertical switchback with six tent stops (12 to 48 months), a small cairn marked 'Today' at 36, a brass 'When proven' tag beside it, and a trailhead ledge below the scale.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "track-ridge",
+      "group": "Tracks",
+      "brief": "Horizontal ridge with five stops and a ledge below where the figure parks. No other imagery.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "bootprints",
+      "group": "Tracks",
+      "brief": "Bootprint in two states: solid ink (walked) and pencil ghost. Also used on the three camp-walk strips.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "brick-map",
+      "group": "Navigation kit",
+      "brief": "2x4 brick, 72x30, navy accent: a folded map with a pencilled route. Studs as ellipses with a flat highlight band.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "brick-compass",
+      "group": "Navigation kit",
+      "brief": "2x4 brick, same navy: a baseplate compass.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "brick-guidebook",
+      "group": "Navigation kit",
+      "brief": "2x4 brick, same navy: a guidebook with a ribbon marker.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "brick-gps",
+      "group": "Navigation kit",
+      "brief": "2x4 brick, same navy: a handheld unit showing a pin.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "brick-radio",
+      "group": "Navigation kit",
+      "brief": "2x4 brick, same navy: a field radio, antenna up, screen showing a cloud.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "brick-brief",
+      "group": "Navigation kit",
+      "brief": "2x4 brick, same navy: a clipboard with weather glyphs, a route line and timings.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "baseplate",
+      "group": "Navigation kit",
+      "brief": "Forest-green rock-ledge base plate, two lanes of six stud rows each, lane heads in Archivo. Nothing printed on its face.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "crate",
+      "group": "Navigation kit",
+      "brief": "Narrow wooden crate, 'Not for them', one column wide.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "route-layers",
+      "group": "Navigation kit",
+      "brief": "The route ahead at four precisions (pencil; dotted; dotted with waypoint ticks; dotted with weather glyphs and times), drawn in code as stroke styles on one path.",
+      "status": "procedural",
+      "release": "v1"
+    },
+    {
+      "id": "strap-kit",
+      "group": "Navigation kit",
+      "brief": "The Day-one bricks at 24px clipped to the shoulder strap (S11).",
+      "status": "derive from bricks",
+      "release": "v1"
+    },
+    {
+      "id": "reviewpack",
+      "group": "Pitches",
+      "brief": "Framed chart pack (Portfolio analysis).",
+      "status": "existing ActivityArt",
+      "release": "v1"
+    },
+    {
+      "id": "clientmail",
+      "group": "Pitches",
+      "brief": "Envelope (Prospect outreach draft).",
+      "status": "existing ActivityArt",
+      "release": "v1"
+    },
+    {
+      "id": "pitchbook",
+      "group": "Pitches",
+      "brief": "Bound book (Meeting brief).",
+      "status": "existing ActivityArt",
+      "release": "v1"
+    },
+    {
+      "id": "onboard",
+      "group": "Pitches",
+      "brief": "Folder of forms (Onboarding paperwork).",
+      "status": "existing ActivityArt",
+      "release": "v1"
+    },
+    {
+      "id": "pitch-crmnotes",
+      "group": "Pitches",
+      "brief": "Notepad with ticks beside an index card (Meeting notes & CRM).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "zone-ownfeet",
+      "group": "Pitch zones",
+      "brief": "Composite: the rookie with boots prominent and a two-slot rucksack, no instruments.",
+      "status": "derive (composite)",
+      "release": "v1"
+    },
+    {
+      "id": "zone-withkit",
+      "group": "Pitch zones",
+      "brief": "Composite: the rookie with the map and compass bricks on the strap.",
+      "status": "derive (composite)",
+      "release": "v1"
+    },
+    {
+      "id": "zone-kitdrafts",
+      "group": "Pitch zones",
+      "brief": "Composite: the brief brick's clipboard on a rock; the rookie reading through a hand lens.",
+      "status": "derive (composite)",
+      "release": "v1"
+    },
+    {
+      "id": "zone-crew",
+      "group": "Pitch zones",
+      "brief": "Composite: the porter by the tent with an empty load frame.",
+      "status": "derive (composite)",
+      "release": "v1"
+    },
+    {
+      "id": "card-certify",
+      "group": "Storm calls",
+      "brief": "A closed meeting-room door with a small blank brass plaque.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "card-aiclient",
+      "group": "Storm calls",
+      "brief": "Split frame: an indoor climbing wall on the left, real rock on the right.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "card-agents",
+      "group": "Storm calls",
+      "brief": "A small figure holding a clipboard, three field radios on the belt.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "card-freedtime",
+      "group": "Storm calls",
+      "brief": "A bronze sun disc over two paths: one to a ledger with extra ribbons, one to a practice boulder.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "snow-overlay",
+      "group": "Storm calls",
+      "brief": "Hachure snow streaks at four densities, drawn in code.",
+      "status": "procedural",
+      "release": "v1"
+    },
+    {
+      "id": "trait-reading",
+      "group": "Traits",
+      "brief": "Two seated figures, one leaning in, a lantern between them.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "trait-hunter",
+      "group": "Traits",
+      "brief": "A flag on a far ledge with footprints heading to it.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "trait-calm",
+      "group": "Traits",
+      "brief": "A figure standing square in slanting snow.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "trait-depth",
+      "group": "Traits",
+      "brief": "Rock strata in four layers.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "trait-story",
+      "group": "Traits",
+      "brief": "A bar chart whose top line becomes a footpath.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "trait-bounce",
+      "group": "Traits",
+      "brief": "A rope catching a short fall at a carabiner.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "trait-judgement",
+      "group": "Traits",
+      "brief": "A balance scale, slightly tipped.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "trait-curiosity",
+      "group": "Traits",
+      "brief": "An unmapped corner of a map with one question-mark contour.",
+      "status": "new",
+      "release": "v1 (draw last; labelled tiles until drawn)"
+    },
+    {
+      "id": "rope-clips",
+      "group": "Traits",
+      "brief": "A rope strung across the stage with three numbered carabiners (also F5's single clip).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "origin-seed",
+      "group": "Traits",
+      "brief": "Swipe-edge glyph: a seed (Born with it).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "origin-bootprint",
+      "group": "Traits",
+      "brief": "Swipe-edge glyph: the walked bootprint (Built on the climb), same finish as the seed.",
+      "status": "derive from bootprints",
+      "release": "v1"
+    },
+    {
+      "id": "cairn-stone",
+      "group": "Summit",
+      "brief": "Flat stone with five stack positions on a cairn.",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "fu-door",
+      "group": "Follow-ups",
+      "brief": "Classroom door in a frame, brass latch: one drawing, rotated to shut, ajar (a client chair visible beyond) and open (F1).",
+      "status": "new",
+      "release": "v1"
+    },
+    {
+      "id": "fu-plaque",
+      "group": "Follow-ups",
+      "brief": "Close-up of the blank brass plaque from card-certify, one drop slot (F4).",
+      "status": "derive from card-certify",
+      "release": "v1"
+    }
+  ]
+}
