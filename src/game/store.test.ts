@@ -187,3 +187,19 @@ describe('preview and real sessions never share answers', () => {
     expect(useGame.getState().answers['rule.text' as never]).toBe('kept')
   })
 })
+
+describe('Codex P1: sessions saved under the old class and business lists', () => {
+  it('start fresh instead of silently losing their segment', () => {
+    const old = { started: true, screen: 'S05', beat: 'A', answers: { 'segment.cohort': '2019', 'segment.business': 'uspb', 'rule.text': 'x' } }
+    const r = rehydrate(old)
+    expect(r.started).toBe(false)
+    expect(r.answers).toEqual({})
+    const other = rehydrate({ started: true, screen: 'S03', beat: 'A', answers: { 'segment.business': 'other', 'segment.cohort': '2024' } })
+    expect(other.started).toBe(false)
+  })
+  it('a current session resumes as before', () => {
+    const r = rehydrate({ started: true, screen: 'S03', beat: 'A', answers: { 'segment.cohort': '2024', 'segment.business': 'ipb' } })
+    expect(r.started).toBe(true)
+    expect(r.answers['segment.cohort' as never]).toBe('2024')
+  })
+})
