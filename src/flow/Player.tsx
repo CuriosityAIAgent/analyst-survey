@@ -6,6 +6,7 @@ import { useFlow, GRAPH, CARD } from './store'
 import { mainPath } from './logic'
 import { SECTIONS, type Answer } from './types'
 import { AUTO, isAnswered, Multi, Pick, Rank, Slider, Swipe, Text, Tokens } from './Cards'
+import { Visual } from './Visual'
 
 const Scene = dynamic(() => import('@/scene/Scene'), { ssr: false })
 const MAIN = mainPath(GRAPH)
@@ -120,6 +121,7 @@ export default function Player() {
           className="panel mt-6 px-1 pb-4"
           aria-live="polite"
         >
+          {card.visual && <Visual id={card.id} brief={card.visual} className="mb-6" />}
           <h1 tabIndex={-1} className="display text-[30px] leading-[1.1] text-ink sm:text-[38px]">{card.prompt}</h1>
           {card.sub && <p className="mt-3 text-[17px] leading-[1.45] text-ink-2">{card.sub}</p>}
 

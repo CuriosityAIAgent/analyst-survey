@@ -18,7 +18,7 @@ export type Card = {
   visual?: string
   options?: Option[]
   sides?: { left: string; right: string }
-  slider?: { min: number; max: number; left: string; right: string; marks?: { at: number; label: string }[] }
+  slider?: { min: number; max: number; left: string; right: string; marks?: { at: number; label: string }[]; style?: 'route' | 'plain' }
   max?: number
   tokens?: Token[]
   optional?: boolean

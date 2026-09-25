@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Card } from './types'
+import { Visual } from './Visual'
 
 type P<T> = { card: Card; value: T | undefined; set: (v: T) => void; done: (from: string) => void }
 
@@ -17,6 +18,27 @@ export function Pick({ card, value, set, done }: P<string>) {
   const pick = (id: string) => {
     set(id)
     window.setTimeout(() => done(card.id), 220)
+  }
+  const pictured = card.options!.some((o) => o.visual)
+  if (pictured) {
+    return (
+      <div className={`grid gap-3 ${card.options!.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
+        {card.options!.map((o) => (
+          <button key={o.id} type="button" aria-pressed={value === o.id} onClick={() => pick(o.id)}
+            className="group flex flex-col overflow-hidden border text-left transition-colors"
+            style={{
+              borderColor: value === o.id ? 'var(--color-ink)' : 'var(--color-rule)',
+              background: value === o.id ? 'var(--color-ink)' : 'var(--color-ground)',
+            }}>
+            <Visual id={`${card.id}.${o.id}`} brief={o.visual} ratio="4/3" />
+            <span className="px-3 py-3 font-[family-name:var(--font-ui)] text-[15px] font-medium"
+              style={{ color: value === o.id ? '#fff' : 'var(--color-ink)' }}>
+              {o.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    )
   }
   return (
     <div className="grid gap-2.5">
@@ -53,6 +75,28 @@ export function Multi({ card, value = [], set }: P<string[]>) {
 }
 
 /* -------------------------------------------------------------- slider */
+/* The route slider: the track is the climb, the thumb is the climber. A native
+   range input sits on top, transparent, so keyboard and screen readers get a
+   real slider and nothing about the answer depends on the drawing. */
+function RouteTrack({ frac, touched }: { frac: number; touched: boolean }) {
+  const W = 320, H = 96
+  const y = (u: number) => H - 14 - (u * 0.78 + Math.sin(u * 9) * 0.05) * (H - 30)
+  const pts = Array.from({ length: 41 }, (_, i) => { const u = i / 40; return `${u * W},${y(u)}` }).join(' ')
+  const cx = frac * W, cy = y(frac)
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" aria-hidden>
+      <polyline points={pts} fill="none" stroke="var(--color-rule)" strokeWidth="2" strokeDasharray="4 5" />
+      <polyline points={pts.split(' ').filter((p) => Number(p.split(',')[0]) <= cx).join(' ')}
+        fill="none" stroke="var(--color-navy)" strokeWidth="3" strokeLinecap="round" />
+      <g transform={`translate(${cx},${cy})`} opacity={touched ? 1 : 0.55}>
+        <path d="M0 0 v-22" stroke="var(--color-ink)" strokeWidth="1.6" />
+        <path d="M0 -22 l12 4 l-12 4 z" fill="var(--color-bronze)" />
+        <circle r="4.5" fill="var(--color-ink)" />
+      </g>
+    </svg>
+  )
+}
+
 export function Slider({ card, value, set }: P<number>) {
   const s = card.slider!
   const mid = Math.round((s.min + s.max) / 2)
@@ -61,15 +105,24 @@ export function Slider({ card, value, set }: P<number>) {
   const nearest = s.marks?.length
     ? s.marks.reduce((a, b) => (Math.abs(b.at - v) < Math.abs(a.at - v) ? b : a)).label
     : String(v)
+  const frac = (v - s.min) / Math.max(1, s.max - s.min)
+  const input = (
+    <input type="range" min={s.min} max={s.max} step={1} value={v}
+      onChange={(e) => set(Number(e.target.value))}
+      aria-label={card.prompt} aria-valuetext={touched ? nearest : 'not answered'}
+      className={s.style === 'route'
+        ? 'absolute inset-0 h-full w-full cursor-grab opacity-0'
+        : 'mt-6 w-full accent-[var(--color-ink)]'}
+      style={s.style === 'route' ? undefined : { height: 44 }} />
+  )
   return (
     <div>
       <div className="display text-[40px] leading-none text-ink" aria-live="polite">
         {touched ? nearest : <span className="text-muted">Drag to answer</span>}
       </div>
-      <input type="range" min={s.min} max={s.max} step={1} value={v}
-        onChange={(e) => set(Number(e.target.value))}
-        aria-label={card.prompt} aria-valuetext={touched ? nearest : 'not answered'}
-        className="mt-6 w-full accent-[var(--color-ink)]" style={{ height: 44 }} />
+      {s.style === 'route'
+        ? <div className="relative mt-4"><RouteTrack frac={frac} touched={touched} />{input}</div>
+        : input}
       <div className="mt-1 flex justify-between font-[family-name:var(--font-ui)] text-[13px] text-muted">
         <span>{s.left}</span><span>{s.right}</span>
       </div>
@@ -109,7 +162,7 @@ export function Swipe({ card, value = {}, set, done }: P<Record<string, 'left' |
         {idx + 1} of {items.length} · swipe, tap, or use ← →
       </p>
       <div
-        className="relative flex min-h-[150px] touch-pan-y select-none items-center justify-center border border-rule bg-ground px-6 text-center"
+        className="relative flex min-h-[150px] touch-pan-y select-none items-center justify-center border border-rule bg-ground px-6 py-6 text-center"
         style={{ transform: `translateX(${dx}px) rotate(${dx / 30}deg)`, transition: start.current ? 'none' : 'transform .2s' }}
         onPointerDown={(e) => { start.current = e.clientX; (e.target as HTMLElement).setPointerCapture?.(e.pointerId) }}
         onPointerMove={(e) => { if (start.current !== null) setDx(e.clientX - start.current) }}
@@ -120,7 +173,10 @@ export function Swipe({ card, value = {}, set, done }: P<Record<string, 'left' |
         onPointerCancel={() => { start.current = null; setDx(0) }}
         onLostPointerCapture={() => { if (start.current !== null) { start.current = null; setDx(0) } }}
       >
-        <span className="display text-[26px] leading-tight text-ink">{cur.label}</span>
+        <span className="flex w-full flex-col items-center gap-4">
+          {cur.visual && <Visual id={`${card.id}.${cur.id}`} brief={cur.visual} ratio="16/9" className="w-full" />}
+          <span className="display text-[26px] leading-tight text-ink">{cur.label}</span>
+        </span>
         {dx < -30 && <span className="absolute left-3 top-3 font-[family-name:var(--font-ui)] text-[12px] text-bronze">{card.sides!.left}</span>}
         {dx > 30 && <span className="absolute right-3 top-3 font-[family-name:var(--font-ui)] text-[12px] text-forest">{card.sides!.right}</span>}
       </div>
