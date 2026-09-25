@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useGame, rehydrate, orderFor, stepKey, readToken, beatsFor, seeded } from './store'
+import { useGame, rehydrate, orderFor, stepKey, readToken, beatsFor, seeded, linkId } from './store'
 import { SCREEN_IDS } from './content'
 
 const G = () => useGame.getState()
@@ -119,5 +119,45 @@ describe('token', () => {
     expect(readToken('?business=USPB&cohort=2021')).toEqual({ business: 'uspb', cohort: '2021' })
     expect(readToken('?b=ipb&c=earlier')).toEqual({ business: 'ipb', cohort: 'earlier' })
     expect(readToken('?business=nope&cohort=1999')).toEqual({})
+  })
+})
+
+describe('Codex P1: saved progress belongs to one link', () => {
+  const start = (search: string) => {
+    useGame.getState().setToken(readToken(search))
+    useGame.getState().begin()
+    useGame.getState().set('rule.text' as never, 'mine' as never)
+  }
+  beforeEach(() => useGame.getState().reset())
+
+  it('reads a respondent code and derives the link identity', () => {
+    expect(readToken('?r=AB12cd&business=uspb')).toEqual({ business: 'uspb', code: 'AB12cd' })
+    expect(readToken('?r=<script>')).toEqual({})
+    expect(linkId({ code: 'AB12cd', business: 'uspb' })).toBe('r:AB12cd')
+    expect(linkId({ business: 'uspb', cohort: '2021' })).toBe('s:uspb|2021')
+    expect(linkId({})).toBe('')
+  })
+  it('a different link in the same browser starts fresh', () => {
+    start('?r=first1')
+    useGame.getState().setToken(readToken('?r=second2'))
+    const s = useGame.getState()
+    expect(s.started).toBe(false)
+    expect(s.answers).toEqual({})
+    expect(s.link).toBe('r:second2')
+  })
+  it('reopening the same link resumes', () => {
+    start('?r=first1')
+    useGame.getState().setToken(readToken('?r=first1'))
+    expect(useGame.getState().started).toBe(true)
+    expect(useGame.getState().answers['rule.text' as never]).toBe('mine')
+  })
+  it('a bare URL (no identity) resumes rather than wiping', () => {
+    start('?r=first1')
+    useGame.getState().setToken(readToken(''))
+    expect(useGame.getState().started).toBe(true)
+  })
+  it('the link survives a reload', () => {
+    expect(rehydrate({ started: true, link: 'r:first1' }).link).toBe('r:first1')
+    expect(rehydrate({ link: 42 }).link).toBe('')
   })
 })

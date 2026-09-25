@@ -17,7 +17,7 @@ import { SCREEN_IDS, cleanAnswers, isBeatId, isScreenId, isSheetId, specBeats, s
 import { followupFor, needsSegment } from './rules'
 
 export type OpenSheet = { id: SheetId; variant?: Variant }
-export type Token = { business?: Answers['segment.business']; cohort?: string }
+export type Token = { business?: Answers['segment.business']; cohort?: string; code?: string }
 
 export type GameState = {
   started: boolean
@@ -34,8 +34,12 @@ export type GameState = {
   sound: boolean
   /** Bumped by back(): lets transient widgets (the camp-walk strip) reset. */
   visit: number
-  /** From the link (?business=&cohort=); not persisted. */
+  /** From the link (?business=&cohort=&r=); not persisted. */
   token: Token
+  /** Which link this saved session belongs to (see linkId). Persisted, so a
+      different respondent opening their own link in the same browser starts
+      fresh instead of resuming someone else's answers. */
+  link: string
 
   begin: () => void
   set: <K extends AnswerKey>(key: K, value: Answers[K]) => void
@@ -84,6 +88,7 @@ const fresh = () => ({
   seed: newSeed(),
   sound: false,
   visit: 0,
+  link: '',
 })
 
 export const useGame = create<GameState>()(
@@ -184,7 +189,18 @@ export const useGame = create<GameState>()(
           move({ started: true, finished: false, screen, beat: b, sheet: sheet ?? null }, 'jump')
         },
 
-        setToken: (t) => setState({ token: t }),
+        setToken: (t) => {
+          const id = linkId(t)
+          const s = get()
+          // A link with an identity that differs from the saved session's is a
+          // different respondent: start over. The same link (or a bare URL, which
+          // carries no identity to compare) resumes.
+          if (id && s.link !== id && (s.started || Object.keys(s.answers).length > 0)) {
+            setState({ ...fresh(), token: t, link: id })
+            return
+          }
+          setState(id ? { token: t, link: id } : { token: t })
+        },
         toggleSound: () => setState((s) => ({ sound: !s.sound })),
         reset: () => setState({ ...fresh() }),
       }
@@ -195,7 +211,7 @@ export const useGame = create<GameState>()(
       storage: createJSONStorage(safeStorage),
       partialize: (s) => ({
         started: s.started, finished: s.finished, screen: s.screen, beat: s.beat, sheet: s.sheet,
-        answers: s.answers, events: s.events, timing: s.timing, seed: s.seed, sound: s.sound,
+        answers: s.answers, events: s.events, timing: s.timing, seed: s.seed, sound: s.sound, link: s.link,
       }),
       merge: (persisted, current) => ({ ...current, ...rehydrate(persisted) }),
       // persist writes only on set(); write once so a seed minted during
@@ -275,6 +291,7 @@ export function rehydrate(persisted: unknown) {
     timing,
     seed: Number.isInteger(p.seed) ? (p.seed as number) : newSeed(),
     sound: p.sound === true,
+    link: typeof p.link === 'string' ? p.link.slice(0, 120) : '',
     enteredAt: Date.now(),
   }
 }
@@ -354,7 +371,18 @@ export function readToken(search: string): Token {
   const t: Token = {}
   if (['uspb', 'ipb', 'solutions', 'other'].includes(b)) t.business = b as Token['business']
   if (/^(20(1[7-9]|2[0-5])|earlier)$/.test(c)) t.cohort = c
+  // the respondent code People Analytics puts on each link
+  const r = q.get('r') ?? q.get('code') ?? ''
+  if (/^[A-Za-z0-9_-]{4,64}$/.test(r)) t.code = r
   return t
+}
+
+/** The identity a link carries: the respondent code if there is one, else its
+    segments. Empty when the link carries nothing to tell respondents apart. */
+export function linkId(t: Token): string {
+  if (t.code) return `r:${t.code}`
+  if (t.business || t.cohort) return `s:${t.business ?? ''}|${t.cohort ?? ''}`
+  return ''
 }
 
 /* ---------------------------------------------------------------- response
