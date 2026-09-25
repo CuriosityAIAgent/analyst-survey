@@ -336,7 +336,7 @@ function ZoneBox({ z, d, board, reduced }: { z: ZoneId; d: DragApiT; board: Boar
             <Slot key={i} z={z} i={i} id={list[i] ?? null} d={d} />
           ))}
           {z === 'hand' && (
-            <span className="ml-2 font-[family-name:var(--font-ui)] text-[11px] leading-[13px] text-muted">Takes a copy</span>
+            <span className="ml-2 font-[family-name:var(--font-ui)] text-[11px] leading-[13px] text-muted">Can also be packed</span>
           )}
           <FullMark z={z} full={full} reduced={reduced} />
         </div>

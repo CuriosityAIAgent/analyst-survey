@@ -22,6 +22,7 @@ import { Art } from './art'
 import { CAMPS, campIndex, copy, paperFor, sceneFor, specBeats, step } from './content'
 import type { BeatId, StepId } from './types'
 import { useGameCtx } from './context'
+import { useGame } from './store'
 import CampWalk from './CampWalk'
 
 export type FrameProps = {
@@ -55,6 +56,8 @@ export type FrameProps = {
 
 export default function Frame(p: FrameProps) {
   const ctx = useGameCtx()
+  const preview = useGame((s) => s.preview)
+  const valid = p.valid || preview
   const s = step(p.id)
   const beats = specBeats(p.id)
   const beat = p.beat ?? 'A'
@@ -78,6 +81,11 @@ export default function Frame(p: FrameProps) {
 
       <div className="relative z-10 flex h-full min-h-0 flex-col" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <TopBar camp={camp} />
+        {preview && (
+          <p className="relative z-[4] -mt-1 mb-1 text-center font-[family-name:var(--font-ui)] text-[10px] uppercase tracking-[0.14em] text-bronze" data-preview>
+            Preview · answers optional
+          </p>
+        )}
 
         {/* the ridge and the pencil route run behind the prompt: a paper halo
             keeps every letter clear of them */}
@@ -85,12 +93,12 @@ export default function Frame(p: FrameProps) {
           <h1
             tabIndex={-1}
             style={{ outline: 'none' }}
-            className="font-[family-name:var(--font-display)] text-[24px] leading-[28px] tracking-[-0.01em] text-ink"
+            className="font-[family-name:var(--font-text)] text-[24px] font-semibold leading-[30px] text-ink"
             data-prompt
           >
             {p.prompt ?? c.prompt}
           </h1>
-          <p className="mt-1 font-[family-name:var(--font-text)] text-[15px] leading-[20px] text-muted" data-helper>
+          <p className="mt-1 font-[family-name:var(--font-text)] text-[16px] leading-[21px] text-ink-2" data-helper>
             {p.helper ?? c.helper}
           </p>
         </header>
@@ -109,12 +117,12 @@ export default function Frame(p: FrameProps) {
           p.footer
         ) : walk ? (
           <div className="relative z-[2] shrink-0 pb-1">
-            <CampWalk key={`${p.id}-${ctx.visit}`} enabled={p.valid} onDone={p.onContinue} reduced={ctx.reduced} />
+            <CampWalk key={`${p.id}-${ctx.visit}`} enabled={valid} onDone={p.onContinue} reduced={ctx.reduced} />
           </div>
         ) : (
           <div className="relative z-[2] flex h-[60px] shrink-0 items-center px-5">
             <AnimatePresence initial={false}>
-              {p.valid && (
+              {valid && (
                 <motion.button
                   key="primary"
                   type="button"

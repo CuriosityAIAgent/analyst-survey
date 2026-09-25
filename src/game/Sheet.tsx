@@ -19,6 +19,7 @@ import { motion } from 'motion/react'
 import type { SheetId, Variant } from './types'
 import { copy } from './content'
 import { useGameCtx } from './context'
+import { useGame } from './store'
 import Figure from './Figure'
 
 export type SheetProps = {
@@ -49,6 +50,8 @@ export const AUTO_DONE_MS = 500
 
 export default function Sheet(p: SheetProps) {
   const ctx = useGameCtx()
+  const preview = useGame((s) => s.preview)
+  const valid = p.valid || preview
   const c = copy(p.id, 'A', p.variant)
   const timer = useRef<number | null>(null)
   const onDone = useRef(p.onDone)
@@ -91,7 +94,7 @@ export default function Sheet(p: SheetProps) {
           {header && <div className="shrink-0 pt-1">{header}</div>}
           <div className="min-w-0 flex-1">
             <h2 id={`sheet-${p.id}-prompt`} tabIndex={-1} style={{ outline: 'none' }}
-              className="font-[family-name:var(--font-display)] text-[22px] leading-[26px] tracking-[-0.01em] text-ink" data-prompt>
+              className="font-[family-name:var(--font-text)] text-[22px] font-semibold leading-[27px] text-ink" data-prompt>
               {p.prompt ?? c.prompt}
             </h2>
             <p className="mt-1 font-[family-name:var(--font-text)] text-[15px] leading-[20px] text-muted" data-helper>
@@ -110,9 +113,9 @@ export default function Sheet(p: SheetProps) {
         <div className="relative min-h-0 px-5 pb-2" data-sheet-body>
           {p.children}
         </div>
-        {(!p.auto || p.showDone) && (
+        {(!p.auto || p.showDone || preview) && (
           <div className="flex h-[60px] shrink-0 items-center px-5">
-            {p.valid && (
+            {valid && (
               <button type="button" className="btn w-full" onClick={() => { if (!ctx.busy) p.onDone() }} data-testid="sheet-done">
                 {p.doneLabel ?? 'Continue'}
               </button>

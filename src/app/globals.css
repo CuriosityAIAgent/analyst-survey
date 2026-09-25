@@ -182,12 +182,10 @@ html[data-skin="survey"] .choice:not([aria-pressed="true"]):not([data-on="true"]
 /* A paper halo for type set over a scene (the prompt and helper over the
    ridge hairline): a stack of paper-coloured shadows masks the line work
    behind each glyph without a box. --halo is the camp's paper (Frame). */
-.halo h1, .halo p, .halo-text {
-  /* a paper outline under each glyph (the map-label halo): the stroke is
-     painted first, the ink fill over it */
-  -webkit-text-stroke: 7px var(--halo, #F8F7F4);
-  paint-order: stroke fill;
-  text-shadow: 0 0 4px var(--halo, #F8F7F4), 0 0 8px var(--halo, #F8F7F4);
+.halo {
+  /* a paper band behind the prompt, fading into the scene below it: the
+     ridge line never runs through the words, and the type stays crisp
+     (a per-glyph glow made it look blurred) */
+  background: linear-gradient(to bottom, var(--halo, #F8F7F4) 0, var(--halo, #F8F7F4) 80%, transparent 100%);
 }
-.halo p { -webkit-text-stroke-width: 6px; }
-.halo button, .halo input, .halo textarea { text-shadow: none; }
+.halo-text { text-shadow: 0 0 3px var(--halo, #F8F7F4), 0 0 6px var(--halo, #F8F7F4); }

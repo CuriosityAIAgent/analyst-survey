@@ -32,7 +32,6 @@ const BUSINESS = items('S01', 'B').filter((i) => i.group === 'Business')
 const YEARS = ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
 const COHORTS: { id: string; text: string }[] = [...YEARS.map((y) => ({ id: y, text: y })), { id: 'earlier', text: 'Earlier' }]
 
-const FOOTNOTE = 'Your answers are held under a code by People Analytics, not under your name. The working group sees only groups of ten or more.'
 
 export default function S01(p: StepProps) {
   const a = p.answers
@@ -53,7 +52,7 @@ export default function S01(p: StepProps) {
     )
   }
   return (
-    <Frame id="S01" beat="A" valid continueLabel="Start the climb" onContinue={p.next} footnote={FOOTNOTE}>
+    <Frame id="S01" beat="A" valid continueLabel="Start the climb" onContinue={p.next}>
       <div className="absolute inset-0 flex flex-col">
         <Trailhead />
       </div>
