@@ -102,3 +102,49 @@ describe('mainPath', () => {
     expect(path.map((c) => c.id)).toEqual(['a', 'b'])
   })
 })
+
+import { isAnswered, ordered, shown, PINNED } from './logic'
+
+describe('per-respondent option order', () => {
+  const opts = ['a', 'b', 'c', 'd', 'e', 'other'].map((id) => ({ id, label: id }))
+  it('is the same every time for the same respondent and card, so Back and refresh keep it', () => {
+    expect(ordered(opts, 7, 'vote')).toEqual(ordered(opts, 7, 'vote'))
+  })
+  it('differs between respondents', () => {
+    const seen = new Set(Array.from({ length: 40 }, (_, s) => ordered(opts, s, 'vote').map((o) => o.id).join('')))
+    expect(seen.size).toBeGreaterThan(10)
+  })
+  it('keeps catch-alls last and loses nothing', () => {
+    for (let s = 0; s < 50; s++) {
+      const o = ordered(opts, s, 'x').map((x) => x.id)
+      expect(o.at(-1)).toBe('other')
+      expect([...o].sort()).toEqual(opts.map((x) => x.id).sort())
+    }
+    expect(PINNED.has('none')).toBe(true)
+  })
+  it('only reorders cards marked shuffle', () => {
+    const card = { id: 'c', section: 'open', kind: 'pick', prompt: '', options: opts, next: 'END', answers: [], seconds: 1 } as Card
+    expect(shown(card, 3)).toBe(card)
+    expect(shown({ ...card, shuffle: true }, 3).options!.map((o) => o.id)).toEqual(ordered(opts, 3, 'c').map((o) => o.id))
+  })
+})
+
+describe('tokens with oneEach', () => {
+  const card = {
+    id: 'vote', section: 'knowing', kind: 'tokens', prompt: '', next: 'END', answers: [], seconds: 1, oneEach: true,
+    options: [{ id: 'x', label: 'x' }, { id: 'y', label: 'y' }],
+    tokens: [{ id: 'green', label: 'g', count: 2, colour: 'green' }],
+  } as Card
+  it('refuses two of the same token on one option', () => {
+    expect(isAnswered(card, { green: ['x', 'x'] })).toBe(false)
+    expect(isAnswered(card, { green: ['x', 'y'] })).toBe(true)
+  })
+  it('still allows stacking where oneEach is off', () => {
+    expect(isAnswered({ ...card, oneEach: false }, { green: ['x', 'x'] })).toBe(true)
+  })
+  it('a carried token condition reads the earlier card', () => {
+    const all = { faster: { block: ['classroom', 'ops', 'ops'] } }
+    expect(test('carried:faster:token:block:classroom', undefined, all, new Set(['faster']))).toBe(true)
+    expect(test('carried:faster:token:block:morning', undefined, all, new Set(['faster']))).toBe(false)
+  })
+})

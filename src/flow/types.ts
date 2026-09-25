@@ -22,6 +22,9 @@ export type Card = {
   max?: number
   tokens?: Token[]
   optional?: boolean
+  shuffle?: boolean    // options in a per-respondent order (seeded, reproducible); catch-alls stay last
+  oneEach?: boolean    // tokens: at most one of each token per option
+  scene?: 'ladder'     // a show card drawn by a component instead of an image slot
   branches?: Branch[]
   next: string
   answers: string[]

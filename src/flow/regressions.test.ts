@@ -34,8 +34,9 @@ describe('Codex P1: answers from an abandoned branch do not steer or get recorde
     expect(test('carried:gone:is:yes', undefined, all, new Set(['a', 'gone']))).toBe(true)
   })
   it('the recorded response drops answers not on the final path', () => {
-    const r = response({ path: ['a', 'c'], answers: { a: 'x', b: 'abandoned', c: 'y' }, timing: [{ id: 'b', ms: 9 }, { id: 'a', ms: 5 }] })
+    const r = response({ path: ['a', 'c'], answers: { a: 'x', b: 'abandoned', c: 'y' }, timing: [{ id: 'b', ms: 9 }, { id: 'a', ms: 5 }], seed: 42 })
     expect(Object.keys(r.answers).sort()).toEqual(['a', 'c'])
+    expect(r.seed).toBe(42) // the shuffled orders can be rebuilt at analysis
     expect(r.timing.map((t) => t.id)).toEqual(['a'])
   })
 })

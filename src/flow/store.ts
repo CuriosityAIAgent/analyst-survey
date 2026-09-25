@@ -14,6 +14,7 @@ type State = {
   answers: Record<string, Answer>         // kept across Back so nothing is lost...
   timing: { id: string; ms: number }[]
   enteredAt: number
+  seed: number                            // per respondent; rebuilds every shuffled order
   begin: () => void
   answer: (id: string, v: Answer) => void
   advance: (from?: string) => void
@@ -25,14 +26,15 @@ type State = {
    Back out of branch B, take branch C, and B's answers stop counting. */
 export const onPath = (path: string[]) => new Set(path.filter((x) => x !== 'END'))
 
-export function response(s: Pick<State, 'path' | 'answers' | 'timing'>) {
+export function response(s: Pick<State, 'path' | 'answers' | 'timing' | 'seed'>) {
   const keep = onPath(s.path)
   const answers: Record<string, Answer> = {}
   for (const id of keep) if (id in s.answers) answers[id] = s.answers[id]
-  return { path: s.path, answers, timing: s.timing.filter((t) => keep.has(t.id)) }
+  return { path: s.path, answers, timing: s.timing.filter((t) => keep.has(t.id)), seed: s.seed }
 }
 
-const fresh = () => ({ started: false, path: [GRAPH.start], answers: {}, timing: [], enteredAt: Date.now() })
+const newSeed = () => (Math.random() * 2 ** 31) | 0
+const fresh = () => ({ started: false, path: [GRAPH.start], answers: {}, timing: [], enteredAt: Date.now(), seed: newSeed() })
 
 export const useFlow = create<State>()(
   persist(
@@ -97,5 +99,7 @@ export function rehydrate(persisted: unknown) {
           path,
           answers,
           timing: Array.isArray(p.timing) ? p.timing.filter((t) => t && CARD.has(t.id)) : [],
+          // keep the seed, or a refresh would reshuffle cards already answered
+          ...(Number.isInteger(p.seed) ? { seed: p.seed as number } : {}),
         }
 }

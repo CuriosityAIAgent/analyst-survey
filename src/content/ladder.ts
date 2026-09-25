@@ -117,3 +117,17 @@ export const RUNG_TO_LANE: Record<RungId, 'human' | 'both' | 'agent'> = {
   standing: 'agent',
   service: 'agent',
 }
+
+/** The explainer card in the survey: one line per rung, phone-length. `eg` puts
+    the rung in the words people already use for AI tools (a chat window, a
+    co-worker agent, an agent you built, agents the platform runs), so the
+    ladder is concrete without naming a product. `catches` is who finds the
+    planted page-nine error, which is what keeps the five rows neutral: it gets
+    caught at every rung, by someone different. */
+export const SHORT: Record<RungId, { label: string; eg: string; you: string; catches: string }> = {
+  own:      { label: 'I do it', eg: 'No AI.',                                   you: 'You build all twelve pages. It costs the evening.', catches: 'You catch it, or no one does.' },
+  assisted: { label: 'It helps while I work', eg: 'A chat window open beside you.',           you: 'You hold the pen. Some framings were its.',         catches: 'You may catch it as you go.' },
+  briefed:  { label: 'I brief it, then check', eg: 'A co-worker agent drafts the whole pack.', you: 'You write the brief, then read all twelve.',        catches: 'You catch it on your read.' },
+  standing: { label: 'I set it up once', eg: 'An agent you built runs every Monday.',    you: 'You wrote the standard. You read samples.',         catches: 'Your spot-check may miss it.' },
+  service:  { label: 'It\'s a service', eg: 'Agents the platform runs for everyone.',   you: 'You own the client and the flagged exceptions.',   catches: "The platform's check flags it to you." },
+}

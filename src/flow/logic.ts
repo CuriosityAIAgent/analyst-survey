@@ -104,11 +104,34 @@ export function isAnswered(card: Card, v: Answer | undefined): boolean {
       if (!v || typeof v !== 'object' || Array.isArray(v)) return false
       const r = v as Record<string, unknown>
       return (card.tokens ?? []).every((t) =>
-        Array.isArray(r[t.id]) && (r[t.id] as string[]).length === t.count && (r[t.id] as string[]).every((x) => ids.has(x)))
+        Array.isArray(r[t.id]) && (r[t.id] as string[]).length === t.count && (r[t.id] as string[]).every((x) => ids.has(x)) &&
+        (!card.oneEach || new Set(r[t.id] as string[]).size === t.count))
     }
     default: return false
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Option order. A fixed order puts the same item first for everyone, and first
+   is where a hurried thumb lands. Cards marked `shuffle` show their options in
+   an order drawn from the respondent's seed and the card id, so it differs
+   between people, is stable across Back and refresh, and can be rebuilt at
+   analysis from the seed alone (rule 14: randomise AND log). Catch-alls such as
+   "Something not here" stay last, where people look for them.
+--------------------------------------------------------------------------- */
+export const PINNED = new Set(['other', 'none', 'nothing', 'never', 'notfreed'])
+
+export function ordered<T extends { id: string }>(items: T[], seed: number, key: string): T[] {
+  let h = seed | 0
+  for (const ch of key) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0
+  const next = () => { h = (Math.imul(h, 1103515245) + 12345) | 0; return (h >>> 0) / 4294967296 }
+  const free = items.filter((x) => !PINNED.has(x.id))
+  for (let i = free.length - 1; i > 0; i--) { const j = Math.floor(next() * (i + 1)); [free[i], free[j]] = [free[j], free[i]] }
+  return [...free, ...items.filter((x) => PINNED.has(x.id))]
+}
+
+export const shown = (card: Card, seed: number): Card =>
+  card.shuffle && card.options ? { ...card, options: ordered(card.options, seed, card.id) } : card
 
 /* ---------------------------------------------------------------------------
    Static checks on a graph. Run in tests and at build time: a broken graph is

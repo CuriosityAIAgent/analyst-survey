@@ -238,10 +238,11 @@ export function Rank({ card, value, set }: P<string[]>) {
   // store the initial order the first time, so an untouched rank is still an answer
   useEffect(() => { if (!value) set(order) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const top = card.max ?? 0
   return (
     <ol className="grid gap-2">
       {order.map((id, i) => (
-        <li key={id} ref={(el) => { rows.current[i] = el }}
+        <li key={id} data-top={top > 0 && i < top ? 'true' : undefined} ref={(el) => { rows.current[i] = el }}
           className="flex min-h-[54px] items-center gap-3 border border-rule bg-ground pl-3 pr-1.5"
           style={{ opacity: drag === i ? 0.6 : 1 }}
           onPointerDown={(e) => { setDrag(i); (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId) }}
@@ -256,7 +257,8 @@ export function Rank({ card, value, set }: P<string[]>) {
           onPointerCancel={() => setDrag(null)}
           onLostPointerCapture={() => setDrag(null)}
         >
-          <span className="w-6 font-[family-name:var(--font-ui)] text-[15px] font-semibold text-ink">{i + 1}</span>
+          <span className="w-6 font-[family-name:var(--font-ui)] text-[15px] font-semibold"
+            style={{ color: top > 0 && i >= top ? 'var(--color-muted)' : 'var(--color-ink)' }}>{i + 1}</span>
           <span className="flex-1 touch-none select-none text-[16px] text-ink">{label(id)}</span>
           <span aria-hidden className="cursor-grab px-1 text-muted">⋮⋮</span>
           <button type="button" className="h-11 w-9 text-muted" aria-label={`Move ${label(id)} up`}
@@ -264,7 +266,9 @@ export function Rank({ card, value, set }: P<string[]>) {
           <button type="button" className="h-11 w-9 text-muted" aria-label={`Move ${label(id)} down`}
             disabled={i === order.length - 1} onClick={() => move(i, i + 1)}>↓</button>
         </li>
-      ))}
+      )).flatMap((row, i) => top > 0 && i === top - 1
+        ? [row, <li key="cut" aria-hidden className="pt-1 font-[family-name:var(--font-ui)] text-[12px] uppercase tracking-[0.12em] text-muted">The rest</li>]
+        : [row])}
     </ol>
   )
 }
@@ -273,40 +277,58 @@ export function Rank({ card, value, set }: P<string[]>) {
 export function Tokens({ card, value = {}, set }: P<Record<string, string[]>>) {
   const toks = card.tokens!
   const [held, setHeld] = useState<string>(toks[0].id)
-  const left = (t: string) => toks.find((x) => x.id === t)!.count - (value[t]?.length ?? 0)
+  const left = (t: string, v = value) => toks.find((x) => x.id === t)!.count - (v[t]?.length ?? 0)
+  const blocked = (opt: string) => left(held) <= 0 || (!!card.oneEach && (value[held] ?? []).includes(opt))
   const drop = (opt: string) => {
-    if (left(held) <= 0) return
-    set({ ...value, [held]: [...(value[held] ?? []), opt] })
+    if (blocked(opt)) return
+    const next = { ...value, [held]: [...(value[held] ?? []), opt] }
+    set(next)
+    // spent the last of this token: pick up the next one that still has some
+    if (left(held, next) <= 0) {
+      const t = toks.find((x) => left(x.id, next) > 0)
+      if (t) setHeld(t.id)
+    }
   }
   const lift = (t: string, opt: string) => {
     const arr = [...(value[t] ?? [])]; arr.splice(arr.indexOf(opt), 1); set({ ...value, [t]: arr })
+    setHeld(t)
   }
+  const heldLabel = toks.find((t) => t.id === held)!.label
   return (
     <div>
       <div className="mb-4 flex flex-wrap gap-2" role="radiogroup" aria-label="Which token you are placing">
         {toks.map((t) => (
           <button key={t.id} type="button" role="radio" aria-checked={held === t.id}
             className="choice flex items-center gap-2" onClick={() => setHeld(t.id)}>
-            <span className="inline-block h-3.5 w-3.5 rounded-full" style={{ background: tone(t.colour) }} />
-            {t.label} <span className="text-muted">×{left(t.id)}</span>
+            <span className="inline-block h-3.5 w-3.5 shrink-0 rounded-full" style={{ background: tone(t.colour) }} />
+            {t.label} <span className="text-muted">{t.count === 1 ? (left(t.id) === 0 ? '✓' : '') : `×${left(t.id)}`}</span>
           </button>
         ))}
       </div>
       <div className="grid gap-2">
         {card.options!.map((o) => {
-          const on = toks.flatMap((t) => (value[t.id] ?? []).filter((x) => x === o.id).map(() => t))
+          // what sits on this row, grouped: a stacked token shows once with its count
+          const here = toks.map((t) => ({ t, n: (value[t.id] ?? []).filter((x) => x === o.id).length })).filter((x) => x.n > 0)
           return (
-            <div key={o.id} className="flex min-h-[54px] items-center gap-2 border border-rule bg-ground pr-2">
-              <button type="button" className="flex-1 px-3 py-3 text-left text-[16px] text-ink"
-                onClick={() => drop(o.id)} disabled={left(held) <= 0}
-                aria-label={`Place a ${toks.find((t) => t.id === held)!.label} token on ${o.label}`}>
+            <div key={o.id} className="border border-rule bg-ground">
+              <button type="button" className="block w-full px-3 py-3 text-left text-[16px] text-ink disabled:text-ink"
+                onClick={() => drop(o.id)} disabled={blocked(o.id)}
+                aria-label={`Place ${heldLabel} on ${o.label}`}>
                 {o.label}
               </button>
-              {on.map((t, i) => (
-                <button key={i} type="button" onClick={() => lift(t.id, o.id)}
-                  aria-label={`Remove ${t.label} from ${o.label}`}
-                  className="h-7 w-7 rounded-full" style={{ background: tone(t.colour) }} />
-              ))}
+              {here.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 px-3 pb-3">
+                  {here.map(({ t, n }) => (
+                    <button key={t.id} type="button" onClick={() => lift(t.id, o.id)}
+                      aria-label={`Remove ${t.label} from ${o.label}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-[family-name:var(--font-ui)] text-[12px] text-ink-2"
+                      style={{ borderColor: tone(t.colour) }}>
+                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: tone(t.colour) }} />
+                      {t.label}{n > 1 ? ` ×${n}` : ''} <span aria-hidden className="text-muted">×</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )
         })}
