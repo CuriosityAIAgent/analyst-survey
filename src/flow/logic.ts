@@ -94,9 +94,12 @@ export function isAnswered(card: Card, v: Answer | undefined): boolean {
     case 'pick': return typeof v === 'string' && ids.has(v)
     case 'slider': return typeof v === 'number' && Number.isFinite(v)
     case 'multi':
-      return Array.isArray(v) && v.every((x) => ids.has(x as string)) && (v.length > 0 || !!card.optional)
+      // what the chips can produce: known ids, no repeats, no more than max
+      return Array.isArray(v) && v.every((x) => ids.has(x as string)) && new Set(v).size === v.length &&
+        v.length <= (card.max ?? opts.length) && (v.length > 0 || !!card.optional)
     case 'rank':
-      return Array.isArray(v) && v.length === opts.length && v.every((x) => ids.has(x as string))
+      // an exact permutation of the options
+      return Array.isArray(v) && v.length === opts.length && v.every((x) => ids.has(x as string)) && new Set(v).size === v.length
     case 'swipe':
       return !!v && typeof v === 'object' && !Array.isArray(v) &&
         opts.every((o) => ['left', 'right'].includes((v as Record<string, string>)[o.id]))

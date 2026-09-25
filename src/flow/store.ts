@@ -67,6 +67,10 @@ export const useFlow = create<State>()(
       name: 'ascent-flow-v1',
       version: 1,
       merge: (persisted, current) => ({ ...current, ...rehydrate(persisted) }),
+      // persist writes only on set(); write once now so a seed made during
+      // hydration survives a reload that happens before the next tap
+      // (deferred: with localStorage, hydration runs inside create(), before useFlow exists)
+      onRehydrateStorage: () => (state) => { if (state) queueMicrotask(() => useFlow.setState({ seed: state.seed })) },
     },
   ),
 )
@@ -99,7 +103,9 @@ export function rehydrate(persisted: unknown) {
           path,
           answers,
           timing: Array.isArray(p.timing) ? p.timing.filter((t) => t && CARD.has(t.id)) : [],
-          // keep the seed, or a refresh would reshuffle cards already answered
-          ...(Number.isInteger(p.seed) ? { seed: p.seed as number } : {}),
+          // keep the seed, or a refresh would reshuffle cards already answered;
+          // state saved before seeds existed gets one here, and it is written
+          // back straight after hydration (onRehydrateStorage) so it holds
+          seed: Number.isInteger(p.seed) ? (p.seed as number) : newSeed(),
         }
 }

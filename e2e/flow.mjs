@@ -10,7 +10,7 @@
 import puppeteer from 'puppeteer-core'
 import { readFileSync } from 'node:fs'
 
-const ROUTES = Number(process.argv[2] ?? 8)
+const ROUTES = Number(process.argv[2] ?? 12)
 const SITE = process.argv[3] ?? 'http://localhost:3000'
 const G = JSON.parse(readFileSync(new URL('../src/content/flow.json', import.meta.url)))
 const CARD = new Map(G.cards.map((c) => [c.id, c]))
@@ -124,6 +124,8 @@ for (let run = 0; run < ROUTES; run++) {
 }
 
 const unseen = G.cards.filter((c) => !seen.has(c.id)).map((c) => c.id)
+// coverage is a gate once enough routes are walked to expect it (12 by default)
+if (ROUTES >= 10 && unseen.length) problems.push(`not reached in ${ROUTES} routes: ${unseen.join(', ')}`)
 console.log(`routes walked: ${ROUTES}, cards per route: ${Math.min(...lengths)}-${Math.max(...lengths)}`)
 console.log(`cards covered: ${seen.size}/${G.cards.length}${unseen.length ? ' (not reached: ' + unseen.join(', ') + ')' : ''}`)
 console.log('problems:', problems.length ? '\n  ' + problems.join('\n  ') : 'none')

@@ -114,3 +114,24 @@ describe('optional means skippable', () => {
     expect(isAnswered(card({ kind: 'multi', options: [{ id: 'x', label: 'X' }] }), undefined)).toBe(false)
   })
 })
+
+describe('Codex review 2: validation matches what the controls can produce', () => {
+  const opts = ['a', 'b', 'c', 'd'].map((id) => ({ id, label: id }))
+  const base = { id: 'x', section: 'open' as const, prompt: '', next: 'END', answers: [] as string[], seconds: 1, options: opts }
+  it('multi: no repeats and no more than max', () => {
+    const c = { ...base, kind: 'multi', max: 2 } as Card
+    expect(isAnswered(c, ['a', 'b'])).toBe(true)
+    expect(isAnswered(c, ['a', 'a'])).toBe(false)
+    expect(isAnswered(c, ['a', 'b', 'c'])).toBe(false)
+  })
+  it('rank: an exact permutation', () => {
+    const c = { ...base, kind: 'rank' } as Card
+    expect(isAnswered(c, ['d', 'c', 'b', 'a'])).toBe(true)
+    expect(isAnswered(c, ['a', 'a', 'c', 'd'])).toBe(false)
+  })
+  it('state saved before seeds existed gets an integer seed; a saved seed is kept', () => {
+    expect(Number.isInteger(rehydrate({}).seed)).toBe(true)
+    expect(rehydrate({ seed: 5 }).seed).toBe(5)
+    expect(Number.isInteger(rehydrate({ seed: 'x' }).seed)).toBe(true)
+  })
+})
