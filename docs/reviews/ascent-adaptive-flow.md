@@ -1,4 +1,4 @@
-> **Superseded.** This describes the first 87-card graph. The live graph in `src/content/flow.json` is the review pass: 49 cards, 37 on every route, 420s by the timing formula. What changed and why is in `.context/evidence-applied.md` and in the graph's own `thesis`, `consistencyPairs` and `weakestPoint`. Card ids below (for example `wrap_more`, which was the old catch-all) do not match the live graph.
+> **Superseded.** This describes the first 87-card graph. The live graph in `src/content/flow.json` was rewritten against the rules in `ascent-evidence.md`: 51 cards, 36 on every route, 414s by the timing formula. What changed and why is in the graph's own `thesis`, `consistencyPairs` and `weakestPoint`. Card ids below (for example `wrap_more`, which was the old catch-all) do not match the live graph.
 
 # The Ascent: the adaptive flow
 
