@@ -10,7 +10,7 @@
 
    Beat B (fallback only, when the link token lacks business or class): two
    rows of text chips, one tap per row. Class of is two rows of five year
-   chips (2017-2021; 2022-2025 and Earlier), each at least 44px.
+   chips (the last four classes, 2022-2025), each at least 44px.
 
    The rookie never moves here: only the respondent moves a climber, and
    nothing is asked of them yet. Tapping the covered kit lifts the canvas a
@@ -28,9 +28,10 @@ import { SCENE_ANCHORS, sceneToBox } from '../art/scenes'
 import { items, label } from '../content'
 import type { Answers, StepProps } from '../types'
 
-const BUSINESS = items('S01', 'B').filter((i) => i.group === 'Business')
-const YEARS = ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
-const COHORTS: { id: string; text: string }[] = [...YEARS.map((y) => ({ id: y, text: y })), { id: 'earlier', text: 'Earlier' }]
+const BUSINESS = items('S01', 'B').filter((i) => i.group === 'Business' && i.id !== 'other')
+// the last four classes only
+const YEARS = ['2022', '2023', '2024', '2025']
+const COHORTS: { id: string; text: string }[] = YEARS.map((y) => ({ id: y, text: y }))
 
 
 export default function S01(p: StepProps) {
@@ -149,7 +150,7 @@ function SegmentPicker({ business, cohort, onBusiness, onCohort }: {
     <div className="shrink-0 px-5 pt-2">
       <fieldset>
         <legend className="eyebrow mb-2">Business</legend>
-        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Business">
+        <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Business">
           {BUSINESS.map((b) => (
             <button
               key={b.id}
@@ -168,8 +169,7 @@ function SegmentPicker({ business, cohort, onBusiness, onCohort }: {
       </fieldset>
       <fieldset className="mt-4">
         <legend className="eyebrow mb-2">Class of</legend>
-        {/* two rows of five: 2017 to 2021, then 2022 to 2025 and Earlier */}
-        <div className="grid grid-cols-5 gap-[6px]" role="radiogroup" aria-label="Class of">
+        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Class of">
           {COHORTS.map((c) => {
             const on = cohort === c.id
             return (

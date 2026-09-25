@@ -110,7 +110,7 @@ export interface Answers {
   consent: boolean
   'variant.seed': number
   'segment.business': 'uspb' | 'ipb' | 'solutions' | 'other' | null
-  'segment.cohort': string | null // '2017'..'2025' | 'earlier'
+  'segment.cohort': string | null // '2022'..'2025' (the last four classes)
   'segment.source': 'token' | 'asked'
   // S02: arrays hold gear ids in slot order
   'vote.green': GearId[]

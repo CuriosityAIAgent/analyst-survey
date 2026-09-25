@@ -5,7 +5,7 @@ import { SCREEN_IDS } from './content'
 const G = () => useGame.getState()
 const at = () => { const s = G(); return stepKey(s) }
 
-beforeEach(() => { G().reset(); G().setToken({ business: 'uspb', cohort: '2021' }) })
+beforeEach(() => { G().reset(); G().setToken({ business: 'uspb', cohort: '2024' }) })
 
 describe('navigation', () => {
   it('walks S01..S11 with every always-on sheet, and back never loses answers', () => {
@@ -116,8 +116,11 @@ describe('orders', () => {
 
 describe('token', () => {
   it('reads business and cohort from the link', () => {
-    expect(readToken('?business=USPB&cohort=2021')).toEqual({ business: 'uspb', cohort: '2021' })
-    expect(readToken('?b=ipb&c=earlier')).toEqual({ business: 'ipb', cohort: 'earlier' })
+    expect(readToken('?business=USPB&cohort=2024')).toEqual({ business: 'uspb', cohort: '2024' })
+    expect(readToken('?b=ipb&c=2022')).toEqual({ business: 'ipb', cohort: '2022' })
+    // only the last four classes; no 'other' business
+    expect(readToken('?business=other&cohort=2021')).toEqual({})
+    expect(readToken('?c=earlier')).toEqual({})
     expect(readToken('?business=nope&cohort=1999')).toEqual({})
   })
 })
@@ -134,7 +137,7 @@ describe('Codex P1: saved progress belongs to one link', () => {
     expect(readToken('?r=AB12cd&business=uspb')).toEqual({ business: 'uspb', code: 'AB12cd' })
     expect(readToken('?r=<script>')).toEqual({})
     expect(linkId({ code: 'AB12cd', business: 'uspb' })).toBe('r:AB12cd')
-    expect(linkId({ business: 'uspb', cohort: '2021' })).toBe('s:uspb|2021')
+    expect(linkId({ business: 'uspb', cohort: '2024' })).toBe('s:uspb|2024')
     expect(linkId({})).toBe('')
   })
   it('a different link in the same browser starts fresh', () => {
@@ -159,5 +162,28 @@ describe('Codex P1: saved progress belongs to one link', () => {
   it('the link survives a reload', () => {
     expect(rehydrate({ started: true, link: 'r:first1' }).link).toBe('r:first1')
     expect(rehydrate({ link: 42 }).link).toBe('')
+  })
+})
+
+describe('preview and real sessions never share answers', () => {
+  beforeEach(() => { useGame.getState().reset(); useGame.getState().setPreview(false) })
+  it('opening /preview after a real session starts fresh, and back again', () => {
+    useGame.getState().begin()
+    useGame.getState().set('rule.text' as never, 'real' as never)
+    useGame.getState().setPreview(true)
+    expect(useGame.getState().answers).toEqual({})
+    expect(useGame.getState().mode).toBe('preview')
+    useGame.getState().begin()
+    useGame.getState().set('rule.text' as never, 'sample' as never)
+    useGame.getState().setPreview(false)
+    expect(useGame.getState().answers).toEqual({})
+    expect(useGame.getState().mode).toBe('live')
+  })
+  it('reloading the same kind of session resumes', () => {
+    useGame.getState().setPreview(true)
+    useGame.getState().begin()
+    useGame.getState().set('rule.text' as never, 'kept' as never)
+    useGame.getState().setPreview(true)
+    expect(useGame.getState().answers['rule.text' as never]).toBe('kept')
   })
 })
