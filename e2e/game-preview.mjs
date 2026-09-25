@@ -4,13 +4,15 @@
    Usage: BASE=http://localhost:3000 node e2e/game-preview.mjs */
 import puppeteer from 'puppeteer-core'
 const BASE = process.env.BASE || 'http://localhost:3000'
+// PREVIEW_PATH=/preview checks the short link; the default checks ?preview=1
+const START = BASE + (process.env.PREVIEW_PATH || '/?preview=1')
 const br = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' })
 const p = await br.newPage()
 await p.setViewport({ width: 390, height: 660, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
 const errs = []; p.on('pageerror', (e) => errs.push(String(e).slice(0, 200)))
-await p.goto(BASE + '/?preview=1', { waitUntil: 'networkidle2' })
+await p.goto(START, { waitUntil: 'networkidle2' })
 await p.evaluate(() => localStorage.clear())
-await p.goto(BASE + '/?preview=1', { waitUntil: 'networkidle2' })
+await p.goto(START, { waitUntil: 'networkidle2' })
 await new Promise((r) => setTimeout(r, 800))
 const state = () => p.evaluate(() => JSON.parse(localStorage.getItem('ascent-game-v1') ?? '{}').state ?? {})
 const key = (s) => s.finished ? 'END' : s.sheet ? `${s.sheet.id}${s.sheet.variant ? ' ' + s.sheet.variant : ''}` : `${s.screen}#${s.beat}`
