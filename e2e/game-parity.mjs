@@ -16,7 +16,7 @@ import puppeteer from 'puppeteer-core'
 const args = process.argv.slice(2)
 const flag = (n) => args.includes(`--${n}`)
 const opt = (n, d) => { const a = args.find((x) => x.startsWith(`--${n}=`)); return a ? a.split('=').slice(1).join('=') : d }
-const BASE = process.env.BASE || 'http://localhost:3000'
+const BASE = (process.env.BASE || 'http://localhost:3000').replace(/\/+$/, '') + '/v1' // the earlier game moved to /v1; BASE is the origin
 const DESK = process.env.DESK && /^\d+x\d+$/.test(process.env.DESK) ? process.env.DESK : '1440x790'
 const SEED = 424242
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))

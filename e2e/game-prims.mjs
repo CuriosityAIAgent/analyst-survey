@@ -4,7 +4,8 @@
    node e2e/game-prims.mjs  -> prints PASS/FAIL per check. */
 import puppeteer from 'puppeteer-core'
 
-const BASE = process.env.BASE || 'http://localhost:3000'
+const ORIGIN = (process.env.ORIGIN || 'http://localhost:3000').replace(/\/+$/, '')
+const BASE = (process.env.BASE || ORIGIN).replace(/\/+$/, '') + '/v1' // the earlier game moved to /v1; BASE is the origin
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' })
 const results = []
 const check = (name, ok, got) => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : `  got: ${got}`}`) }
@@ -16,7 +17,7 @@ async function fresh(touch = false) {
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.setViewport({ width: 1200, height: 1000, deviceScaleFactor: 1, hasTouch: touch, isMobile: false })
-  await page.goto(`${BASE}/art/game`, { waitUntil: 'networkidle2' })
+  await page.goto(`${ORIGIN}/art/game`, { waitUntil: 'networkidle2' })
   await page.addStyleTag({ content: 'nextjs-portal{display:none!important}' })
   return { page, ctx, errors }
 }

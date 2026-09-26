@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'The Ascent',
-  description: 'About seven minutes. Help the next cohort become strong Advisors faster.',
+  description: 'About eight minutes. Help new Analysts become strong Advisors faster.',
 }
 export const viewport: Viewport = {
   themeColor: '#0B1424',

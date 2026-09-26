@@ -35,7 +35,7 @@ import { fileURLToPath } from 'node:url'
 
 const args = process.argv.slice(2)
 const flag = (n) => args.includes(`--${n}`)
-const BASE = process.env.BASE || 'http://localhost:3000'
+const BASE = (process.env.BASE || 'http://localhost:3000').replace(/\/+$/, '') + '/v1' // the earlier game moved to /v1; BASE is the origin
 const OUT = '/tmp/ascent-game-shots'
 const DESK = process.env.DESK ? (/^\d+x\d+$/.test(process.env.DESK) ? process.env.DESK : '1440x790') : ''
 const [W, H] = DESK ? DESK.split('x').map(Number) : [390, flag('tall') ? 844 : 660]
