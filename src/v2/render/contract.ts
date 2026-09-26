@@ -33,3 +33,13 @@ export type RenderProps = {
 /* A renderer must: show q.question, q.instruction (and note/privacy) through V2Frame;
    compute `missing` ("Pick 1 more") from its constraints unless `preview`; call set()
    on every change; never repeat the respondent's earlier answers in a follow-up. */
+
+/* Test hooks every renderer must expose, so e2e/v2-walk.mjs can play any screen
+   like a person (and stays template-agnostic):
+     data-q="<question or follow-up id>"      on the object root
+     data-option="<option id>"                every tappable option / tile / tool / trait / card choice
+     data-zone="<tray | stop | step id>"      every drop target, track stop, podium step
+     data-choice="<choice id>"                card-stack and stamp buttons (per card)
+     data-jug="<option id>"                   bottle jugs (tap = pour 1 hour)
+     data-input                              the text field on text questions
+   plus V2Frame's own data-next on Next. Tap-then-tap must work everywhere drag works. */
