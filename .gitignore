@@ -11,3 +11,6 @@ AGENTS.md
 CLAUDE.md
 .agents/
 .gstack/
+
+# local survey responses (dev); production writes to $RESPONSES_DIR on a volume
+.data/
