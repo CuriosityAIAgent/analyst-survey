@@ -4,6 +4,9 @@
    all three answers, so none looks favoured; the mark and word tell them apart. */
 
 export type Choice = 'yes' | 'unsure' | 'no'
+/** The glyph an option carries in questions.ts, and the mark it draws. */
+export type Glyph = 'cross' | 'query' | 'tick'
+export const GLYPH: Record<Glyph, Choice> = { tick: 'yes', query: 'unsure', cross: 'no' }
 
 const INK = '#7A3E12'
 const WORD: Record<Choice, string> = { yes: 'YES', unsure: 'NOT SURE', no: 'NO' }
@@ -40,9 +43,11 @@ export function InkFilter() {
   )
 }
 
-/** The stamped impression: a double-ruled box with the mark and the word. */
-export function StampMark({ c, size = 1 }: { c: Choice; size?: number }) {
-  const w = c === 'unsure' ? 212 : c === 'yes' ? 150 : 132
+/** The stamped impression: a double-ruled box with the mark and the word
+    (by default the choice's own word; pass `word` for an option's label). */
+export function StampMark({ c, size = 1, word }: { c: Choice; size?: number; word?: string }) {
+  const text = (word ?? WORD[c]).toUpperCase()
+  const w = word ? Math.round(70 + text.length * 17.5) : c === 'unsure' ? 212 : c === 'yes' ? 150 : 132
   const h = 60
   return (
     <svg viewBox={`0 0 ${w} ${h}`} width={w * size} height={h * size} aria-hidden style={{ mixBlendMode: 'multiply', opacity: 0.9 }}>
@@ -60,7 +65,7 @@ export function StampMark({ c, size = 1 }: { c: Choice; size?: number }) {
           )}
         </g>
         <text x="52" y="39.5" fill={INK} fontFamily="Archivo, Arial, sans-serif" fontWeight="700" fontSize="24" letterSpacing="2.5">
-          {WORD[c]}
+          {text}
         </text>
       </g>
     </svg>

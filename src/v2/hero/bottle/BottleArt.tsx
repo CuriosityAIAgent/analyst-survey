@@ -1,33 +1,42 @@
 /* The glass bottle: eight fine hour lines, coloured layers in pour order, a stream
    for the latest pour, and a cap that drops on when all 8 hours are in.
-   viewBox 0 0 200 290. Hour k (1..8) sits at y = 268 - 19k. */
+   viewBox 0 0 200 290. With 8 hours, hour k (1..8) sits at y = 268 - 19k; any other
+   total spreads the same 152 units of glass evenly. `looks` colours each jug id
+   (default: the five known jugs). */
 import { forwardRef, useId } from 'react'
-import { JUG, TOTAL_HOURS, type JugId } from './jugs'
+import { JUG, JUGS, TOTAL_HOURS, type JugLook } from './jugs'
 import Patterns, { patId } from './Patterns'
 
 export const VB_W = 200
 export const SPOUT = { x: 95, y: 11 } // where the pouring jug's spout sits, in bottle units
 const FLOOR = 268
-const HOUR = 19
-const levelY = (k: number) => FLOOR - HOUR * k
+const SPAN = 152 // glass height from the floor to the fill line
 
 const OUTER = 'M79 39 L79 60 C79 80 34 80 34 104 L34 254 Q34 272 52 272 L148 272 Q166 272 166 254 L166 104 C166 80 121 80 121 60 L121 39 Z'
 const INNER = 'M83 39 L83 61 C83 84 38 84 38 106 L38 252 Q38 268 54 268 L146 268 Q162 268 162 252 L162 106 C162 84 117 84 117 61 L117 39 Z'
 
-export type Layer = { id: number; jug: JugId; fresh: boolean }
-export type Pour = { id: number; jug: JugId; from: number } // from = level before this pour
+export type Layer = { id: number; jug: string; fresh: boolean }
+export type Pour = { id: number; jug: string; from: number } // from = level before this pour
 
-type Props = { layers: Layer[]; pour: Pour | null; kind: 'pour' | 'back'; className?: string }
+type Props = {
+  layers: Layer[]; pour: Pour | null; kind: 'pour' | 'back'; className?: string
+  total?: number; looks?: Record<string, JugLook>
+}
 
-const BottleArt = forwardRef<SVGSVGElement, Props>(function BottleArt({ layers, pour, kind, className }, ref) {
+const BottleArt = forwardRef<SVGSVGElement, Props>(function BottleArt(
+  { layers, pour, kind, className, total = TOTAL_HOURS, looks = JUG as Record<string, JugLook> }, ref,
+) {
   const u = useId().replace(/:/g, '')
+  const HOUR = SPAN / total
+  const levelY = (k: number) => FLOOR - HOUR * k
+  const look = (id: string): JugLook => looks[id] ?? JUGS[0]
   const level = layers.length
-  const full = level >= TOTAL_HOURS
+  const full = level >= total
   const top = layers[level - 1]
   const rising = kind === 'pour'
   return (
     <svg ref={ref} viewBox="0 0 200 290" className={className} role="img"
-      aria-label={`A bottle with ${level} of ${TOTAL_HOURS} hours poured`}>
+      aria-label={`A bottle with ${level} of ${total} hours poured`}>
       <defs>
         <clipPath id={`${u}-in`}><path d={INNER} /></clipPath>
         <linearGradient id={`${u}-glass`} x1="0" x2="1">
@@ -46,7 +55,7 @@ const BottleArt = forwardRef<SVGSVGElement, Props>(function BottleArt({ layers, 
           <stop offset="0" stopColor="#0D0C0B" stopOpacity="0.20" />
           <stop offset="1" stopColor="#0D0C0B" stopOpacity="0" />
         </radialGradient>
-        <Patterns prefix={u} />
+        <Patterns prefix={u} looks={Object.values(looks)} />
       </defs>
 
       {/* shadow on the table */}
@@ -59,7 +68,7 @@ const BottleArt = forwardRef<SVGSVGElement, Props>(function BottleArt({ layers, 
       {/* the liquid, one layer per hour, in pour order */}
       <g clipPath={`url(#${u}-in)`}>
         {layers.map((l, k) => {
-          const j = JUG[l.jug]
+          const j = look(l.jug)
           const h = k === 0 ? HOUR + 10 : HOUR + 0.6
           return (
             <g key={l.id} className="bt-slide" style={{ transform: `translateY(${levelY(k)}px)` }}>
@@ -78,7 +87,7 @@ const BottleArt = forwardRef<SVGSVGElement, Props>(function BottleArt({ layers, 
         {/* the surface: a thin lit ellipse that settles after each pour */}
         <g className="bt-slide" style={{ transform: `translateY(${levelY(level)}px)`, opacity: level ? 1 : 0, transitionDelay: rising ? '600ms' : '0ms', transitionDuration: rising ? '520ms' : '320ms' }}>
           <g key={pour?.id ?? 'still'} className={pour ? 'bt-settle' : undefined}>
-            <ellipse cx="100" cy="0" rx="62" ry="3.2" fill={top ? JUG[top.jug].light : 'transparent'} opacity="0.9"
+            <ellipse cx="100" cy="0" rx="62" ry="3.2" fill={top ? look(top.jug).light : 'transparent'} opacity="0.9"
               style={{ transition: `fill 0s ${rising ? '600ms' : '0ms'}` }} />
             <ellipse cx="86" cy="-0.6" rx="30" ry="0.9" fill="#fff" opacity="0.45" />
           </g>
@@ -93,15 +102,15 @@ const BottleArt = forwardRef<SVGSVGElement, Props>(function BottleArt({ layers, 
       {/* the stream for the latest pour: falls, holds, then lets go from the top */}
       {pour && (
         <path key={`p${pour.id}`} d={`M${SPOUT.x} ${SPOUT.y} Q${SPOUT.x + 3.5} ${SPOUT.y + 3} ${SPOUT.x + 3.5} ${SPOUT.y + 12} L${SPOUT.x + 3.5} ${levelY(pour.from) + 1}`}
-          pathLength={100} fill="none" stroke={JUG[pour.jug].color} strokeWidth="4.2" strokeLinecap="round"
+          pathLength={100} fill="none" stroke={look(pour.jug).color} strokeWidth="4.2" strokeLinecap="round"
           strokeDasharray="100 100" className="bt-stream" />
       )}
 
       {/* hour lines: fine, no clock times; the 8th is the fill line */}
-      {Array.from({ length: TOTAL_HOURS }, (_, i) => i + 1).map((k) => (
+      {Array.from({ length: total }, (_, i) => i + 1).map((k) => (
         <g key={k}>
-          <line x1="39" x2="161" y1={levelY(k)} y2={levelY(k)} stroke="#6B6761" strokeOpacity={k === TOTAL_HOURS ? 0.5 : 0.22} strokeWidth="0.7"
-            strokeDasharray={k === TOTAL_HOURS ? '3 2' : undefined} />
+          <line x1="39" x2="161" y1={levelY(k)} y2={levelY(k)} stroke="#6B6761" strokeOpacity={k === total ? 0.5 : 0.22} strokeWidth="0.7"
+            strokeDasharray={k === total ? '3 2' : undefined} />
           <line x1="39" x2="50" y1={levelY(k)} y2={levelY(k)} stroke="#494540" strokeOpacity="0.55" strokeWidth="1" />
         </g>
       ))}

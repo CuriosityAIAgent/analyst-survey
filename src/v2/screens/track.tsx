@@ -19,7 +19,7 @@ export default function TrackScreen() {
       block="look-back" step={10} total={17}
       question="With a different Advisor on day one, where would you be today?"
       instruction="Tap or drag to set. Assume you worked just as hard."
-      privacy="Anonymous: your answers are held under a code, not your name. We only report groups of ten or more."
+      privacy="Only reported in groups of ten or more."
       missing={done ? undefined : 'Set where you would be'}
       onNext={() => { setValue(null); setOptedOut(false) }}
     >

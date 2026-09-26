@@ -1,14 +1,14 @@
 /* One <pattern> per jug, drawn in paper at low opacity over the clay colour. */
-import { JUGS, type Jug } from './jugs'
+import { JUGS, type JugLook } from './jugs'
 
-export const patId = (prefix: string, j: Jug) => `${prefix}-pat-${j.id}`
+export const patId = (prefix: string, j: JugLook) => `${prefix}-pat-${j.id}`
 
-export default function Patterns({ prefix, size = 7 }: { prefix: string; size?: number }) {
+export default function Patterns({ prefix, size = 7, looks = JUGS }: { prefix: string; size?: number; looks?: JugLook[] }) {
   const s = size
   const ink = 'rgba(248,247,244,0.26)'
   return (
     <>
-      {JUGS.map((j) => (
+      {looks.map((j) => (
         <pattern key={j.id} id={patId(prefix, j)} width={s} height={s} patternUnits="userSpaceOnUse">
           {j.pattern === 'diag' && <path d={`M-1 ${s + 1} L${s + 1} -1`} stroke={ink} strokeWidth={s * 0.17} />}
           {j.pattern === 'back' && <path d={`M-1 -1 L${s + 1} ${s + 1}`} stroke={ink} strokeWidth={s * 0.17} />}

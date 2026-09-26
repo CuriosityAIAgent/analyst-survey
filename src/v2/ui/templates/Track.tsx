@@ -1,25 +1,52 @@
 'use client'
 /* Template 3: the track.
    A horizontal line with labelled stops. A large readout above says the answer
-   in words. The handle waits beside the track until touched; drag it on, or tap
-   any stop. The line fills from the anchor (the middle, or the start) to the
-   handle as it moves. Optional opt-out button underneath. */
+   in words. The handle waits beside the line until touched (and nudges once);
+   drag it on, or tap any stop or its label. The line fills from the anchor (the
+   middle, or the start) to the handle as it moves. Nothing is chosen until the
+   first touch. Optional opt-outs ("I'd rather not say") sit underneath.
+
+   Test hooks: data-zone="<stop id>" on every stop label, data-option on opt-outs.
+   Legacy props (`optOut`, `optedOut`, `onOptOut`) still work for the preview. */
 import { useRef, useState } from 'react'
+
+type OptOut = { id: string; label: string }
 
 type Props = {
   stops: string[]
+  /** Ids for the test hooks (data-zone); default: the labels. */
+  stopIds?: string[]
   value: number | null             // index into stops
   onChange: (i: number | null) => void
-  readoutLead: string              // small line over the readout: "With a different Advisor, I'd be"
-  anchorLabel?: string             // fixed marker in the middle: "Where I am today"
+  readoutLead?: string             // small line over the readout: "With a different Advisor, I'd be"
+  anchorLabel?: string             // fixed marker in the middle: "Where you are now"
+  startLabel?: string              // words at the two ends: "Behind" · "Ahead"
+  endLabel?: string
   fillFrom?: 'centre' | 'start'
-  optOut?: string                  // "I'd rather not say"
+  optOuts?: OptOut[]
+  optedOutId?: string | null
+  onOptOutId?: (id: string | null) => void
+  /** legacy: one opt-out, on or off */
+  optOut?: string
   optedOut?: boolean
   onOptOut?: (on: boolean) => void
+  /** 0 roomy · 1 tighter (a short phone) */
+  density?: number
+  label?: string
 }
 
-export default function Track({ stops, value, onChange, readoutLead, anchorLabel, fillFrom = 'centre', optOut, optedOut, onOptOut }: Props) {
+const UI = 'font-[family-name:var(--font-ui)]'
+
+export default function Track(p: Props) {
+  const { stops, value, onChange, readoutLead, anchorLabel, startLabel, endLabel, fillFrom = 'centre', density = 0 } = p
   const n = stops.length
+  const ids = p.stopIds ?? stops
+  const outs: OptOut[] = p.optOuts ?? (p.optOut ? [{ id: p.optOut, label: p.optOut }] : [])
+  const outId = p.optedOutId !== undefined ? p.optedOutId : p.optedOut ? outs[0]?.id ?? null : null
+  const setOut = (id: string | null) => (p.onOptOutId ? p.onOptOutId(id) : p.onOptOut?.(!!id))
+  const clearOut = () => { if (outId) setOut(null) }
+  const optedOut = !!outId
+
   const bar = useRef<HTMLDivElement>(null)
   const wrap = useRef<HTMLDivElement>(null)
   const [live, setLive] = useState<number | null>(null)   // 0..1 while dragging
@@ -33,33 +60,36 @@ export default function Track({ stops, value, onChange, readoutLead, anchorLabel
     return Math.max(xOf(0), Math.min(xOf(n - 1), f))
   }
   const nearest = (f: number) => Math.max(0, Math.min(n - 1, Math.round(f * n - 0.5)))
+  const choose = (i: number) => { setTouched(true); clearOut(); if (i !== value || optedOut) onChange(i) }
 
   const onDown = (e: React.PointerEvent) => {
     setTouched(true)
-    onOptOut?.(false)
     wrap.current?.setPointerCapture(e.pointerId)
     const f = frac(e.clientX)
     setLive(f)
-    onChange(nearest(f))
+    choose(nearest(f))
   }
   const onMove = (e: React.PointerEvent) => {
     if (live === null) return
     const f = frac(e.clientX)
     setLive(f)
-    onChange(nearest(f))
+    const i = nearest(f)
+    if (i !== value) onChange(i)
   }
   const onUp = () => setLive(null)
 
   const placed = value !== null && !optedOut
   const pos = live ?? (placed ? xOf(value!) : null)
   const anchor = fillFrom === 'centre' ? 0.5 : xOf(0)
-  const shown = placed ? stops[value!] : optedOut ? optOut : null
+  const shown = placed ? stops[value!] : optedOut ? outs.find((o) => o.id === outId)?.label : null
 
   const onKey = (e: React.KeyboardEvent) => {
     const v = value ?? Math.floor(n / 2)
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); setTouched(true); onOptOut?.(false); onChange(Math.max(0, placed ? v - 1 : v)) }
-    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); setTouched(true); onOptOut?.(false); onChange(Math.min(n - 1, placed ? v + 1 : v)) }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); choose(Math.max(0, placed ? v - 1 : v)) }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); choose(Math.min(n - 1, placed ? v + 1 : v)) }
   }
+  const aria = p.label ?? readoutLead ?? 'Choose a point on the line'
+  const ends = anchorLabel || startLabel || endLabel
 
   return (
     <div className="flex flex-col">
@@ -70,38 +100,42 @@ export default function Track({ stops, value, onChange, readoutLead, anchorLabel
       `}</style>
 
       {/* the readout */}
-      <div className="rounded-[8px] border border-rule-soft bg-ground px-4 py-1.5 text-center sm:py-3" aria-live="polite">
-        <p className="font-[family-name:var(--font-ui)] text-[12px] leading-[16px] text-muted sm:text-[13px]">{readoutLead}</p>
-        <p className={`mt-0.5 font-[family-name:var(--font-text)] text-[26px] font-semibold leading-[32px] sm:text-[36px] sm:leading-[44px] ${shown ? 'text-ink' : 'text-rule'}`}>
+      <div className={`rounded-[8px] border border-rule-soft bg-ground px-4 text-center ${density >= 1 ? 'py-1' : 'py-2 sm:py-3 lg:py-6'}`} aria-live="polite">
+        {readoutLead && <p className={`${UI} text-[12px] leading-[16px] text-muted sm:text-[13px]`}>{readoutLead}</p>}
+        <p key={shown ?? 'none'} className={`font-[family-name:var(--font-text)] font-semibold ${density >= 1 ? 'text-[23px] leading-[30px]' : 'text-[26px] leading-[34px] sm:text-[36px] sm:leading-[46px] lg:text-[44px] lg:leading-[54px]'} ${shown ? 'v2-ready text-ink' : 'text-rule'}`}>
           {shown ?? '—'}
         </p>
       </div>
 
-      {/* the track */}
-      <div ref={wrap} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} className={`relative mt-2 select-none sm:mt-5 ${optedOut ? 'opacity-40' : ''}`}>
-        {anchorLabel && (
-          <p className="text-center font-[family-name:var(--font-ui)] text-[13px] font-semibold text-forest">{anchorLabel}</p>
+      {/* the line */}
+      <div ref={wrap} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} className={`relative select-none ${density >= 1 ? 'mt-2' : 'mt-3 sm:mt-6'} ${optedOut ? 'opacity-40' : ''}`}>
+        {ends && (
+          <div className={`${UI} grid grid-cols-[1fr_auto_1fr] items-end gap-2 text-[13px] leading-[16px]`}>
+            <span className="text-left font-medium text-muted">{startLabel && <>‹ {startLabel}</>}</span>
+            <span className="text-center font-semibold text-forest">{anchorLabel}</span>
+            <span className="text-right font-medium text-muted">{endLabel && <>{endLabel} ›</>}</span>
+          </div>
         )}
-        <div ref={bar} className="relative h-14 cursor-pointer touch-none" onPointerDown={onDown}>
+        <div ref={bar} className="relative h-14 cursor-pointer touch-none lg:h-20" onPointerDown={onDown}>
           {/* rail */}
-          <div className="absolute top-1/2 h-3 -translate-y-1/2 rounded-full bg-rule-soft" style={{ left: `${xOf(0) * 100}%`, right: `${(1 - xOf(n - 1)) * 100}%` }} />
+          <div className="absolute top-1/2 h-3 -translate-y-1/2 rounded-full bg-rule-soft lg:h-4" style={{ left: `${xOf(0) * 100}%`, right: `${(1 - xOf(n - 1)) * 100}%` }} />
           {/* fill from the anchor to the handle */}
           {pos !== null && (
-            <div className="absolute top-1/2 h-3 -translate-y-1/2 rounded-full bg-navy transition-[left,width] duration-150"
+            <div className="absolute top-1/2 h-3 -translate-y-1/2 rounded-full bg-navy transition-[left,width] duration-150 lg:h-4"
               style={{ left: `${Math.min(anchor, pos) * 100}%`, width: `${Math.abs(pos - anchor) * 100}%` }} />
           )}
           {/* stops */}
           {stops.map((s, i) => (
-            <span key={s} aria-hidden className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${placed && ((anchor <= xOf(i) && xOf(i) <= pos!) || (pos! <= xOf(i) && xOf(i) <= anchor)) ? 'border-navy bg-navy' : 'border-rule bg-paper'}`}
+            <span key={ids[i]} aria-hidden className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 lg:h-5 lg:w-5 ${placed && ((anchor <= xOf(i) && xOf(i) <= pos!) || (pos! <= xOf(i) && xOf(i) <= anchor)) ? 'border-navy bg-navy' : 'border-rule bg-paper'}`}
               style={{ left: `${xOf(i) * 100}%` }} />
           ))}
           {/* the fixed marker */}
           {anchorLabel && (
             <span aria-hidden className="absolute top-0 h-full w-[3px] -translate-x-1/2 rounded-full bg-forest" style={{ left: `${anchor * 100}%` }} />
           )}
-          {/* the handle, on the track once touched */}
+          {/* the handle, on the line once touched */}
           {pos !== null && (
-            <button type="button" role="slider" aria-label={readoutLead} aria-valuemin={1} aria-valuemax={n} aria-valuenow={(value ?? 0) + 1} aria-valuetext={shown ?? undefined}
+            <button type="button" role="slider" aria-label={aria} aria-valuemin={1} aria-valuemax={n} aria-valuenow={(value ?? 0) + 1} aria-valuetext={shown ?? undefined}
               onKeyDown={onKey}
               className={`absolute top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-navy bg-ground text-navy shadow-[0_2px_8px_rgba(13,12,11,0.25)] ${live !== null ? '' : 'transition-[left] duration-200'}`}
               style={{ left: `${pos * 100}%` }}>
@@ -112,17 +146,17 @@ export default function Track({ stops, value, onChange, readoutLead, anchorLabel
         {/* stop labels: tap one to set */}
         <div className="grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
           {stops.map((s, i) => (
-            <button key={s} type="button" onClick={() => { setTouched(true); onOptOut?.(false); onChange(i) }}
-              className={`flex min-h-11 items-start justify-center px-0.5 pt-1 text-center font-[family-name:var(--font-ui)] text-[13px] leading-[16px] sm:text-[14px] ${placed && value === i ? 'font-semibold text-navy' : 'text-muted'}`}>
+            <button key={ids[i]} type="button" data-zone={ids[i]} aria-pressed={placed && value === i} onClick={() => choose(i)}
+              className={`${UI} flex min-h-11 items-start justify-center px-0.5 pt-1 text-center text-[13px] leading-[16px] sm:text-[14px] sm:leading-[18px] lg:text-[15px] lg:leading-[20px] ${placed && value === i ? 'font-semibold text-navy' : 'text-muted hover:text-ink'}`}>
               {s}
             </button>
           ))}
         </div>
 
-        {/* the handle, waiting beside the track until first touched */}
+        {/* the handle, waiting beside the line until first touched */}
         {pos === null && !optedOut && (
-          <div className="relative h-[52px]">
-            <button type="button" role="slider" aria-label={readoutLead} aria-valuemin={1} aria-valuemax={n} aria-valuetext="Not set"
+          <div className={`relative ${density >= 1 ? 'h-[50px]' : 'h-[56px]'}`}>
+            <button type="button" role="slider" aria-label={aria} aria-valuemin={1} aria-valuemax={n} aria-valuetext="Not set"
               onKeyDown={onKey}
               onPointerDown={onDown}
               className={`absolute left-1/2 top-1 flex h-12 w-12 touch-none items-center justify-center rounded-full border-2 border-navy bg-ground text-navy shadow-[0_4px_12px_rgba(13,12,11,0.22)] ${!touched ? 'v2tr-nudge' : ''}`}
@@ -133,12 +167,16 @@ export default function Track({ stops, value, onChange, readoutLead, anchorLabel
         )}
       </div>
 
-      {optOut && (
-        <button type="button" onClick={() => { onOptOut?.(!optedOut); if (!optedOut) onChange(null) }}
-          aria-pressed={!!optedOut}
-          className={`mx-auto mt-1 min-h-11 rounded-full border px-5 font-[family-name:var(--font-ui)] text-[14px] transition-colors ${optedOut ? 'border-ink bg-ink text-white' : 'border-rule bg-ground text-ink hover:border-ink'}`}>
-          {optOut}
-        </button>
+      {outs.length > 0 && (
+        <div className="mt-1 flex flex-wrap justify-center gap-2">
+          {outs.map((o) => (
+            <button key={o.id} type="button" data-option={o.id} aria-pressed={outId === o.id}
+              onClick={() => { setTouched(true); if (outId === o.id) setOut(null); else { setOut(o.id); if (!p.onOptOutId) onChange(null) } }}
+              className={`${UI} min-h-11 rounded-full border px-5 text-[14px] transition-colors ${outId === o.id ? 'border-ink bg-ink text-white' : 'border-rule bg-ground text-ink hover:border-ink'}`}>
+              {o.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )

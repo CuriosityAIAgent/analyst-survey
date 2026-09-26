@@ -1,13 +1,13 @@
 /* A small clay pitcher in the jug's colour: handle left, spout top-right.
    The spout tip sits at (60, 8.5) in a 64x64 box; the pour animation pivots there. */
 import { useId } from 'react'
-import type { Jug } from './jugs'
+import type { JugLook } from './jugs'
 
 export const SPOUT_ORIGIN = '93.75% 13.3%'
 
 const BODY = 'M15 13 L51 13 L60.5 8.5 L56.5 16 C53 20 52 24 53 31 C55 45 51.5 57 41 58 L25 58 C14.5 57 11 45 13 31 C14 24 13 18 15 13 Z'
 
-export default function JugArt({ jug, className }: { jug: Jug; className?: string }) {
+export default function JugArt({ jug, className }: { jug: JugLook; className?: string }) {
   const uid = useId().replace(/:/g, '')
   const shade = `${uid}-shade`, clip = `${uid}-clip`, pat = `${uid}-pat`
   const ink = 'rgba(248,247,244,0.28)'

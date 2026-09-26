@@ -1,6 +1,8 @@
 /* Small weighted sounds for the hero screens: a soft thunk (podium, stamp) and
    a quiet click (a month block settling). WebAudio, made on the first gesture,
    very low volume; silent if audio is unavailable. Shared by podium, months and stamp. */
+import { soundOn } from '../soundPref'
+
 let ctx: AudioContext | null = null
 
 function ac(): AudioContext | null {
@@ -19,6 +21,7 @@ function ac(): AudioContext | null {
 }
 
 function tone(freq: number, dur: number, gain: number, type: OscillatorType = 'sine', drop = 0.5) {
+  if (!soundOn()) return
   const a = ac()
   if (!a) return
   const t = a.currentTime
@@ -36,6 +39,7 @@ function tone(freq: number, dur: number, gain: number, type: OscillatorType = 's
 }
 
 function noise(dur: number, gain: number, cutoff: number) {
+  if (!soundOn()) return
   const a = ac()
   if (!a) return
   const t = a.currentTime

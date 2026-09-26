@@ -60,7 +60,7 @@ function Ending({ toggle, onReplay }: { toggle: React.ReactNode; onReplay: () =>
   return (
     <V2Frame block="last" step={17} total={17}
       question="AI can help. You still do the work."
-      instruction="Thank you. Your answers are saved, and you can close this tab."
+      instruction="Thank you. Your answers have been sent."
       nextLabel="Close"
       onNext={onReplay}>
       {toggle}

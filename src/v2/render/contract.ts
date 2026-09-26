@@ -28,6 +28,12 @@ export type RenderProps = {
   onBack: () => void
   /** A per-respondent seed for shuffles (stable across reloads). */
   seed: number
+  /** The last screen only: what Next says ("Send", or "Couldn't send. Tap to try
+      again." after a failed send). Pass it to V2Frame's nextLabel when set. */
+  nextLabel?: string
+  /** The last screen only, while the answers are being sent: pass it to V2Frame's
+      `missing` so Next is disabled and says so ("Sending…"). */
+  busy?: string
 }
 
 /* A renderer must: show q.question, q.instruction (and note/privacy) through V2Frame;

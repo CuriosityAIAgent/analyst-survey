@@ -27,9 +27,15 @@ export type V2FrameProps = {
   question: string
   instruction: string   // the exact count: "Pick two." "Place 7 of the 12."
   bridge?: string       // follow-ups only: names the topic, never the answer ("One more on classroom training.")
+  note?: string         // one short example line, grey, under the instruction
   privacy?: string      // sensitive screens only
   missing?: string      // e.g. "Pick 1 more": Next is disabled and shows this
   nextLabel?: string    // default "Next"
+  /** Replaces "Question N of M" in the rail: breaks, the scene and the ending are not
+      questions ("Section 2 of 5", "Before the next questions"). '' shows no label. */
+  railLabel?: string
+  /** Hide Next entirely (the ending, once sent). */
+  noNext?: boolean
   onNext?: () => void
   onBack?: () => void
   tray?: ReactNode

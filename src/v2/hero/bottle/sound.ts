@@ -1,4 +1,4 @@
-/* A soft pour and a cap click, synthesised (no files). Off unless the person turns sound on.
+/* A soft pour and a cap click, synthesised (no files). The bottle plays them only while the shared sound switch (../soundPref) is on.
    The pour's pitch rises with the level, the way a filling bottle sounds. */
 let ctx: AudioContext | null = null
 let noise: AudioBuffer | null = null

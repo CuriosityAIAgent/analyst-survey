@@ -1,4 +1,6 @@
-/* Small flat line icons for the 3.1 activity tiles. Label first; these sit second. */
+/* Small flat line icons for the tray tiles: the twelve 3.1 activities and the
+   six 3.4 AI tools. Label first; these sit second. Names are the option ids in
+   questions.ts (plus the preview's older names, kept as aliases). */
 const P: Record<string, React.ReactNode> = {
   meetings: <><circle cx="8" cy="8" r="2.5" /><circle cx="16" cy="8" r="2.5" /><path d="M3 20c0-3 2.2-5 5-5s5 2 5 5M11 20c0-3 2.2-5 5-5s5 2 5 5" /></>,
   presenting: <><rect x="3" y="4" width="18" height="11" rx="1" /><path d="M12 15v5M8 20h8M7 11l3-3 2 2 4-4" /></>,
@@ -12,12 +14,33 @@ const P: Record<string, React.ReactNode> = {
   roleplay: <><circle cx="7" cy="9" r="3" /><circle cx="17" cy="9" r="3" /><path d="M2 20c.5-3 2.5-5 5-5M22 20c-.5-3-2.5-5-5-5M10 5.5h4" /></>,
   crm: <><ellipse cx="12" cy="5.5" rx="7" ry="2.5" /><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5" /></>,
   decks: <><rect x="6" y="3" width="15" height="11" rx="1" /><path d="M3 7v10a1 1 0 0 0 1 1h13" /><path d="M9 7h9M9 10h5" /></>,
+
+  /* 3.4: the AI tools */
+  'ai-chat': <><path d="M4 5h16v10H10l-4 4v-4H4z" /><path d="M8 9h8M8 12h5" /></>,
+  'ai-office': <><rect x="3" y="4" width="18" height="16" rx="1" /><path d="M3 9h18M3 14.5h18M9 4v16" /></>,
+  'ai-research': <><path d="M4 5c2.5-1 5-1 8 1 3-2 5.5-2 8-1v14c-2.5-1-5-1-8 1-3-2-5.5-2-8-1z" /><path d="M12 6v14" /></>,
+  'ai-client': <><rect x="3" y="5" width="18" height="14" rx="1.5" /><circle cx="9" cy="11" r="2.2" /><path d="M5.5 16.5c.6-1.8 1.9-2.8 3.5-2.8s2.9 1 3.5 2.8M15 10h3.5M15 13.5h3.5" /></>,
+  'ai-markets': <><path d="M3 18l5-6 4 3 6-8" /><path d="M15 7h3v3" /><path d="M3 21h18" /></>,
+  'ai-meetings': <><rect x="4" y="5" width="16" height="15" rx="1" /><path d="M4 9.5h16M8.5 3v4M15.5 3v4M8 13.5l2 2 4-4" /></>,
+}
+
+/** questions.ts option ids -> icon names. */
+const ALIAS: Record<string, string> = {
+  'client-meetings': 'meetings',
+  'role-plays': 'roleplay',
+}
+
+/** The icon for an option on a question, or undefined if there is none.
+    3.4's tools share ids with other lists ('meetings'), so they are prefixed. */
+export function iconName(questionId: string, optionId: string): string | undefined {
+  const name = questionId.startsWith('q3.4') ? `ai-${optionId}` : (ALIAS[optionId] ?? optionId)
+  return name in P ? name : undefined
 }
 
 export default function ActivityIcon({ name, size = 18 }: { name: string; size?: number }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-      {P[name]}
+      {P[ALIAS[name] ?? name]}
     </svg>
   )
 }

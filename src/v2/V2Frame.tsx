@@ -1,7 +1,7 @@
 'use client'
 /* V2Frame: the one-column screen every v2 question uses (see contract.ts).
 
-   R  rail      Back · a small mountain line with a dot · "Question 4 of 17"
+   R  rail      Back · a small mountain line with a dot · "Question 4 of 17" · Sound (off by default)
    Q  question  serif, at most two lines, plus one grey instruction line with the count
    O  object    the thing you play with; its state is the answer
    T  tray      the parts you add, only if needed
@@ -14,6 +14,7 @@
    `callouts` numbers the bands, and `aside` adds a note beside the column. */
 import type { ReactNode } from 'react'
 import type { V2FrameProps } from './contract'
+import { useSound } from './hero/soundPref'
 
 export type V2Callouts = { question?: string; instruction?: string; object?: string; next?: string }
 type Extras = { callouts?: V2Callouts; aside?: ReactNode }
@@ -25,7 +26,7 @@ export default function V2Frame(p: V2FrameProps & Extras) {
   const disabled = !!p.missing
   const c = p.callouts
   return (
-    <div className="relative flex min-h-[calc(100dvh-52px)] w-full justify-center bg-paper lg:py-5">
+    <div className="relative flex min-h-[calc(100dvh-var(--v2-bar,0px))] w-full justify-center bg-paper lg:py-5">
       <V2Styles />
       {/* faded scenery on a laptop; never clickable, never behind text */}
       <div aria-hidden className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
@@ -41,8 +42,8 @@ export default function V2Frame(p: V2FrameProps & Extras) {
           <Band n={1} text={c?.question}>
             <div key={(p.bridge ?? '') + p.question} className="v2-q">
               {p.bridge && (
-                <p data-bridge className={`${TEXT} mb-1.5 flex items-center gap-2 text-[17px] leading-[24px] text-forest lg:text-[19px]`}>
-                  <span aria-hidden className="inline-block h-[2px] w-4 bg-forest" />
+                <p data-bridge className={`${TEXT} mb-1.5 flex items-start gap-2 text-[17px] leading-[24px] text-forest lg:text-[19px]`}>
+                  <span aria-hidden className="mt-[11px] inline-block h-[2px] w-4 shrink-0 bg-forest" />
                   {p.bridge}
                 </p>
               )}
@@ -54,11 +55,14 @@ export default function V2Frame(p: V2FrameProps & Extras) {
           <Band n={2} text={c?.instruction} className={c?.instruction ? 'mt-3' : ''}>
             <p key={p.instruction} className={`${UI} v2-i mt-1.5 text-[15px] leading-[21px] text-muted lg:text-[16px]`}>{p.instruction}</p>
           </Band>
-          {p.privacy && <p className={`${UI} mt-1 text-[13px] leading-[18px] text-forest`}>{p.privacy}</p>}
+          {p.note && <p data-note className={`${UI} mt-1 text-[14px] leading-[19px] text-muted lg:text-[15px]`}>{p.note}</p>}
+          {p.privacy && <p data-privacy className={`${UI} mt-1 text-[13px] leading-[18px] text-forest`}>{p.privacy}</p>}
         </header>
 
         <div className="relative mt-5 flex flex-1 flex-col px-5 lg:mt-6 lg:px-12" data-object>
-          <Band n={3} text={c?.object} className="flex flex-1 flex-col">
+          {/* on a laptop the object sits centred between the question and Next, never
+              stranded at the top of a tall empty column */}
+          <Band n={3} text={c?.object} className="flex flex-1 flex-col lg:justify-center">
             {p.children}
           </Band>
         </div>
@@ -70,6 +74,12 @@ export default function V2Frame(p: V2FrameProps & Extras) {
           <div aria-hidden className="h-5 bg-gradient-to-b from-transparent to-paper" />
           <div className="relative bg-paper px-5 pb-3 pt-1 lg:rounded-b-[4px] lg:px-12 lg:pb-6 lg:pt-2">
             <Band n={4} text={c?.next}>
+            {p.noNext ? (
+              <p data-done className={`${UI} flex h-14 w-full items-center justify-center gap-2 text-[15px] text-forest`}>
+                <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden><path d="M5 12.5 L10 17 L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Done
+              </p>
+            ) : (
             <button type="button" disabled={disabled} onClick={p.onNext} data-next
               className={`${UI} btn v2-next flex h-14 w-full items-center justify-center gap-3 rounded-[3px] text-[16px] font-medium tracking-[0.01em] transition-[background-color,color,transform] duration-200 disabled:cursor-not-allowed ${disabled ? '' : 'active:scale-[0.99]'}`}>
               <span key={disabled ? `m-${p.missing}` : 'ready'} className={disabled ? '' : 'v2-ready'} aria-live="polite">
@@ -77,6 +87,7 @@ export default function V2Frame(p: V2FrameProps & Extras) {
               </span>
               {!disabled && <span aria-hidden className="v2-ready text-[18px] leading-none">→</span>}
             </button>
+            )}
             </Band>
           </div>
           <GroundBand />
@@ -120,19 +131,45 @@ function Rail(p: V2FrameProps) {
         className={`${UI} flex h-11 min-w-[72px] items-center gap-1 rounded-[3px] px-2 text-[15px] text-ink transition-opacity disabled:opacity-35`}>
         <span aria-hidden className="text-[20px] leading-none">‹</span> Back
       </button>
-      <div className="flex flex-1 items-center justify-end gap-3 pr-2 sm:justify-start sm:pl-2">
-        <svg viewBox="0 0 128 26" className="h-[22px] w-[108px] shrink-0 lg:h-[26px] lg:w-[128px]" aria-hidden>
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:justify-start sm:pl-2">
+        {/* the line gives way (down to a stub) before the label or Sound would */}
+        <svg viewBox="0 0 128 26" className="h-[22px] w-[108px] min-w-[44px] shrink lg:h-[26px] lg:w-[128px]" aria-hidden>
           <path d={path} fill="none" stroke="#C9C3B8" strokeWidth="1.25" strokeLinejoin="round" pathLength={1} />
           <path d={path} fill="none" stroke="#1F4B3A" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"
             pathLength={1} strokeDasharray={`${t} 1`} className="transition-[stroke-dasharray] duration-500" />
           <circle cx={x} cy={y} r="3.6" fill="#1F4B3A" stroke="#F8F7F4" strokeWidth="1.5" />
           {p.bridge && <circle cx={x + 6.5} cy={y - 1.5} r="1.9" fill="none" stroke="#1F4B3A" strokeWidth="1.1" />}
         </svg>
-        <span className={`${UI} whitespace-nowrap text-[13px] tabular-nums text-muted lg:text-[14px]`}>
-          Question <span className="font-semibold text-ink">{p.step}</span> of {p.total}
-        </span>
+        {p.railLabel !== undefined ? (
+          p.railLabel && <span data-rail-label className={`${UI} whitespace-nowrap text-[13px] text-muted lg:text-[14px]`}>{p.railLabel}</span>
+        ) : (
+          <span data-rail-label className={`${UI} whitespace-nowrap text-[13px] tabular-nums text-muted lg:text-[14px]`}>
+            Question <span className="font-semibold text-ink">{p.step}</span> of {p.total}
+          </span>
+        )}
       </div>
+      <SoundSwitch />
     </div>
+  )
+}
+
+/* Sound: off until the respondent turns it on; one switch for every screen. */
+function SoundSwitch() {
+  const [on, set] = useSound()
+  return (
+    <button type="button" onClick={() => set(!on)} aria-pressed={on} data-sound
+      aria-label={on ? 'Sound on. Tap to turn it off.' : 'Sound off. Tap to turn it on.'}
+      className={`${UI} flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-[3px] px-1.5 text-[13px] transition-colors lg:px-2 lg:text-[14px] ${on ? 'text-ink' : 'text-muted hover:text-ink'}`}>
+      <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" aria-hidden>
+        <path d="M3 8 H6 L10 4.5 V15.5 L6 12 H3 Z" fill="currentColor" />
+        {on ? (
+          <path d="M13 7 C14.5 8.5 14.5 11.5 13 13 M15.2 5 C17.8 7.6 17.8 12.4 15.2 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        ) : (
+          <path d="M13 8 L17 12 M17 8 L13 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        )}
+      </svg>
+      <span className="hidden lg:inline">Sound</span>
+    </button>
   )
 }
 

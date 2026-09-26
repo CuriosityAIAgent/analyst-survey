@@ -1,12 +1,124 @@
 'use client'
-/* STUB: replaced by its builder. Renders a 'cards' question from questions.ts. */
+/* The card-stack renderer: every 'cards' question and follow-up in questions.ts.
+
+   With constraints.cards (1.3, 3.2, 5.3): one card at a time, q.options as the
+   buttons under it (piles either side when there are two). Stores card id ->
+   answer id, e.g. { portfolio: 'by-hand' }. An option's `cap` limits how many
+   cards may take it (3.2 "Do it by hand": 2). Next says how many cards are left.
+
+   Without cards (the 3.2 "why by hand" follow-ups): the task card stays on screen
+   and q.options sit under it as buttons; tap one. Stores the answer id. The card
+   is found from the follow-up's `when` (card:<id>:...) on its parent question; it
+   names the task, never the respondent's answer. */
+import { useState } from 'react'
 import V2Frame from '../V2Frame'
+import CardStack from '../ui/templates/CardStack'
+import { QUESTIONS, type Card } from '../questions'
 import type { RenderProps } from './contract'
+import { asId, asRecord, useFit } from './checklist'
+
+const UI = 'font-[family-name:var(--font-ui)]'
+const TEXT = 'font-[family-name:var(--font-text)]'
+
 export default function CardsRender(p: RenderProps) {
+  if (p.q.constraints.cards?.length) return <StackRender {...p} />
+  return <OneCardRender {...p} />
+}
+
+function StackRender(p: RenderProps) {
+  const { q } = p
+  const cards = q.constraints.cards ?? []
+  const answers = new Set(q.options.map((o) => o.id))
+  const cardIds = new Set(cards.map((c) => c.id))
+  const rec = asRecord(p.value)
+  const sorted: Record<string, string> = {}
+  for (const [k, v] of Object.entries(rec)) if (cardIds.has(k) && answers.has(String(v))) sorted[k] = String(v)
+
+  const onSort = (id: string, choice: string | null) => {
+    const next = { ...sorted }
+    if (choice) next[id] = choice
+    else delete next[id]
+    p.set(next)
+    p.log(choice ? 'sort' : 'undo', { card: id, ...(choice ? { choice } : {}) })
+  }
+
+  const left = cards.length - Object.keys(sorted).length
+  const missing = left && !p.preview ? `Sort ${left} more card${left === 1 ? '' : 's'}` : undefined
+  const density = useFit(3, [q.id])
+  const two = q.options.length === 2
+
   return (
-    <V2Frame block={p.q.block} step={p.step} total={p.total} question={p.q.question} instruction={p.q.instruction}
-      bridge={p.bridge} missing={p.preview ? undefined : 'Not built yet'} onNext={p.onNext} onBack={p.onBack}>
-      <div className="flex flex-1 items-center justify-center border border-dashed border-rule text-muted">cards</div>
+    <V2Frame block={q.block} step={p.step} total={p.total} question={q.question} instruction={q.instruction}
+      bridge={p.bridge} note={q.note} privacy={q.privacy} missing={missing} onNext={p.onNext} onBack={p.onBack}>
+      <div data-q={q.id} className="flex flex-1 flex-col">
+        <CardStack
+          key={q.id}
+          cards={cards.map((c) => ({ id: c.id, label: c.label, art: c.icon, hint: c.hint }))}
+          choices={q.options.map((o) => ({ id: o.id, label: o.label, hint: o.hint, cap: o.cap }))}
+          sorted={sorted}
+          onSort={onSort}
+          onRefuse={(choice) => p.log('refused', { choice })}
+          density={density}
+          done={
+            <>
+              <p className={`${TEXT} text-[20px] font-semibold text-ink`}>All {cards.length} sorted.</p>
+              <p className={`${UI} mt-1 text-[14px] text-muted`}>{two ? 'Tap a pile to change one.' : 'Tap a tick above to change one.'}</p>
+            </>
+          }
+        />
+      </div>
+    </V2Frame>
+  )
+}
+
+/** The card a card-level follow-up is about, from its parent's `when: card:<id>:...`. */
+function cardFor(id: string): Card | undefined {
+  for (const parent of QUESTIONS) {
+    const f = parent.followUps?.find((x) => x.id === id)
+    if (!f) continue
+    const m = /^card:([^:]+):/.exec(f.when)
+    return m ? parent.constraints.cards?.find((c) => c.id === m[1]) : undefined
+  }
+  return undefined
+}
+
+function OneCardRender(p: RenderProps) {
+  const { q } = p
+  const card = cardFor(q.id)
+  const chosen = q.options.find((o) => o.id === asId(p.value))?.id
+  const [pressed, setPressed] = useState<string | null>(null)
+  const density = useFit(2, [q.id])
+  const missing = chosen || p.preview ? undefined : 'Tap one'
+
+  return (
+    <V2Frame block={q.block} step={p.step} total={p.total} question={q.question} instruction={q.instruction}
+      bridge={p.bridge} note={q.note} privacy={q.privacy} missing={missing} onNext={p.onNext} onBack={p.onBack}>
+      <div data-q={q.id} className={`flex flex-1 flex-col ${p.bridge ? 'v2-rise' : ''}`} style={p.bridge ? { animationDelay: '120ms' } : undefined}>
+        {card && (
+          <div data-option={card.id}
+            className={`flex items-center justify-center gap-4 rounded-[10px] border border-rule-soft bg-ground px-4 shadow-[0_1px_0_#DDD9D2,0_10px_28px_rgba(13,12,11,0.10)] ${density >= 1 ? 'py-3' : 'py-5 sm:py-7'}`}>
+            {card.icon && (
+              <img src={`/game/3d/${card.icon}.webp`} alt="" draggable={false}
+                className={`pointer-events-none shrink-0 object-contain ${density >= 1 ? 'h-14 w-14' : 'h-20 w-20 sm:h-28 sm:w-28'}`} />
+            )}
+            <p className={`${TEXT} font-semibold text-ink ${density >= 1 ? 'text-[20px] leading-[25px]' : 'text-[22px] leading-[27px] sm:text-[26px] sm:leading-[32px]'}`}>{card.label}</p>
+          </div>
+        )}
+        <div role="radiogroup" aria-label={q.question} className={`grid grid-cols-2 gap-2 ${card ? 'mt-3' : ''}`}>
+          {q.options.map((o) => {
+            const on = chosen === o.id
+            return (
+              <button key={o.id} type="button" role="radio" aria-checked={on} data-choice={o.id}
+                onClick={() => { setPressed(o.id); p.set(o.id) }}
+                className={`${UI} flex items-center justify-center rounded-[6px] border-2 px-2 text-center text-[15px] font-semibold leading-[19px] transition-colors
+                  ${density >= 2 ? 'min-h-[52px]' : 'min-h-[64px]'}
+                  ${on ? 'border-navy bg-navy text-white' : 'border-navy bg-ground text-navy hover:bg-[#EEF1F5]'}`}>
+                <span key={on && pressed === o.id ? 'on' : 'off'} className={on && pressed === o.id ? 'v2-ready' : ''}>{o.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
     </V2Frame>
   )
 }
