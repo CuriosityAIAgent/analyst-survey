@@ -18,7 +18,7 @@ export default function Page() {
   }
   const S = SCREENS[i]
   return (
-    <div className="min-h-dvh bg-paper">
+    <div className="min-h-dvh bg-paper" style={{ ['--v2-bar' as string]: '52px' }}>
       <div className="sticky top-0 z-50 flex items-center gap-3 bg-ink px-4 py-2 text-[13px] text-white font-[family-name:var(--font-ui)]" data-mock-bar>
         <button type="button" onClick={() => go(i - 1)} className="h-9 px-2" aria-label="Previous mockup">‹</button>
         <select value={S.id} onChange={(e) => go(SCREENS.findIndex((x) => x.id === e.target.value))}
