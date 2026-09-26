@@ -4,7 +4,7 @@
    Usage: BASE=http://localhost:3000 node e2e/game-preview.mjs
           DESK=1 node e2e/game-preview.mjs      (1440x790; DESK=1280x600 etc.) */
 import puppeteer from 'puppeteer-core'
-const BASE = process.env.BASE || 'http://localhost:3000'
+const BASE = process.env.BASE || 'http://localhost:3000/v1' // the earlier game moved to /v1
 // PREVIEW_PATH=/preview checks the short link; the default checks ?preview=1
 const START = BASE + (process.env.PREVIEW_PATH || '/?preview=1')
 const br = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' })

@@ -20,7 +20,7 @@ import puppeteer from 'puppeteer-core'
 
 const args = process.argv.slice(2)
 const opt = (n, d) => { const a = args.find((x) => x.startsWith(`--${n}=`)); return a ? a.split('=').slice(1).join('=') : d }
-const BASE = process.env.BASE || 'http://localhost:3000'
+const BASE = process.env.BASE || 'http://localhost:3000/v1' // the earlier game moved to /v1
 const SIZES = opt('sizes', '1440x790,1280x600,1920x950').split(',').map((s) => s.split('x').map(Number))
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 

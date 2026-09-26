@@ -24,7 +24,7 @@ const args = process.argv.slice(2)
 const flag = (n) => args.includes(`--${n}`)
 const opt = (n, d) => { const a = args.find((x) => x.startsWith(`--${n}=`)); return a ? a.split('=').slice(1).join('=') : d }
 const shots = args.filter((a) => !a.startsWith('--'))
-const BASE = process.env.BASE || 'http://localhost:3000'
+const BASE = process.env.BASE || 'http://localhost:3000/v1' // the earlier game moved to /v1
 const OUT = opt('out', '/tmp/ascent-game-shots')
 const tall = flag('tall')
 const size = opt('size', flag('desk') ? '1440x790' : '')
