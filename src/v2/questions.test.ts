@@ -123,7 +123,7 @@ describe('ids and play order', () => {
     }
   })
 
-  it('the scene comes straight after 2.1, and the podium opens the game', () => {
+  it('the scene comes straight after 2.1 in play order, and the podium opens the game', () => {
     for (const c of CHANNELS) {
       const o = PLAY_ORDER[c]
       expect(o.indexOf('scene')).toBe(o.indexOf('q2.1') + 1)
@@ -147,6 +147,17 @@ describe('ids and play order', () => {
       expect(screens.filter((s) => s.kind === 'break').map((s) => (s.kind === 'break' ? s.block : ''))).toEqual(BLOCK_ORDER.slice(1))
       expect(screens.filter((s) => s.kind === 'scene')).toHaveLength(1)
     }
+  })
+
+  it('on a phone the scene sits after the "A new Analyst\'s time" break, directly before 3.1', () => {
+    const phone = screensFor('phone')
+    const i = phone.findIndex((s) => s.kind === 'scene')
+    expect(phone[i - 1]).toMatchObject({ kind: 'break', block: 'analyst-time' })
+    expect(phone[i + 1]).toMatchObject({ kind: 'question', question: { id: 'q3.1' } })
+    const desk = screensFor('desk')
+    const j = desk.findIndex((s) => s.kind === 'scene')
+    expect(desk[j - 1]).toMatchObject({ kind: 'question', question: { id: 'q2.1' } })
+    expect(desk[j + 1]).toMatchObject({ kind: 'question', question: { id: 'q2.3' } })
   })
 })
 
@@ -409,9 +420,10 @@ describe('art, welcome, breaks, scene, ending', () => {
     }
   })
 
-  it('the scene is worded as an assumption, not an answer', () => {
-    expect(SCENE.lines.join(' ')).toMatch(/assume/i)
-    expect(SCENE.assumption).toBe('Whatever you picked, this is the plan, not your answer.')
+  it('the scene is worded as an explicit hypothetical, not as the bank\'s plan', () => {
+    expect(SCENE.lines[0]).toMatch(/^Imagine/)
+    expect(SCENE.lines.join(' ')).not.toMatch(/bank's plan/i)
+    expect(SCENE.assumption).toBe("You don't have to agree. Just assume it for the next few questions.")
     expect(SCENE.calendar).toEqual({ from: 2026, to: 2031 })
     expect(SCENE.channels).toEqual(['phone', 'desk'])
   })
@@ -419,6 +431,25 @@ describe('art, welcome, breaks, scene, ending', () => {
   it('the ending says the idea plainly', () => {
     expect(ENDING.line).toBe('AI can help. You still do the work.')
     expect(ENDING.thanks).toMatch(/^Thank you/)
+    // no false claim: the ending is shown only after the server stored the answers
+    expect(ENDING.thanks).not.toMatch(/close this tab/i)
+    expect(ENDING.retry).toBe("Couldn't send. Tap to try again.")
+  })
+
+  it('the sensitive screens promise what is true (a code, groups of ten), never "Anonymous"', () => {
+    for (const id of ['q1.4', 'q1.5']) expect(QUESTION[id].privacy).toBe('Only reported in groups of ten or more.')
+    const all = JSON.stringify([QUESTIONS, SCENE, WELCOME, BREAKS, ENDING])
+    expect(all).not.toMatch(/anonymous/i)
+  })
+
+  it('3.2 "why by hand" answers are about Analysts, not the respondent', () => {
+    for (const f of QUESTION['q3.2'].followUps ?? []) {
+      for (const o of f.options) expect(o.label, o.label).not.toMatch(/\b(me|my)\b/i)
+    }
+  })
+
+  it('4.2 has no off-topic option', () => {
+    expect(QUESTION['q4.2'].options.map((o) => o.id)).not.toContain('role')
   })
 })
 

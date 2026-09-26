@@ -146,7 +146,7 @@ export type Scene = {
   id: 'scene'
   block: Block
   template: 'scene'
-  /** The assumption, stated as the bank's plan. */
+  /** The heading ("Imagine that by 2031, Advisors have:"), then one line per row. */
   lines: string[]
   /** Says plainly that the plan is not the respondent's answer. */
   assumption: string
@@ -244,7 +244,7 @@ export const QUESTIONS: Question[] = [
     id: 'q1.2',
     block: 'look-back',
     template: 'podium',
-    question: 'What helped you learn the most?',
+    question: 'In A2A, what helped you learn the job the most?',
     instruction: 'Pick your top 2, best first.',
     options: [
       { id: 'morning', label: 'Morning meeting' },
@@ -378,8 +378,7 @@ export const QUESTIONS: Question[] = [
       { id: 'checked', label: 'My view was checked beforehand' },
       { id: 'outcome', label: 'I saw how the advice turned out' },
       { id: 'near-peer', label: 'It came from someone a year or two ahead' },
-      // TODO(Monday): not about feedback; keep or replace (plan decision 6).
-      { id: 'role', label: 'I had a clear role in the meeting' },
+      // "I had a clear role in the meeting" was removed (26 Sep review): it is not about feedback.
     ],
     constraints: { pick: 2 },
     channels: DESK,
@@ -390,7 +389,7 @@ export const QUESTIONS: Question[] = [
     id: 'q4.4',
     block: 'look-back',
     template: 'checklist',
-    question: 'Which two would have helped you learn fastest?',
+    question: 'Which two kinds of training would have helped you learn fastest?',
     instruction: 'Pick two.',
     options: [
       { id: 'classroom', label: 'More classroom' },
@@ -490,15 +489,15 @@ export const QUESTIONS: Question[] = [
     block: 'look-back',
     template: 'checklist',
     question: 'No one should become an Advisor without having…',
-    instruction: 'Tap one, then pick or type.',
-    // TODO(Monday): the six experiences are to be agreed; each completes the sentence.
+    instruction: 'Tap Watched, Done or Led. Then pick one.',
+    // TODO(Monday): the six experiences are to be agreed. Each reads after Watched, Done and Led.
     options: [
       { id: 'review', label: 'a client review' },
-      { id: 'prospect', label: 'a first meeting with a prospect' },
+      { id: 'prospect', label: 'a first prospect meeting' },
       { id: 'difficult', label: 'a difficult client conversation' },
       { id: 'market-fall', label: 'a call after a market fall' },
-      { id: 'family', label: 'a family or estate talk' },
-      { id: 'proposal', label: 'a proposal to a client' },
+      { id: 'family', label: 'a family or estate conversation' },
+      { id: 'proposal', label: 'a client proposal' },
       { id: 'other', label: 'Something else…', pinned: true },
     ],
     constraints: {
@@ -524,7 +523,7 @@ export const QUESTIONS: Question[] = [
     question: 'With a different Advisor at the start, would you be ahead or behind today?',
     instruction: 'Tap one.',
     note: 'Assume you worked just as hard.',
-    privacy: 'Anonymous.',
+    privacy: 'Only reported in groups of ten or more.',
     options: [RATHER_NOT],
     constraints: {
       stops: [
@@ -546,7 +545,7 @@ export const QUESTIONS: Question[] = [
     template: 'checklist',
     question: 'What most often stops good Analysts from becoming Advisors?',
     instruction: 'Tap one.',
-    privacy: 'Anonymous.',
+    privacy: 'Only reported in groups of ten or more.',
     options: [
       { id: 'team', label: 'Not the right team' },
       { id: 'coaching', label: 'No coaching from their Advisor' },
@@ -589,9 +588,9 @@ export const QUESTIONS: Question[] = [
     id: 'q2.3',
     block: 'job-ahead',
     template: 'checklist',
-    // TODO(Monday): the plan's wording is "As Advisors take on more, smaller clients, which three
-    // skills will matter more than today?" (15 words); "on" dropped to fit 14.
-    question: 'As Advisors take more, smaller clients, which three skills will matter more than today?',
+    // The plan's wording is "As Advisors take on more, smaller clients, which three skills will
+    // matter more than today?" (15 words); "than today" dropped to fit 14 (26 Sep review).
+    question: 'As Advisors take on more, smaller clients, which three skills will matter more?',
     instruction: 'Pick three.',
     options: SKILLS,
     constraints: { pick: 3 },
@@ -628,7 +627,6 @@ export const QUESTIONS: Question[] = [
       { id: 'escalate', label: 'Know when to escalate' },
     ],
     constraints: { pick: 2 },
-    art: ['hand-zone', 'hand-zone-closed'],
     channels: DESK,
     stores: 'advisor.stillDo',
     measures: 'Monday 2.4, HNW shift: what stays hand-built before AI and the team take over.',
@@ -691,10 +689,10 @@ export const QUESTIONS: Question[] = [
       instruction: 'Tap one.',
       template: 'cards' as const,
       options: [
-        { id: 'own-view', label: 'Formed my own view' },
-        { id: 'room', label: 'Got me into the room' },
-        { id: 'trust', label: "Built the client's trust" },
-        { id: 'mistakes', label: 'Taught me to spot mistakes' },
+        { id: 'own-view', label: 'They form their own view' },
+        { id: 'room', label: 'It earns them a seat in client meetings' },
+        { id: 'trust', label: "It builds the client's trust" },
+        { id: 'mistakes', label: 'They learn to spot mistakes' },
       ],
       constraints: { pick: 1 },
       stores: `tasks.why.${t.id}`,
@@ -801,7 +799,7 @@ export const QUESTIONS: Question[] = [
     id: 'q5.3',
     block: 'faster',
     template: 'cards',
-    question: 'Could better training speed this up, or does it just take experience?',
+    question: 'For each, can training speed up learning it, or does it just take experience?',
     instruction: 'Swipe or tap. 7 cards.',
     options: [
       { id: 'training', label: 'Training can speed it up' },
@@ -944,10 +942,15 @@ export const SCENE: Scene = {
   block: 'job-ahead',
   template: 'scene',
   // TODO(Monday): Adam, and probably Communications, must approve the exact sentence (plan decision 7).
+  // Worded as an explicit hypothetical (26 Sep review), not as the bank's plan: it goes out
+  // before that approval. The first line is the heading; each later line is one row after it.
   lines: [
-    "For the next questions, assume the bank's plan for 2031: more clients each, most of them smaller. More AI. A bigger team.",
+    'Imagine that by 2031, Advisors have:',
+    'More clients each, most of them smaller.',
+    'More AI helping them.',
+    'A bigger team.',
   ],
-  assumption: 'Whatever you picked, this is the plan, not your answer.',
+  assumption: "You don't have to agree. Just assume it for the next few questions.",
   calendar: { from: 2026, to: 2031 },
   channels: BOTH,
   stores: 'scene.seen',
@@ -1011,7 +1014,14 @@ export const BREAKS: Record<Block, { name: string; line: string }> = {
 
 export const ENDING = {
   line: 'AI can help. You still do the work.',
-  thanks: 'Thank you: your answers are saved, and you can close this tab.',
+  /** Shown only once the answers have reached the server (see engine/send.ts). */
+  thanks: 'Thank you. Your answers have been sent.',
+  /** Preview runs, and live runs while response storage is not switched on (prototype review). */
+  notSent: "Thank you. This is a preview version, so your answers stay on this device and aren't sent anywhere.",
+  /** Next on the last question, and what it says while sending or after a failure. */
+  send: 'Send',
+  sending: 'Sending…',
+  retry: "Couldn't send. Tap to try again.",
 }
 
 /* ------------------------------------------------------------ helpers */
@@ -1043,14 +1053,18 @@ export type Screen =
   | { kind: 'question'; question: Question; n: number; total: number }
 
 /** Every screen after the welcome, in order: questions (numbered for the rail),
-    the scene, and a block break wherever the block changes. The ending follows the last. */
+    the scene, and a block break wherever the block changes. The ending follows the last.
+    The scene belongs with the question after it: on a phone (no 2.3 or 2.4) the
+    "A new Analyst's time" break comes first, so the scene sits directly before 3.1. */
 export function screensFor(channel: Channel): Screen[] {
   const total = countFor(channel)
+  const order = PLAY_ORDER[channel]
   const out: Screen[] = []
   let block: Block | undefined
   let n = 0
-  for (const id of PLAY_ORDER[channel]) {
-    const b = id === 'scene' ? SCENE.block : QUESTION[id].block
+  for (const [i, id] of order.entries()) {
+    const after = order.slice(i + 1).find((x) => x !== 'scene')
+    const b = id === 'scene' ? (after ? QUESTION[after].block : SCENE.block) : QUESTION[id].block
     if (block !== undefined && b !== block) out.push({ kind: 'break', block: b, ...BREAKS[b] })
     block = b
     if (id === 'scene') out.push({ kind: 'scene', scene: SCENE })
