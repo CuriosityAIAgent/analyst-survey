@@ -45,7 +45,7 @@ export default function TrackRender(p: RenderProps) {
           fillFrom={t.marker || FROM_MIDDLE.has(q.id) ? 'centre' : 'start'}
           optOuts={q.options.map((o) => ({ id: o.id, label: o.label }))}
           optedOutId={out}
-          onOptOutId={(id) => { if (id) p.set(id) }}
+          onOptOutId={(id) => p.set(id ?? '')} /* tapping the chosen opt-out again clears it */
           density={density}
         />
       </div>
