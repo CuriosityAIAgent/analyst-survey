@@ -4,7 +4,7 @@ import {
   followUpFor, followUpOptions, followUpsFor, forChannel, matches, questionsFor, screensFor,
   type Answer, type Channel, type FollowUp, type Question,
 } from './questions'
-import { BLOCK_NAME } from './contract'
+import { BLOCK_MARK, BLOCK_NAME } from './contract'
 import { SPRITES } from '../game/art/sprites'
 
 const CHANNELS: Channel[] = ['phone', 'desk']
@@ -418,6 +418,14 @@ describe('art, welcome, breaks, scene, ending', () => {
       expect(BREAKS[b].name).toBe(BLOCK_NAME[b])
       expect(words(BREAKS[b].line)).toBeLessThanOrEqual(10)
     }
+  })
+
+  it('the two middle sections say plainly that they are about AI', () => {
+    expect(BLOCK_NAME['job-ahead']).toMatch(/\bAI\b/)
+    expect(BLOCK_NAME['analyst-time']).toMatch(/\bAI\b/)
+    // the mountain label beside the lower markers stays short enough to fit (the heading has the full name)
+    for (const b of BLOCK_ORDER) expect(BLOCK_MARK[b].length).toBeLessThanOrEqual(25)
+    expect(BLOCK_MARK['job-ahead'].length).toBeLessThanOrEqual(15)
   })
 
   it('the scene is worded as an explicit hypothetical, not as the bank\'s plan', () => {

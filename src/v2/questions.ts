@@ -563,7 +563,7 @@ export const QUESTIONS: Question[] = [
     measures: 'Monday 1.5, Goal 1: whether we lose good Analysts to placement or to talent. Groups of ten or more.',
   },
 
-  /* ---------------- Block 2. The job ahead (HNW shift) ---------------- */
+  /* ---------------- Block 2. How AI changes the Advisor job (HNW shift) ---------------- */
   {
     id: 'q2.1',
     block: 'job-ahead',
@@ -632,7 +632,7 @@ export const QUESTIONS: Question[] = [
     measures: 'Monday 2.4, HNW shift: what stays hand-built before AI and the team take over.',
   },
 
-  /* ---------------- Block 3. A new Analyst's time (Goal 2) ---------------- */
+  /* ---------------- Block 3. How AI changes an Analyst's work (Goal 2) ---------------- */
   {
     id: 'q3.1',
     block: 'analyst-time',
@@ -1007,8 +1007,8 @@ export const WELCOME = {
 // TODO(Monday): the lines are new; the names are the plan's.
 export const BREAKS: Record<Block, { name: string; line: string }> = {
   'look-back': { name: BLOCK_NAME['look-back'], line: 'First, your own time in A2A.' },
-  'job-ahead': { name: BLOCK_NAME['job-ahead'], line: "Next, the Advisor's job in five years." },
-  'analyst-time': { name: BLOCK_NAME['analyst-time'], line: 'How a new Analyst should spend their week.' },
+  'job-ahead': { name: BLOCK_NAME['job-ahead'], line: 'What the Advisor job needs as AI takes on more.' },
+  'analyst-time': { name: BLOCK_NAME['analyst-time'], line: 'What AI should do, and what Analysts must still do.' },
   faster: { name: BLOCK_NAME.faster, line: 'What could make the path to Advisor shorter.' },
   last: { name: BLOCK_NAME.last, line: 'Nearly done.' },
 }
@@ -1056,7 +1056,7 @@ export type Screen =
 /** Every screen after the welcome, in order: questions (numbered for the rail),
     the scene, and a block break wherever the block changes. The ending follows the last.
     The scene belongs with the question after it: on a phone (no 2.3 or 2.4) the
-    "A new Analyst's time" break comes first, so the scene sits directly before 3.1. */
+    "How AI changes an Analyst's work" break comes first, so the scene sits directly before 3.1. */
 export function screensFor(channel: Channel): Screen[] {
   const total = countFor(channel)
   const order = PLAY_ORDER[channel]
