@@ -7,12 +7,13 @@
    ending (it walks to the top by itself and a small flag rises). This is the
    only place the figure moves. Reduced motion: it arrives at once. */
 import { useEffect, useState } from 'react'
-import { BLOCK_NAME } from '../contract'
+import { BLOCK_MARK, BLOCK_NAME } from '../contract'
 import { BLOCK_ORDER } from '../questions'
 
 /* the markers: one per section start, then the top */
 const STOPS: [number, number][] = [[72, 252], [186, 222], [292, 170], [382, 140], [446, 90], [494, 44]]
 const SECTIONS = BLOCK_ORDER.map((b) => BLOCK_NAME[b])
+const MARKS = BLOCK_ORDER.map((b) => BLOCK_MARK[b])
 
 function legPath(i: number) {
   const [x0, y0] = STOPS[i]
@@ -112,7 +113,7 @@ export function Journey({ reached, walking, pos, highlight, flag, className = ''
         ))}
         {highlight !== undefined && (
           <text x={STOPS[highlight][0] - 26} y={STOPS[highlight][1] + 6} textAnchor="end"
-            className="v2-ready" style={{ font: '600 20px var(--font-ui)', fill: '#0D0C0B' }}>{SECTIONS[highlight]}</text>
+            className="v2-ready" style={{ font: '600 20px var(--font-ui)', fill: '#0D0C0B' }}>{MARKS[highlight]}</text>
         )}
         {/* the top: a small flag rises at the end */}
         <line x1="508" y1="40" x2="508" y2={flag ? 10 : 40} stroke="#0D0C0B" strokeWidth="1.6" style={{ transition: 'all .5s cubic-bezier(.2,.8,.3,1) .15s' }} />

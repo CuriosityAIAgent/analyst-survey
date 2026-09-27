@@ -13,9 +13,20 @@ import type { ReactNode } from 'react'
 export type Block = 'look-back' | 'job-ahead' | 'analyst-time' | 'faster' | 'last'
 
 export const BLOCK_NAME: Record<Block, string> = {
+  // Haresh, 27 Sep: say plainly that the middle of the survey is about AI
+  'look-back': 'Looking back: what made you successful',
+  'job-ahead': 'How AI changes the Advisor job',
+  'analyst-time': "How AI changes an Analyst's work",
+  faster: 'Getting to Advisor faster',
+  last: 'Last thoughts',
+}
+
+/** The short label beside a marker on the mountain. The break's heading, right above it,
+    carries the full name; the full names do not fit beside the lower markers. */
+export const BLOCK_MARK: Record<Block, string> = {
   'look-back': 'Looking back',
-  'job-ahead': 'The job ahead',
-  'analyst-time': "A new Analyst's time",
+  'job-ahead': 'The Advisor job',
+  'analyst-time': "The Analyst's work",
   faster: 'Getting to Advisor faster',
   last: 'Last thoughts',
 }

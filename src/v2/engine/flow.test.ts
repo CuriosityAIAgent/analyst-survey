@@ -62,7 +62,7 @@ describe('route', () => {
   it('breaks sit between blocks: 4 of them, named, numbered for the question that follows', () => {
     for (const ch of ['phone', 'desk'] as Channel[]) {
       const bs = walk(ch, {}, false).filter((v) => v.kind === 'break') as Extract<View, { kind: 'break' }>[]
-      expect(bs.map((b) => b.name)).toEqual(['The job ahead', "A new Analyst's time", 'Getting to Advisor faster', 'Last thoughts'])
+      expect(bs.map((b) => b.name)).toEqual(['How AI changes the Advisor job', "How AI changes an Analyst's work", 'Getting to Advisor faster', 'Last thoughts'])
       expect(bs.map((b) => b.section)).toEqual([2, 3, 4, 5])
       expect(bs[0].from).toBe('look-back')
       const list = screens(ch)
