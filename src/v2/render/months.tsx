@@ -27,6 +27,12 @@ function inYears(m: number) {
   return [ys, rs].filter(Boolean).join(' ')
 }
 
+/** 24 -> "2", 30 -> "2½" (months shown as years and half years). */
+function yearsNum(m: number): string {
+  const y = Math.floor(m / 12), r = m % 12
+  return r === 6 ? `${y}½` : r === 0 ? `${y}` : (m / 12).toFixed(1)
+}
+
 /** "{n} months" -> ['', ' months'] around the number. */
 function around(t: string | undefined, fallback: string): [string, string] {
   const s = t ?? fallback
@@ -40,7 +46,8 @@ export default function MonthsRender(p: RenderProps) {
   const range = q.constraints.range ?? { min: 12, max: 48, step: 3, unit: 'months' }
   const { min: MIN, max: MAX, step: STEP, unit } = range
   const SPAN = Math.max(1, MAX - MIN)
-  const blocks = SPAN <= 60 ? SPAN : Math.round(SPAN / STEP) // one block per unit when that stays small
+  // months are shown as years: one block per step (six half-year blocks for 12-48 by 6)
+  const blocks = unit === 'months' ? Math.max(1, Math.round(SPAN / STEP)) : SPAN <= 60 ? SPAN : Math.round(SPAN / STEP)
   const stops = Array.from({ length: Math.floor(SPAN / STEP) + 1 }, (_, i) => MIN + i * STEP)
   const chips = q.options
   const ot = q.objectText ?? {}
@@ -159,16 +166,21 @@ export default function MonthsRender(p: RenderProps) {
                     <span className="ml-2 text-[24px] text-disabled-ink lg:text-[30px]">{emptyPost.trim()}</span>
                   </>
                 ) : (
+                  unit === 'months' ? (
+                    <>
+                      <span className="inline-block min-w-[1.2ch] text-[64px] font-semibold tabular-nums text-ink lg:text-[84px]">{yearsNum(value)}</span>
+                      <span className="ml-2 text-[24px] text-ink lg:text-[30px]">{value === 12 ? 'year' : 'years'}</span>
+                    </>
+                  ) : (
                   <>
                     {pre && <span className="mr-2 text-[24px] text-ink lg:text-[28px]">{pre}</span>}
                     <span className="inline-block min-w-[1.2ch] text-[64px] font-semibold tabular-nums text-ink lg:text-[84px]">{value}</span>
                     <span className="ml-2 text-[24px] text-ink lg:text-[30px]">{post.trim()}</span>
                   </>
+                  )
                 )}
               </p>
-              <p className={`${UI} mt-1.5 h-5 text-[14px] text-muted lg:text-[15px]`}>
-                {value !== null && unit === 'months' ? inYears(value) : ''}
-              </p>
+              <p className={`${UI} mt-1.5 h-5 text-[14px] text-muted lg:text-[15px]`} aria-hidden />
             </>
           )}
         </div>
@@ -211,17 +223,15 @@ export default function MonthsRender(p: RenderProps) {
             {/* the handle: waits beside the groove until touched */}
             <div role="slider" tabIndex={0} aria-label={q.question}
               aria-valuemin={MIN} aria-valuemax={MAX} aria-valuenow={value ?? undefined}
-              aria-valuetext={value === null ? 'Not set' : `${value} ${unit}`}
+              aria-valuetext={value === null ? 'Not set' : unit === 'months' ? `${yearsNum(value)} ${value === 12 ? 'year' : 'years'}` : `${value} ${unit}`}
               onKeyDown={onKey} data-handle
-              className={`absolute top-1/2 z-10 flex h-[50px] w-[34px] -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-[8px] active:cursor-grabbing lg:h-[64px] lg:w-[40px] ${
+              className={`absolute top-1/2 z-10 flex h-[38px] w-[38px] -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-full active:cursor-grabbing lg:h-[46px] lg:w-[46px] ${
                 parked
                   ? 'border-[1.5px] border-dashed border-[#A39C90] bg-paper opacity-80'
                   : 'border border-ink bg-ground shadow-[0_4px_10px_rgba(13,12,11,.18)]'
               } ${parked && !chip && !touched ? 'v2m-nudge' : ''}`}
               style={{ left: parked ? (laptop ? -42 : -34) : `${pct}%`, transition: drag ? 'none' : 'left 180ms cubic-bezier(.3,.7,.2,1)' }}>
-              <span aria-hidden className="flex gap-[3px]">
-                <span className="h-5 w-[2px] rounded bg-rule" /><span className="h-5 w-[2px] rounded bg-rule" /><span className="h-5 w-[2px] rounded bg-rule" />
-              </span>
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-ink/70" />
             </div>
 
             {/* year marks */}

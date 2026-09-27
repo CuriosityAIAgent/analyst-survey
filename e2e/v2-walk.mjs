@@ -72,7 +72,7 @@ const ROUTES = {
     notes: 'type',
     swapCheck: 'q3.1',
     expect: { 'lead.year': 'y2', 'ready.when': 'months-before' },
-    fires: ['q1.1.what', 'q4.4.classroom', 'q4.4.ai-client', 'q5.1.blocker', 'q3.2.why.portfolio', 'q3.2.why.outreach', 'q3.4.first', 'q5.5.prove'],
+    fires: ['q1.1.what', 'q4.4.classroom', 'q4.4.ai-client', 'q5.1.blocker', 'q3.2.why.portfolio', 'q3.4.first', 'q5.5.prove'],
   },
   B: {
     link: '?r=walkB0002',
@@ -98,7 +98,7 @@ const ROUTES = {
     },
     notes: 'type',
     expect: { 'lead.year': 'after' },
-    fires: ['q1.1.what', 'q4.4.ai-client', 'q5.1.blocker', 'q3.2.why.briefs', 'q3.2.why.onboarding', 'q3.4.first', 'q5.5.prove'],
+    fires: ['q1.1.what', 'q4.4.ai-client', 'q5.1.blocker', 'q3.4.first', 'q5.5.prove'],
   },
   D: {
     link: '?business=uspb&cohort=2025&r=walkD0004',
@@ -108,7 +108,7 @@ const ROUTES = {
     },
     notes: 'type',
     expect: { 'lead.year': 'y1' },
-    fires: ['q1.1.what', 'q4.4.classroom', 'q3.2.why.crm'],
+    fires: ['q1.1.what', 'q4.4.classroom'],
   },
 }
 
