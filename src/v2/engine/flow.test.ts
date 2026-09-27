@@ -149,8 +149,8 @@ describe('follow-ups as questions', () => {
   it('followList: live follows the rules, preview lists all', () => {
     const q = QUESTION['q3.2']
     expect(followList(q, { 'tasks.how': { portfolio: 'by-hand', crm: 'by-hand', briefs: 'stop' } }, false).map((f) => f.id))
-      .toEqual(['q3.2.why.portfolio', 'q3.2.why.crm'])
-    expect(followList(q, {}, true)).toHaveLength(5)
+      .toEqual(['q3.2.why.portfolio']) // no follow-up for CRM (portfolio only)
+    expect(followList(q, {}, true)).toHaveLength(1)
   })
 })
 
@@ -158,7 +158,8 @@ describe('answers', () => {
   it('knows every stores key and its .order, nothing else', () => {
     expect(isKnownStore('learn.top')).toBe(true)
     expect(isKnownStore('learn.top.order')).toBe(true)
-    expect(isKnownStore('tasks.why.crm')).toBe(true)
+    expect(isKnownStore('tasks.why.portfolio')).toBe(true)
+    expect(isKnownStore('tasks.why.crm')).toBe(false)
     expect(isKnownStore('scene.seen')).toBe(true)
     expect(isKnownStore('__proto__')).toBe(false)
     expect(isKnownStore('vote.green')).toBe(false)

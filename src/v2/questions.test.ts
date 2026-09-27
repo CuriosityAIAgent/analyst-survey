@@ -290,7 +290,7 @@ describe('follow-ups', () => {
 
   it('followUpFor / followUpsFor fire for each `when`, and only then', () => {
     // 1.1, 1.3, 4.4 (x2), 5.1, 2.3, 3.1, 3.2 (x5, one per task), 3.4, 5.5
-    expect(followUps.length).toBe(14)
+    expect(followUps.length).toBe(10) // 3.2 asks 'why by hand' for portfolio analysis only (Haresh, 27 Sep)
     for (const { q, f } of followUps) {
       const { hit, miss } = probes(q, f)
       for (const ans of hit) expect(followUpsFor(q, ans), `${f.id} should fire on ${JSON.stringify(ans)}`).toContain(f)
@@ -308,7 +308,7 @@ describe('follow-ups', () => {
 
     const q32 = QUESTION['q3.2']
     const two = { portfolio: 'by-hand', outreach: 'ai-drafts', briefs: 'by-hand', onboarding: 'stop', crm: 'someone-else' }
-    expect(followUpsFor(q32, two).map((f) => f.id)).toEqual(['q3.2.why.portfolio', 'q3.2.why.briefs'])
+    expect(followUpsFor(q32, two).map((f) => f.id)).toEqual(['q3.2.why.portfolio'])
     expect(followUpFor(q32, two)?.question).toBe('Why should Analysts still do portfolio analysis by hand?')
 
     expect(followUpFor(QUESTION['q1.1'], 'not-yet')).toBeUndefined()

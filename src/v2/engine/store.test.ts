@@ -135,7 +135,7 @@ describe('preview', () => {
     for (let i = 0; i < 120 && !G().finished; i++) { seen.push(at()); G().next(at()) }
     expect(G().finished).toBe(true)
     for (const id of ['q1.1.what', 'q1.3.improving', 'q4.4.classroom', 'q4.4.ai-client', 'q5.1.blocker', 'q3.1.fastest',
-      'q3.2.why.portfolio', 'q3.2.why.crm', 'q3.4.first', 'q5.5.prove']) expect(seen).toContain(id)
+      'q3.2.why.portfolio', 'q3.4.first', 'q5.5.prove']) expect(seen).toContain(id)
     expect(Object.values(G().answers['time.sort'] as Record<string, string>)).toContain('more')
     expect(G().answers['lead.year']).toBeUndefined() // nothing else is invented
     expect(G().answers.notes).toBeUndefined()

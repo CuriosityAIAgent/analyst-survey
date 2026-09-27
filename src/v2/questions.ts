@@ -590,7 +590,7 @@ export const QUESTIONS: Question[] = [
     template: 'checklist',
     // The plan's wording is "As Advisors take on more, smaller clients, which three skills will
     // matter more than today?" (15 words); "than today" dropped to fit 14 (26 Sep review).
-    question: 'As Advisors take on more, smaller clients, which three skills will matter more?',
+    question: 'As Advisors take on more clients, which three skills will matter more?',
     instruction: 'Pick three.',
     options: SKILLS,
     constraints: { pick: 3 },
@@ -679,9 +679,9 @@ export const QUESTIONS: Question[] = [
       { id: 'stop', label: 'Stop doing it' },
     ],
     constraints: { cards: TASKS.map(({ id, label, icon }) => ({ id, label, icon })) },
-    // Asked on the same card, right after a by-hand choice (at most two).
-    // TODO(Monday): the plan words only the portfolio analysis follow-up; the other four follow it.
-    followUps: TASKS.map((t) => ({
+    // Haresh (27 Sep): ask "why by hand?" only for portfolio analysis, the one clarification that
+    // matters; no follow-up for the other tasks, whatever was chosen for them.
+    followUps: TASKS.filter((t) => t.id === 'portfolio').map((t) => ({
       id: `q3.2.why.${t.id}`,
       when: `card:${t.id}:by-hand`,
       bridge: `One more on ${t.topic}.`,
@@ -785,12 +785,13 @@ export const QUESTIONS: Question[] = [
     template: 'months',
     // TODO(Monday): the plan's wording is "From their first day, how many months should it take a
     // new Analyst to become an Advisor?" (17 words); the start point moved to the note line.
-    question: 'How many months should it take a new Analyst to become an Advisor?',
+    question: 'How long should it take a new Analyst to become an Advisor?',
     instruction: 'Tap or drag to set.',
     note: 'Count from their first day at J.P. Morgan.',
     options: [{ id: 'when-ready', label: "No set time: when they're ready" }],
-    constraints: { range: { min: 12, max: 48, step: 3, unit: 'months' } },
-    objectText: { readout: '{n} months', empty: '— months', whenReady: 'When ready', start: '1 year', end: '4 years' },
+    // stored in months (12 to 48), shown in years and half years (Haresh, 27 Sep: one unit, not both)
+    constraints: { range: { min: 12, max: 48, step: 6, unit: 'months' } },
+    objectText: { readout: '{n} months', empty: '— years', whenReady: 'When ready', start: '1 year', end: '4 years' },
     channels: BOTH,
     stores: 'months',
     measures: "Monday 5.2, Goal 3: Adam's compression question: 12 to 48 months, or promote on skills.",
@@ -856,7 +857,7 @@ export const QUESTIONS: Question[] = [
       cards: [
         { id: 'promote', label: 'Promote on proven skills, not years' },
         { id: 'certify', label: 'Sign off on set tasks before they do them alone' },
-        { id: 'hnw', label: 'A few HNW clients each, supervised, by year two' },
+        { id: 'hnw', label: 'A few clients of their own, supervised, by year two' },
         { id: 'ai-client', label: 'Make AI client role play required before real meetings' },
         {
           id: 'agents',
@@ -946,7 +947,7 @@ export const SCENE: Scene = {
   // before that approval. The first line is the heading; each later line is one row after it.
   lines: [
     'Imagine that by 2031, Advisors have:',
-    'More clients each, most of them smaller.',
+    'More clients each.',
     'More AI helping them.',
     'A bigger team.',
   ],
