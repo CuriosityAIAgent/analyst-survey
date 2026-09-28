@@ -15,7 +15,7 @@
    and q.options sit under it as buttons; tap one. Stores the answer id. The card
    is found from the follow-up's `when` (card:<id>:...) on its parent question; it
    names the task, never the respondent's answer. */
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import V2Frame from '../V2Frame'
 import CardStack from '../ui/templates/CardStack'
 import SplitCards from '../ui/templates/SplitCards'
@@ -36,29 +36,40 @@ function SplitRender(p: RenderProps) {
   const { q } = p
   const cards = q.constraints.cards ?? []
   const first = q.constraints.first!
-  const rec = asRecord(p.value)
-  const pickedIn = (options: { id: string }[], key: (card: string) => string) => {
+  const firstKey = (card: string) => `${card}.${first.id}`
+  const pickedIn = (rec: Record<string, string | number>, options: { id: string }[], key: (card: string) => string) => {
     const ok = new Set(options.map((o) => o.id))
     const out: Record<string, string> = {}
     for (const c of cards) { const v = rec[key(c.id)]; if (v !== undefined && ok.has(String(v))) out[c.id] = String(v) }
     return out
   }
-  const firstKey = (card: string) => `${card}.${first.id}`
-  const pickedFirst = pickedIn(first.options, firstKey)
-  const pickedMain = pickedIn(q.options, (card) => card)
+  // only the known keys with known answers: { card: main, '<card>.today': first }
+  const clean = (rec: Record<string, string | number>) => {
+    const out: Record<string, string> = {}
+    for (const [k, v] of Object.entries(pickedIn(rec, q.options, (c) => c))) out[k] = v
+    for (const [k, v] of Object.entries(pickedIn(rec, first.options, firstKey))) out[firstKey(k)] = v
+    return out
+  }
+  const saved = clean(asRecord(p.value))
+  // the record as last written: two taps before a re-render must not lose the first
+  const latest = useRef(saved)
+  latest.current = saved
+  const pickedFirst = pickedIn(saved, first.options, firstKey)
+  const pickedMain = pickedIn(saved, q.options, (card) => card)
 
   const onPick = (row: 'first' | 'main', card: string, choice: string) => {
-    const next: Record<string, string> = {}
-    for (const [k, v] of Object.entries(pickedMain)) next[k] = v
-    for (const [k, v] of Object.entries(pickedFirst)) next[firstKey(k)] = v
-    next[row === 'main' ? card : firstKey(card)] = choice
+    const next = { ...latest.current, [row === 'main' ? card : firstKey(card)]: choice }
+    latest.current = next
     p.set(next)
     p.log('sort', { card, row: row === 'main' ? 'main' : first.id, choice })
   }
 
   const left = cards.filter((c) => !pickedFirst[c.id] || !pickedMain[c.id]).length
   const missing = left && !p.preview ? `Answer ${left} more card${left === 1 ? '' : 's'}` : undefined
-  const density = useFit(2, [q.id])
+  // re-fit when the card on screen changes: a two-line title ("Onboarding and operations") is taller
+  const [shown, setShown] = useState<string | null>(null)
+  const onShow = useCallback((id: string | null) => setShown(id), [])
+  const density = useFit(3, [q.id, shown])
 
   return (
     <V2Frame block={q.block} step={p.step} total={p.total} question={q.question} instruction={q.instruction}
@@ -73,11 +84,12 @@ function SplitRender(p: RenderProps) {
           ]}
           onPick={onPick}
           onRefuse={(row, choice) => p.log('refused', { row, choice })}
+          onShow={onShow}
           density={density}
           done={
             <>
               <p className={`${TEXT} text-[20px] font-semibold text-ink`}>All {cards.length} answered.</p>
-              <p className={`${UI} mt-1 text-[14px] text-muted`}>Tap a number above to change one.</p>
+              <p className={`${UI} mt-1 text-[14px] text-muted`}>Tap a tick above to change one.</p>
             </>
           }
         />

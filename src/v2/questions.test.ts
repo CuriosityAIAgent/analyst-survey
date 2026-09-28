@@ -21,7 +21,7 @@ const BANNED = [
   'track', 'clip', 'anchor', 'stones', 'own feet', 'storm', 'plaque', 'door', 'slot', 'lane', 'tokens',
   // plan section 4: jargon
   'policy', 'dropped', 'unsure', 'once proven', 'LLM', 'avatar', 'hypothesis', 'ECM', 'product shelf',
-  'families', // 'hunter' allowed since 28 Sep: Haresh asked for "a hunter's instinct" on 1.3
+  'families', // 'hunter' allowed since 28 Sep: Haresh asked for "hunter's instinct" on 1.3
   // plan section 4: idioms
   'top shelf', 'gives back', 'gets in the way', 'make Advisor', 'comes with time', 'tweaks', 'held it back',
   'least ready for', 'closest', 'were guaranteed', 'classmate', 'go with your gut', 'same you', 'same effort',
@@ -499,9 +499,11 @@ describe("Haresh's notes, 28 Sep evening", () => {
     expect(labels).toContain('Regular attendance at the morning meeting')
     expect(labels).toContain('Classroom training')
     expect(labels.filter((l) => /role play/i.test(l))).toEqual(['One-on-one coaching and role play with a senior Advisor'])
-    expect(QUESTION['q1.3'].constraints.cards?.find((c) => c.id === 'drive')?.label).toBe("Drive to win clients (a hunter's instinct)")
+    expect(QUESTION['q1.3'].constraints.cards?.find((c) => c.id === 'drive')?.label).toBe("Drive to win clients (hunter's instinct)")
     expect(QUESTION['q3.3'].options.map((o) => o.id)).toEqual(['meetings', 'practice', 'coaching', 'product', 'new-clients'])
     expect(JSON.stringify(QUESTION['q3.3'].options)).not.toMatch(/looking after/i)
+    // a phone jug is about 63px wide and clips a longer word ("conversations" did)
+    for (const o of QUESTION['q3.3'].options) for (const w of o.label.split(/\s+/)) expect(w.length, `${o.label}: ${w}`).toBeLessThanOrEqual(10)
   })
 })
 

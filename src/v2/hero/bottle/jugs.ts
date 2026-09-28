@@ -17,7 +17,7 @@ export type Jug = JugLook & { id: JugId }
 
 export const JUGS: Jug[] = [
   { id: 'meetings', label: 'Joining client meetings', color: '#2F5D4A', light: '#6E9582', dark: '#1F4B3A', pattern: 'diag' },
-  { id: 'practice', label: 'Practising client conversations', color: '#2D4468', light: '#6F84A6', dark: '#14233B', pattern: 'dots' },
+  { id: 'practice', label: 'Practising for client meetings', color: '#2D4468', light: '#6F84A6', dark: '#14233B', pattern: 'dots' },
   { id: 'coaching', label: 'Being coached', color: '#8C4E24', light: '#C08A62', dark: '#6A3510', pattern: 'back' },
   { id: 'product', label: 'Learning the products', color: '#B8862B', light: '#DDBB72', dark: '#8E6418', pattern: 'vert' },
   { id: 'new-clients', label: 'Helping win new clients', color: '#6B4A63', light: '#A0869A', dark: '#4A2F44', pattern: 'grid' },

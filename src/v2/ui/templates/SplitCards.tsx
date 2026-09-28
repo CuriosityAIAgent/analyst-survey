@@ -3,10 +3,15 @@
    of answers: the first row ("Today, on your team") and the main row ("The Analyst of
    2031"). Tap one in each row; once both are answered the card moves on by itself.
 
-   Numbered dots above the card show each card: a tick once both rows are answered. Tap
-   a dot to bring that card back with its answers and change either row; a tap in the
-   last row moves on again. An answer can have a cap in its row ("Up to 2"): once full,
-   it says so and shakes if tapped.
+   Numbered dots above the card show each card: a tick once both rows are answered, a
+   ring on the card on screen. Tap a ticked dot to bring that card back and change it;
+   it moves on again after the change. The dot of the first unanswered card always
+   works, so there is always a way back to it. A tap in the moment before a finished
+   card moves on still counts (it corrects that card). An answer can have a cap in its
+   row ("Up to 2 cards"): once full, it says so and shakes if tapped.
+
+   Keyboard: when a card moves on, focus goes to the new card's first answer (or to Next
+   once every card is answered), and a polite live region says which card is showing.
 
    Test hooks: data-option on the card (its id), data-row="first" | "main" on each row,
    data-choice on every answer button (aria-disabled once its cap is full). */
@@ -27,14 +32,16 @@ const NEXT_MS = 380
 const UI = 'font-[family-name:var(--font-ui)]'
 const TEXT = 'font-[family-name:var(--font-text)]'
 
-export default function SplitCards({ cards, rows, onPick, onRefuse, done, density = 0 }: {
+export default function SplitCards({ cards, rows, onPick, onRefuse, onShow, done, density = 0 }: {
   cards: SplitCard[]
   rows: [SplitRow, SplitRow]
   onPick: (row: 'first' | 'main', card: string, choice: string) => void
   onRefuse?: (row: 'first' | 'main', choice: string) => void
+  /** told which card is on screen (null: the done panel), so the page can re-fit */
+  onShow?: (card: string | null) => void
   /** shown in place of the card once every card has both answers */
   done?: ReactNode
-  /** 0 roomy · 1 tighter · 2 tightest (fit a short phone) */
+  /** 0 roomy · 1 tighter · 2 tighter still · 3 smallest (fit a short phone) */
   density?: number
 }) {
   const complete = (id: string) => rows.every((r) => !!r.picked[id])
@@ -43,17 +50,41 @@ export default function SplitCards({ cards, rows, onPick, onRefuse, done, densit
   const [refused, setRefused] = useState<{ key: string; n: number } | null>(null)
   const timer = useRef(0)
   const refuseTimer = useRef(0)
+  const root = useRef<HTMLDivElement>(null)
+  const moved = useRef(false)
   useEffect(() => () => { window.clearTimeout(timer.current); window.clearTimeout(refuseTimer.current) }, [])
 
-  const currentId = hold ?? focus ?? cards.find((c) => !complete(c.id))?.id ?? null
+  const firstOpen = cards.find((c) => !complete(c.id))?.id ?? null
+  const currentId = hold ?? focus ?? firstOpen
   const current = cards.find((c) => c.id === currentId)
   const n = current ? cards.indexOf(current) : cards.length
+
+  // the page re-fits when the card on screen changes (a two-line title is taller)
+  useEffect(() => { onShow?.(currentId) }, [currentId, onShow])
+
+  // after a card moves on by itself, keep keyboard focus in the game
+  useEffect(() => {
+    if (!moved.current) return
+    moved.current = false
+    const inside = root.current?.contains(document.activeElement) || document.activeElement === document.body
+    if (!inside) return
+    const target = currentId
+      ? root.current?.querySelector<HTMLElement>('[data-row="first"] [data-choice]')
+      : document.querySelector<HTMLElement>('[data-next]')
+    target?.focus()
+  }, [currentId])
 
   const used = (row: SplitRow, ch: SplitChoice) => cards.filter((c) => c.id !== currentId && row.picked[c.id] === ch.id).length
   const full = (row: SplitRow, ch: SplitChoice) => ch.cap !== undefined && used(row, ch) >= ch.cap
 
+  const moveOn = (id: string) => {
+    setHold(id)
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => { moved.current = true; setHold(null); setFocus(null) }, NEXT_MS)
+  }
+
   const pick = (row: SplitRow, ch: SplitChoice) => {
-    if (!current || hold) return
+    if (!current) return
     if (full(row, ch)) {
       window.clearTimeout(refuseTimer.current)
       setRefused((r) => ({ key: `${row.key}:${ch.id}`, n: (r?.n ?? 0) + 1 }))
@@ -61,39 +92,47 @@ export default function SplitCards({ cards, rows, onPick, onRefuse, done, densit
       onRefuse?.(row.key, ch.id)
       return
     }
-    const wasComplete = complete(current.id)
     onPick(row.key, current.id, ch.id)
-    // both rows answered: hold the card a moment so the tap shows, then move on. On a card
-    // brought back to change, only a tap in the last row moves on, so both rows can be changed.
+    // both rows answered: hold the card a moment so the tap shows, then move on. A tap
+    // while it is held corrects the held card and restarts the moment.
     const other = rows.find((r) => r.key !== row.key)!
-    if (other.picked[current.id] && (!wasComplete || row.key === 'main')) {
-      setHold(current.id)
-      window.clearTimeout(timer.current)
-      timer.current = window.setTimeout(() => { setHold(null); setFocus(null) }, NEXT_MS)
-    }
+    if (other.picked[current.id]) moveOn(current.id)
   }
 
-  const artH = density >= 2 ? 'h-10 w-10' : density >= 1 ? 'h-12 w-12' : 'h-14 w-14 sm:h-16 sm:w-16'
-  const chipH = density >= 2 ? 'min-h-[46px]' : density >= 1 ? 'min-h-[52px]' : 'min-h-[56px]'
+  const show = (id: string | null) => {
+    window.clearTimeout(timer.current)
+    setHold(null)
+    setFocus(id)
+  }
+
+  const artH = density >= 3 ? 'h-8 w-8' : density >= 2 ? 'h-10 w-10' : density >= 1 ? 'h-12 w-12' : 'h-14 w-14 sm:h-16 sm:w-16'
+  const chipH = density >= 3 ? 'min-h-[42px]' : density >= 2 ? 'min-h-[46px]' : density >= 1 ? 'min-h-[52px]' : 'min-h-[56px]'
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div ref={root} className="flex flex-1 flex-col">
       <style>{`
         @keyframes v2sc-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
         .v2sc-in { animation: v2sc-in .24s cubic-bezier(.2,.7,.2,1) backwards }
         @media (prefers-reduced-motion: reduce){ .v2sc-in {animation:none!important} }
       `}</style>
+      <p className="sr-only" aria-live="polite">
+        {current ? `Card ${n + 1} of ${cards.length}: ${current.label}` : `All ${cards.length} cards answered`}
+      </p>
 
       {/* the dots: one per card */}
       <div className={`${density >= 2 ? 'mb-1.5' : 'mb-2'} flex items-center justify-center gap-2`} role="group" aria-label="Cards">
         {cards.map((c, i) => {
           const all = complete(c.id)
           const some = rows.some((r) => !!r.picked[c.id])
+          const here = c.id === currentId
+          const resume = c.id === firstOpen && !here
           return (
-            <button key={c.id} type="button" disabled={!some || !!hold} onClick={() => setFocus(c.id)}
-              aria-label={all ? `${c.label}: answered. Tap to change.` : some ? `${c.label}: one row answered` : `${c.label}: not answered yet`}
+            <button key={c.id} type="button" disabled={!some && !resume} onClick={() => show(resume ? null : c.id)}
+              aria-current={here ? 'step' : undefined}
+              aria-label={`${c.label}: ${all ? 'answered. Tap to change.' : some ? 'one row answered' : resume ? 'not answered yet. Tap to go back to it.' : 'not answered yet'}`}
               className={`${UI} flex h-[30px] w-[30px] items-center justify-center rounded-full border-[1.5px] text-[13px] font-semibold tabular-nums transition-colors
-                ${all ? 'border-forest bg-forest text-white hover:bg-[#173a2d]' : c.id === currentId ? 'border-ink bg-ground text-ink' : some ? 'border-ink bg-ground text-ink' : 'border-rule-soft bg-ground text-disabled-ink'}`}>
+                ${here ? 'ring-2 ring-ink ring-offset-2 ring-offset-paper' : ''}
+                ${all ? 'border-forest bg-forest text-white hover:bg-[#173a2d]' : some || here || resume ? 'border-ink bg-ground text-ink' : 'border-rule-soft bg-ground text-disabled-ink'}`}>
               {all ? <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden><path d="M5 12.5 L10 17 L19 7.5" fill="none" stroke="#fff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" /></svg> : i + 1}
             </button>
           )
@@ -106,7 +145,7 @@ export default function SplitCards({ cards, rows, onPick, onRefuse, done, densit
           <div key={current.id} data-option={current.id} role="group" aria-label={`${current.label}. Card ${n + 1} of ${cards.length}`}
             className={`v2sc-in relative flex items-center gap-3 rounded-[10px] border border-rule-soft bg-ground px-4 shadow-[0_1px_0_#DDD9D2,0_10px_28px_rgba(13,12,11,0.10)] ${density >= 2 ? 'py-2' : 'py-3'}`}>
             {current.art && <img src={`/game/3d/${current.art}.webp`} alt="" draggable={false} className={`pointer-events-none shrink-0 object-contain ${artH}`} />}
-            <p className={`${TEXT} flex-1 font-semibold text-ink ${density >= 2 ? 'text-[19px] leading-[24px]' : 'text-[20px] leading-[25px] sm:text-[24px] sm:leading-[30px]'}`}>{current.label}</p>
+            <p className={`${TEXT} flex-1 font-semibold text-ink ${density >= 3 ? 'text-[18px] leading-[22px]' : density >= 2 ? 'text-[19px] leading-[24px]' : 'text-[20px] leading-[25px] sm:text-[24px] sm:leading-[30px]'}`}>{current.label}</p>
             <span className={`${UI} self-start text-[12px] tabular-nums text-muted`}>{n + 1} of {cards.length}</span>
           </div>
 

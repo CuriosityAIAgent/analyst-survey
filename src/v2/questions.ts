@@ -239,7 +239,7 @@ const TASK_CARDS: Card[] = TASKS.map(({ id, label, icon }) => ({ id, label, icon
     strongest trait-like predictor (Vinchur et al. 1998). Report the answers as what graduates
     believe: people credit their successes to lasting qualities. */
 const TRAITS: Card[] = [
-  { id: 'drive', label: "Drive to win clients (a hunter's instinct)", icon: 'trait-hunter' }, // Haresh, 28 Sep
+  { id: 'drive', label: "Drive to win clients (hunter's instinct)", icon: 'trait-hunter' }, // Haresh's words, 28 Sep
   { id: 'reading', label: 'Reading people', icon: 'trait-reading' },
   { id: 'difficult', label: 'Handling a difficult situation', icon: 'trait-calm' },
   { id: 'numbers', label: 'Good with numbers', icon: 'trait-story' },
@@ -251,10 +251,10 @@ const TRAITS: Card[] = [
     Adam, 28 Sep: "their own clients" and "coaching" were unclear. Each label now says what the
     Analyst does: joins, practises, is coached, learns, helps. Haresh, 28 Sep: a new Analyst
     doesn't look after clients, so that jug became practice (role plays, as in 1.2). Two lines
-    at most on a laptop jug. */
+    at most on a laptop jug, and no word longer than 10 letters (a phone jug is about 63px). */
 const JUGS: Option[] = [
   { id: 'meetings', label: 'Joining client meetings' },
-  { id: 'practice', label: 'Practising client conversations' },
+  { id: 'practice', label: 'Practising for client meetings' },
   { id: 'coaching', label: 'Being coached' },
   { id: 'product', label: 'Learning the products' },
   { id: 'new-clients', label: 'Helping win new clients' },
@@ -731,7 +731,7 @@ export const QUESTIONS: Question[] = [
     // Short labels, because four sit in a row; the grey line says who does the work. Only the
     // 2031 row caps "By hand" at 2 (its forced trade-off): say so in the report.
     options: [
-      { id: 'by-hand', label: 'By hand', hint: 'Up to 2', cap: 2 },
+      { id: 'by-hand', label: 'By hand', hint: 'Up to 2 cards', cap: 2 },
       { id: 'ai-helps', label: 'AI helps', hint: 'Analyst leads' },
       { id: 'ai-drafts', label: 'AI does it', hint: 'Analyst checks' },
       { id: 'someone-else', label: 'Someone else', hint: 'Not the Analyst' },
@@ -743,7 +743,7 @@ export const QUESTIONS: Question[] = [
         id: 'today',
         label: 'Today, on your team',
         options: [
-          { id: 'by-hand', label: 'By hand', hint: 'The Analyst' },
+          { id: 'by-hand', label: 'By hand', hint: 'Analyst alone' },
           { id: 'ai-helps', label: 'AI helps', hint: 'Analyst leads' },
           { id: 'ai-drafts', label: 'AI does it', hint: 'Analyst checks' },
           { id: 'someone-else', label: 'Someone else', hint: 'Not the Analyst' },
@@ -799,9 +799,9 @@ export const QUESTIONS: Question[] = [
     // it does to learning: AI that hands over answers lowered what learners could do alone, AI that
     // gave hints did not (Bastani et al. 2025), and AI that passes on how the best people work sped
     // novices up (Brynjolfsson, Li and Raymond 2025). This measures what graduates expect.
-    // Worded as "imagine", like the scene: the rollout is not announced (and 5.5 still asks
-    // whether Analysts should run AI agents).
-    question: 'Imagine every new Analyst has these. What will each do to their learning?',
+    // A hypothetical, like the scene: the rollout is not announced (and 5.5 still asks whether
+    // Analysts should run AI agents). "If", not "Imagine": the context line under it says Imagine.
+    question: 'If every new Analyst had these, what would each do to their learning?',
     instruction: 'Place all 4.',
     note: CONTEXT_2031,
     options: AI_TYPES,
