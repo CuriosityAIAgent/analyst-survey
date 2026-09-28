@@ -6,6 +6,11 @@
    answer id, e.g. { portfolio: 'by-hand' }. An option's `cap` limits how many
    cards may take it (3.2 "Analyst does it by hand": 2). Next says how many cards are left.
 
+   With constraints.first as well (3.2): the split card (ui/templates/SplitCards). Each card
+   has two rows, constraints.first ("Today, on your team") and q.options (objectText.second,
+   "The Analyst of 2031"). Stores the main row under the card id and the first row under
+   `<card id>.<first.id>`, in one record: { portfolio: 'ai-helps', 'portfolio.today': 'by-hand' }.
+
    Without cards (the 3.2 "why by hand" follow-ups): the task card stays on screen
    and q.options sit under it as buttons; tap one. Stores the answer id. The card
    is found from the follow-up's `when` (card:<id>:...) on its parent question; it
@@ -13,6 +18,7 @@
 import { useState } from 'react'
 import V2Frame from '../V2Frame'
 import CardStack from '../ui/templates/CardStack'
+import SplitCards from '../ui/templates/SplitCards'
 import { QUESTIONS, type Card } from '../questions'
 import type { RenderProps } from './contract'
 import { asId, asRecord, useFit } from './checklist'
@@ -21,8 +27,63 @@ const UI = 'font-[family-name:var(--font-ui)]'
 const TEXT = 'font-[family-name:var(--font-text)]'
 
 export default function CardsRender(p: RenderProps) {
+  if (p.q.constraints.cards?.length && p.q.constraints.first) return <SplitRender {...p} />
   if (p.q.constraints.cards?.length) return <StackRender {...p} />
   return <OneCardRender {...p} />
+}
+
+function SplitRender(p: RenderProps) {
+  const { q } = p
+  const cards = q.constraints.cards ?? []
+  const first = q.constraints.first!
+  const rec = asRecord(p.value)
+  const pickedIn = (options: { id: string }[], key: (card: string) => string) => {
+    const ok = new Set(options.map((o) => o.id))
+    const out: Record<string, string> = {}
+    for (const c of cards) { const v = rec[key(c.id)]; if (v !== undefined && ok.has(String(v))) out[c.id] = String(v) }
+    return out
+  }
+  const firstKey = (card: string) => `${card}.${first.id}`
+  const pickedFirst = pickedIn(first.options, firstKey)
+  const pickedMain = pickedIn(q.options, (card) => card)
+
+  const onPick = (row: 'first' | 'main', card: string, choice: string) => {
+    const next: Record<string, string> = {}
+    for (const [k, v] of Object.entries(pickedMain)) next[k] = v
+    for (const [k, v] of Object.entries(pickedFirst)) next[firstKey(k)] = v
+    next[row === 'main' ? card : firstKey(card)] = choice
+    p.set(next)
+    p.log('sort', { card, row: row === 'main' ? 'main' : first.id, choice })
+  }
+
+  const left = cards.filter((c) => !pickedFirst[c.id] || !pickedMain[c.id]).length
+  const missing = left && !p.preview ? `Answer ${left} more card${left === 1 ? '' : 's'}` : undefined
+  const density = useFit(2, [q.id])
+
+  return (
+    <V2Frame block={q.block} step={p.step} total={p.total} question={q.question} instruction={q.instruction}
+      bridge={p.bridge} note={q.note} privacy={q.privacy} missing={missing} onNext={p.onNext} onBack={p.onBack}>
+      <div data-q={q.id} className="flex flex-1 flex-col">
+        <SplitCards
+          key={q.id}
+          cards={cards.map((c) => ({ id: c.id, label: c.label, art: c.icon }))}
+          rows={[
+            { key: 'first', label: first.label, choices: first.options.map(({ id, label, hint, cap }) => ({ id, label, hint, cap })), picked: pickedFirst },
+            { key: 'main', label: q.objectText?.second ?? '', choices: q.options.map(({ id, label, hint, cap }) => ({ id, label, hint, cap })), picked: pickedMain },
+          ]}
+          onPick={onPick}
+          onRefuse={(row, choice) => p.log('refused', { row, choice })}
+          density={density}
+          done={
+            <>
+              <p className={`${TEXT} text-[20px] font-semibold text-ink`}>All {cards.length} answered.</p>
+              <p className={`${UI} mt-1 text-[14px] text-muted`}>Tap a number above to change one.</p>
+            </>
+          }
+        />
+      </div>
+    </V2Frame>
+  )
 }
 
 function StackRender(p: RenderProps) {

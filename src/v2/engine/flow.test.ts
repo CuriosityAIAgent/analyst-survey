@@ -19,9 +19,9 @@ function walk(channel: Channel, answers: Answers, preview: boolean): View[] {
 }
 
 describe('route', () => {
-  it('numbers questions 1..M (19 on phone, 26 on desk) and follow-ups keep the parent number', () => {
-    expect(totalFor('phone')).toBe(19)
-    expect(totalFor('desk')).toBe(26)
+  it('numbers questions 1..M (18 on phone, 25 on desk) and follow-ups keep the parent number', () => {
+    expect(totalFor('phone')).toBe(18)
+    expect(totalFor('desk')).toBe(25)
     for (const ch of ['phone', 'desk'] as Channel[]) {
       const vs = walk(ch, {}, true)
       const qs = vs.filter((v) => v.kind === 'question')
@@ -38,8 +38,8 @@ describe('route', () => {
   })
 
   it('welcome length line matches the numbering', () => {
-    expect(WELCOME_TEXT.lines.phone[0]).toMatch(/^19 questions/)
-    expect(WELCOME_TEXT.lines.desk[0]).toMatch(/^26 questions/)
+    expect(WELCOME_TEXT.lines.phone[0]).toMatch(/^18 questions/)
+    expect(WELCOME_TEXT.lines.desk[0]).toMatch(/^25 questions/)
   })
 
   it('preview shows every follow-up of every question, in order, after its parent', () => {

@@ -46,6 +46,7 @@ export type RenderProps = {
      data-option="<option id>"                every tappable option / tile / tool / trait / card choice
      data-zone="<tray | stop | step id>"      every drop target, track stop, podium step
      data-choice="<choice id>"                card-stack and stamp buttons (per card)
+     data-row="first" | "main"               3.2's two answer rows on one card (each holds data-choice buttons)
      data-jug="<option id>"                   bottle jugs (tap = pour 1 hour)
      data-input                              the text field on text questions
    plus V2Frame's own data-next on Next. Tap-then-tap must work everywhere drag works. */

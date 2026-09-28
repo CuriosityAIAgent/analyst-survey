@@ -27,8 +27,9 @@ import { STORE_VERSION_KEY } from './version'
 export const STORE_KEY = STORE_VERSION_KEY
 /** Bump when the questions change in a way a saved session can't carry over (new screens,
     renamed option ids): an older saved session then starts fresh instead of resuming past a new
-    question with answers in the old ids. 2 = Adam's 28 Sep review (3.2a added, ids renamed). */
-const VERSION = 2
+    question with answers in the old ids. 2 = Adam's 28 Sep review (3.2a added, ids renamed);
+    3 = Haresh's notes that evening (3.2 split on one screen, 3.2a gone, the practice jug). */
+const VERSION = 3
 const MAX_EVENTS = 1500
 
 export type Viewport = { w: number; h: number; pointer: 'fine' | 'coarse'; dpr: number }

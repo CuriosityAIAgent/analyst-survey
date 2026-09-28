@@ -160,8 +160,9 @@ export default function BottleRender(p: RenderProps) {
       <div className="flex flex-1 items-center justify-center gap-5 lg:gap-10 lg:pt-2" data-q={q.id} data-bottle>
         <div className="hidden w-[190px] shrink-0 lg:block" aria-hidden />
         <div ref={shakeRef}>
+          {/* lg 222px: leaves room for the 2031 context line on a 790px-tall laptop */}
           <BottleArt ref={bottleRef} layers={layers} pour={pour} kind={kind} total={total} looks={looks}
-            className="block h-[150px] w-auto shrink-0 lg:h-[250px]" />
+            className="block h-[150px] w-auto shrink-0 lg:h-[222px]" />
         </div>
         <div className="flex w-[124px] shrink-0 flex-col justify-end self-stretch pb-2 lg:w-[190px] lg:pb-6">
           <div aria-live="polite" data-readout>

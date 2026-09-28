@@ -1,7 +1,7 @@
 /* The five places the 8 hours can go (plan 3.3). Each jug has a clay colour from
    the house palette and its own pattern, so the mix reads without colour alone.
    Colours are chosen at similar weight so no destination looks "better". */
-export type JugId = 'meetings' | 'own-clients' | 'coaching' | 'product' | 'new-clients'
+export type JugId = 'meetings' | 'practice' | 'coaching' | 'product' | 'new-clients'
 
 /** How one jug looks. `Jug` is the same, keyed by the five known ids. */
 export type JugLook = {
@@ -17,7 +17,7 @@ export type Jug = JugLook & { id: JugId }
 
 export const JUGS: Jug[] = [
   { id: 'meetings', label: 'Joining client meetings', color: '#2F5D4A', light: '#6E9582', dark: '#1F4B3A', pattern: 'diag' },
-  { id: 'own-clients', label: 'Looking after a few clients', color: '#2D4468', light: '#6F84A6', dark: '#14233B', pattern: 'dots' },
+  { id: 'practice', label: 'Practising client conversations', color: '#2D4468', light: '#6F84A6', dark: '#14233B', pattern: 'dots' },
   { id: 'coaching', label: 'Being coached', color: '#8C4E24', light: '#C08A62', dark: '#6A3510', pattern: 'back' },
   { id: 'product', label: 'Learning the products', color: '#B8862B', light: '#DDBB72', dark: '#8E6418', pattern: 'vert' },
   { id: 'new-clients', label: 'Helping win new clients', color: '#6B4A63', light: '#A0869A', dark: '#4A2F44', pattern: 'grid' },
