@@ -8,19 +8,19 @@
    which the contract says must work wherever drag works.
 
    Seeded routes, so every follow-up fires on some route:
-     A  token link. 1.1 "Year 2" (what you did), 4.4 classroom + AI client (both
+     A  token link. 1.1 "Year 2", 4.4 classroom + AI client (both
         follow-ups), 5.1 "a few months before" (what stopped you), 3.2 by hand:
-        portfolio + outreach, 3.4 meeting prep from day one, 5.5 sign-off: Yes.
+        portfolio + outreach, 5.5 sign-off: Yes.
      B  no token (business and class picked on the welcome). Optional follow-ups
-        do NOT fire: 1.1 "Not yet", 4.4 neither, 5.1 "about when I got it", 3.2 none
-        by hand, 3.4 meeting prep once proven, 5.5 sign-off: No; notes left blank.
+        do NOT fire: 4.4 neither, 5.1 "about when I got it", 3.2 none
+        by hand, 5.5 sign-off: No; notes left blank.
         Back from a follow-up to its parent (the answer is still there), a
         reload mid-game that must resume on the same screen, and a first Send
         that fails (the server is made to refuse it): the game must stay on the
         last question, say "Couldn't send. Tap to try again.", and send on the retry.
      C  token. 3.2 by hand: briefs + onboarding.
      D  token. 3.2 by hand: CRM and admin.
-   The 'always' follow-ups (1.3, 3.1, and 2.3 on desk) fire on every route.
+   The 'always' follow-ups (1.1, 1.3, 3.1, 3.4, and 2.3 on desk) fire on every route.
 
    At every screen: no page scroll, Next fully on screen, no page errors, no
    renderer fallback, the rail's label ("Question N of M" on questions, "Section
@@ -67,26 +67,26 @@ const ROUTES = {
     prefer: {
       'q1.1': ['y2'], 'q4.4': ['classroom', 'ai-client'], 'q5.1': ['months-before'],
       'q3.2': { portfolio: 'by-hand', outreach: 'by-hand', '*': 'ai-drafts' },
-      'q3.4': { meetings: 'day-one' }, 'q5.5': { certify: 'yes' },
+      'q3.4': { alone: 'slower', '*': 'faster' }, 'q5.5': { certify: 'yes' },
     },
     notes: 'type',
     swapCheck: 'q3.1',
     expect: { 'lead.year': 'y2', 'ready.when': 'months-before' },
-    fires: ['q1.1.what', 'q4.4.classroom', 'q4.4.ai-client', 'q5.1.blocker', 'q3.2.why.portfolio', 'q3.4.first', 'q5.5.prove'],
+    fires: ['q4.4.classroom', 'q4.4.ai-client', 'q5.1.blocker', 'q3.2.why.portfolio', 'q5.5.prove'],
   },
   B: {
     link: '?r=walkB0002',
     welcome: { business: 'ipb', cohort: '2023' },
     prefer: {
-      'q1.1': ['not-yet'], 'q4.4': ['examples', 'seniors'], 'q5.1': ['on-time'],
-      'q3.2': { '*': 'ai-drafts', portfolio: 'someone-else', crm: 'stop' },
-      'q3.4': { meetings: 'proven' }, 'q5.5': { certify: 'no' },
+      'q1.1': ['y3'], 'q4.4': ['examples', 'seniors'], 'q5.1': ['on-time'],
+      'q3.2': { '*': 'ai-drafts', portfolio: 'someone-else', crm: 'ai-helps' },
+      'q3.4': { '*': 'time' }, 'q5.5': { certify: 'no' },
     },
     notes: 'blank',
-    backFrom: 'q1.3.improving', // Back to 1.3, check its answer is kept, then on again
+    backFrom: 'q1.3.matter', // Back to 1.3, check its answer is kept, then on again
     reloadAt: 'q3.3',
     failFirstSend: true,
-    expect: { 'lead.year': 'not-yet', 'ready.when': 'on-time' },
+    expect: { 'lead.year': 'y3', 'ready.when': 'on-time' },
     fires: [],
   },
   C: {
@@ -94,21 +94,21 @@ const ROUTES = {
     prefer: {
       'q1.1': ['after'], 'q4.4': ['ai-client', 'role-plays'], 'q5.1': ['year-before'],
       'q3.2': { briefs: 'by-hand', onboarding: 'by-hand', '*': 'someone-else' },
-      'q3.4': { meetings: 'day-one' }, 'q5.5': { certify: 'yes' },
+      'q3.4': { drafts: 'time', '*': 'faster' }, 'q5.5': { certify: 'yes' },
     },
     notes: 'type',
     expect: { 'lead.year': 'after' },
-    fires: ['q1.1.what', 'q4.4.ai-client', 'q5.1.blocker', 'q3.4.first', 'q5.5.prove'],
+    fires: ['q4.4.ai-client', 'q5.1.blocker', 'q5.5.prove'],
   },
   D: {
     link: '?business=uspb&cohort=2025&r=walkD0004',
     prefer: {
       'q1.1': ['y1'], 'q4.4': ['classroom', 'self-paced'], 'q5.1': ['after'],
-      'q3.2': { crm: 'by-hand', '*': 'stop' }, 'q3.4': { meetings: 'not-for-them' }, 'q5.5': { certify: 'not-sure' },
+      'q3.2': { crm: 'by-hand', '*': 'someone-else' }, 'q3.4': { '*': 'slower' }, 'q5.5': { certify: 'not-sure' },
     },
     notes: 'type',
     expect: { 'lead.year': 'y1' },
-    fires: ['q1.1.what', 'q4.4.classroom'],
+    fires: ['q4.4.classroom'],
   },
 }
 
@@ -507,7 +507,7 @@ async function runRoute(browser, name) {
   // every question's stores, and every follow-up on the path
   for (const k of flow.expectedStores(channel, a)) if (a[k] === undefined) fail(`${name}: nothing stored under "${k}"`)
   const fired = flow.followUpsOnPath(channel, a)
-  const optional = new Set(['q1.3.improving', 'q2.3.less', 'q3.1.fastest'])
+  const optional = new Set(['q1.1.what', 'q1.3.matter', 'q2.3.less', 'q3.1.fastest', 'q3.4.still']) // the 'always' ones
   const firedOpt = fired.filter((f) => !optional.has(f))
   if (JSON.stringify(firedOpt) !== JSON.stringify(route.fires)) fail(`${name}: follow-ups fired ${JSON.stringify(firedOpt)}, planned ${JSON.stringify(route.fires)}`)
   for (const [k, v] of Object.entries(route.expect)) if (JSON.stringify(a[k]) !== JSON.stringify(v)) fail(`${name}: ${k} = ${JSON.stringify(a[k])}, want ${JSON.stringify(v)}`)

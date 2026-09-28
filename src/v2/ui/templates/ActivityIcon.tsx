@@ -1,6 +1,7 @@
 /* Small flat line icons for the tray tiles: the twelve 3.1 activities and the
-   six 3.4 AI tools. Label first; these sit second. Names are the option ids in
-   questions.ts (plus the preview's older names, kept as aliases). */
+   3.4 types of AI (the older AI tool icons stay for the /v2 mockups). Label
+   first; these sit second. Names are the option ids in questions.ts (plus the
+   preview's older names, kept as aliases). */
 const P: Record<string, React.ReactNode> = {
   meetings: <><circle cx="8" cy="8" r="2.5" /><circle cx="16" cy="8" r="2.5" /><path d="M3 20c0-3 2.2-5 5-5s5 2 5 5M11 20c0-3 2.2-5 5-5s5 2 5 5" /></>,
   presenting: <><rect x="3" y="4" width="18" height="11" rx="1" /><path d="M12 15v5M8 20h8M7 11l3-3 2 2 4-4" /></>,
@@ -22,6 +23,10 @@ const P: Record<string, React.ReactNode> = {
   'ai-client': <><rect x="3" y="5" width="18" height="14" rx="1.5" /><circle cx="9" cy="11" r="2.2" /><path d="M5.5 16.5c.6-1.8 1.9-2.8 3.5-2.8s2.9 1 3.5 2.8M15 10h3.5M15 13.5h3.5" /></>,
   'ai-markets': <><path d="M3 18l5-6 4 3 6-8" /><path d="M15 7h3v3" /><path d="M3 21h18" /></>,
   'ai-meetings': <><rect x="4" y="5" width="16" height="15" rx="1" /><path d="M4 9.5h16M8.5 3v4M15.5 3v4M8 13.5l2 2 4-4" /></>,
+
+  /* 3.4 since 28 Sep: the four types of AI (research and client are above) */
+  'ai-drafts': <><path d="M4 5h16v10H10l-4 4v-4H4z" /><path d="M8 9h8M8 12h5" /></>,
+  'ai-alone': <><rect x="4" y="5" width="16" height="15" rx="1" /><path d="M4 9.5h16M8.5 3v4M15.5 3v4M8 13.5l2 2 4-4" /></>,
 }
 
 /** questions.ts option ids -> icon names. */

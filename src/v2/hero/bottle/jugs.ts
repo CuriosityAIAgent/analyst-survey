@@ -16,11 +16,11 @@ export type JugLook = {
 export type Jug = JugLook & { id: JugId }
 
 export const JUGS: Jug[] = [
-  { id: 'meetings', label: 'Client meetings', color: '#2F5D4A', light: '#6E9582', dark: '#1F4B3A', pattern: 'diag' },
-  { id: 'own-clients', label: 'Their own clients', color: '#2D4468', light: '#6F84A6', dark: '#14233B', pattern: 'dots' },
-  { id: 'coaching', label: 'Coaching', color: '#8C4E24', light: '#C08A62', dark: '#6A3510', pattern: 'back' },
-  { id: 'product', label: 'Product knowledge', color: '#B8862B', light: '#DDBB72', dark: '#8E6418', pattern: 'vert' },
-  { id: 'new-clients', label: 'Finding new clients', color: '#6B4A63', light: '#A0869A', dark: '#4A2F44', pattern: 'grid' },
+  { id: 'meetings', label: 'Joining client meetings', color: '#2F5D4A', light: '#6E9582', dark: '#1F4B3A', pattern: 'diag' },
+  { id: 'own-clients', label: 'A few clients, supervised', color: '#2D4468', light: '#6F84A6', dark: '#14233B', pattern: 'dots' },
+  { id: 'coaching', label: 'Being coached', color: '#8C4E24', light: '#C08A62', dark: '#6A3510', pattern: 'back' },
+  { id: 'product', label: 'Learning products', color: '#B8862B', light: '#DDBB72', dark: '#8E6418', pattern: 'vert' },
+  { id: 'new-clients', label: 'Helping win new clients', color: '#6B4A63', light: '#A0869A', dark: '#4A2F44', pattern: 'grid' },
 ]
 
 export const JUG: Record<JugId, Jug> = Object.fromEntries(JUGS.map((j) => [j.id, j])) as Record<JugId, Jug>

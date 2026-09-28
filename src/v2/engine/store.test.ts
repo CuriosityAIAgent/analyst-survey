@@ -51,7 +51,7 @@ describe('start and channel', () => {
 describe('navigation', () => {
   it('walks follow-ups in place and back returns to the parent with its answer', () => {
     G().begin('phone')
-    G().set('learn.top', ['watching', 'setback'])
+    G().set('learn.top', ['coaching', 'morning'])
     G().next('q1.2')
     expect(at()).toBe('q1.1')
     G().set('lead.year', 'y2')
@@ -59,15 +59,14 @@ describe('navigation', () => {
     expect(at()).toBe('q1.1.what')
     const v = viewOf(G())
     expect(v.kind === 'follow' && v.n).toBe(2)
-    expect(v.kind === 'follow' && v.bridge).toBe('One more on leading a client meeting.')
+    expect(v.kind === 'follow' && v.bridge).toBe('One more on that first client meeting.')
     G().back('q1.1.what')
     expect(at()).toBe('q1.1')
     expect(G().answers['lead.year']).toBe('y2')
-    G().set('lead.year', 'not-yet') // a changed answer: the follow-up no longer applies
+    G().set('lead.year', 'after') // a changed answer: 1.1's follow-up is asked whatever the year
     G().next('q1.1')
-    expect(at()).toBe('q1.3')
-    G().back()
-    G().set('lead.year', 'y1'); G().next('q1.1'); G().set('lead.what', 'led'); G().next('q1.1.what')
+    expect(at()).toBe('q1.1.what')
+    G().set('lead.what', 'review'); G().next('q1.1.what')
     expect(at()).toBe('q1.3')
     G().back()
     expect(at()).toBe('q1.1.what') // back from the next question lands on the last follow-up
@@ -134,8 +133,8 @@ describe('preview', () => {
     const seen: string[] = []
     for (let i = 0; i < 120 && !G().finished; i++) { seen.push(at()); G().next(at()) }
     expect(G().finished).toBe(true)
-    for (const id of ['q1.1.what', 'q1.3.improving', 'q4.4.classroom', 'q4.4.ai-client', 'q5.1.blocker', 'q3.1.fastest',
-      'q3.2.why.portfolio', 'q3.4.first', 'q5.5.prove']) expect(seen).toContain(id)
+    for (const id of ['q1.1.what', 'q1.3.matter', 'q4.4.classroom', 'q4.4.ai-client', 'q5.1.blocker', 'q3.1.fastest',
+      'q3.2.why.portfolio', 'q3.4.still', 'q5.5.prove']) expect(seen).toContain(id)
     expect(Object.values(G().answers['time.sort'] as Record<string, string>)).toContain('more')
     expect(G().answers['lead.year']).toBeUndefined() // nothing else is invented
     expect(G().answers.notes).toBeUndefined()
@@ -220,12 +219,12 @@ describe('rehydrate', () => {
   })
 
   it('keeps a good session, restoring a follow-up only if the answers still call for it', () => {
-    const i = screens('phone').findIndex((s) => s.kind === 'question' && s.question.id === 'q1.1')
-    const good = { started: true, channel: 'phone', cursor: { screen: i, fu: 0 }, cursorId: 'q1.1', answers: { 'lead.year': 'y3', junk: 1 },
+    const i = screens('phone').findIndex((s) => s.kind === 'question' && s.question.id === 'q5.1')
+    const good = { started: true, channel: 'phone', cursor: { screen: i, fu: 0 }, cursorId: 'q5.1', answers: { 'ready.when': 'months-before', junk: 1 },
       segment: { business: 'uspb', cohort: '2024', source: 'token' }, seed: 7, link: 'r:abcd', mode: 'live', timing: { 'q1.2': 1200, bad: 'x' } }
     const r = rehydrate(good)
-    expect(r).toMatchObject({ started: true, channel: 'phone', cursor: { screen: i, fu: 0 }, answers: { 'lead.year': 'y3' }, seed: 7, link: 'r:abcd', timing: { 'q1.2': 1200 } })
-    expect(rehydrate({ ...good, answers: { 'lead.year': 'not-yet' } }).cursor).toEqual({ screen: i, fu: -1 })
+    expect(r).toMatchObject({ started: true, channel: 'phone', cursor: { screen: i, fu: 0 }, answers: { 'ready.when': 'months-before' }, seed: 7, link: 'r:abcd', timing: { 'q1.2': 1200 } })
+    expect(rehydrate({ ...good, answers: { 'ready.when': 'on-time' } }).cursor).toEqual({ screen: i, fu: -1 })
   })
 
   it('finds the screen by its saved id if the index moved', () => {
