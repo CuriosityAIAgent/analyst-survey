@@ -20,6 +20,8 @@
         last question, say "Couldn't send. Tap to try again.", and send on the retry.
      C  token. 3.2 by hand: briefs + onboarding.
      D  token. 3.2 by hand: CRM and admin.
+   3.2 is a split card: every card gets a "today" answer (seeded random) and a 2031 answer
+   (the route's steering above, which is the row the follow-up reads).
    The 'always' follow-ups (1.1, 1.3, 3.1, 3.4, and 2.3 on desk) fire on every route.
 
    At every screen: no page scroll, Next fully on screen, no page errors, no
@@ -231,6 +233,25 @@ async function play(page, st, route, R, meta) {
       const jugs = (await ids(page, '[data-jug]', 'data-jug')).filter((j) => !j.disabled)
       if (!jugs.length) break
       await press(page, pick(jugs).el)
+      continue
+    }
+    if (t === 'cards' && (await one(page, '[data-row]'))) {
+      // 3.2's split card: one answer in each row (today, then 2031); the route steers the 2031 row
+      const card = (await ids(page, '[data-option]', 'data-option'))[0]?.id
+      if (!card) break
+      for (const row of ['first', 'main']) {
+        const choices = (await ids(page, `[data-row="${row}"] [data-choice]`, 'data-choice')).filter((c) => !c.disabled)
+        if (!choices.length) { fail(`${q.id}: no answers in the ${row} row`); break }
+        const want = row === 'main' && prefer && typeof prefer === 'object' && !Array.isArray(prefer) ? (prefer[card] ?? prefer['*']) : undefined
+        const c = choices.find((x) => x.id === want) ?? (row === 'main' ? pickCard(choices, q, R, prefer) : pick(choices))
+        await press(page, c.el)
+        await sleep(90)
+      }
+      for (let k = 0; k < 30; k++) {
+        await sleep(80)
+        if ((await ids(page, '[data-option]', 'data-option'))[0]?.id !== card) break
+      }
+      await sleep(120)
       continue
     }
     if (t === 'cards' || t === 'stamp') {

@@ -249,9 +249,11 @@ describe('rehydrate', () => {
   it('persists under its own key', () => {
     expect(STORE_KEY).toBe('ascent-v2-v1')
     expect(useV2.persist.getOptions().name).toBe('ascent-v2-v1')
-    // 28 Sep: the questions changed (3.2a added, option ids renamed), so sessions saved before start fresh
-    expect(useV2.persist.getOptions().version).toBe(2)
+    // 28 Sep: the questions changed twice (3.2a added, then 3.2 split on one screen), so sessions
+    // saved under either earlier version start fresh
+    expect(useV2.persist.getOptions().version).toBe(3)
     expect(useV2.persist.getOptions().migrate?.({ started: true, answers: { 'lead.year': 'not-yet' } }, 1)).toEqual({})
+    expect(useV2.persist.getOptions().migrate?.({ started: true, answers: { 'tasks.today': { crm: 'by-hand' } } }, 2)).toEqual({})
   })
 })
 

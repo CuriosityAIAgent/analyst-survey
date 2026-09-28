@@ -6,7 +6,8 @@
    SCENE.lines[0] ("Imagine it's 2031 and you're an Advisor. You have:") is the heading and each
    later line is one row. A small desk calendar flips from 2026 to 2031 by
    itself; as it lands, each row's picture changes: thick client folders become a
-   taller stack of thin ones, a laptop lights, two chairs slide in. Next is live at once.
+   taller stack of thin ones, a laptop lights, and one of three chairs slides away (a
+   leaner team). Next is live at once.
    Stored: 'seen' (logged, not scored). */
 import { useEffect, useRef, useState } from 'react'
 import V2Frame from '../V2Frame'
@@ -162,7 +163,8 @@ function Laptop({ on }: { on: boolean }) {
   )
 }
 
-/* One chair; two more slide in beside it. viewBox 64x46. */
+/* Three chairs; as 2031 lands the right-hand one slides away and the other two close up
+   (a leaner team). viewBox 64x46. */
 function Chairs({ on }: { on: boolean }) {
   const chair = (x: number, c: string) => (
     <g transform={`translate(${x} 0)`}>
@@ -174,13 +176,13 @@ function Chairs({ on }: { on: boolean }) {
   return (
     <svg viewBox="0 0 64 46" className="h-full w-full">
       <ellipse cx="32" cy="43.5" rx="27" ry="2" fill="#0D0C0B" opacity="0.10" />
-      <g className="v2c-t" style={{ opacity: on ? 1 : 0, transform: on ? 'none' : 'translateX(-14px)', transitionDelay: on ? '120ms' : '0ms' }}>
+      <g className="v2c-t" style={{ transform: on ? 'translateX(10px)' : 'none', transitionDelay: on ? '260ms' : '0ms' }}>
         {chair(12, '#2F5D4A')}
+        {chair(32, '#8C4E24')}
       </g>
-      <g className="v2c-t" style={{ opacity: on ? 1 : 0, transform: on ? 'none' : 'translateX(14px)', transitionDelay: on ? '260ms' : '0ms' }}>
+      <g className="v2c-t" style={{ opacity: on ? 0 : 1, transform: on ? 'translateX(16px)' : 'none', transitionDelay: on ? '120ms' : '0ms' }}>
         {chair(52, '#2D4468')}
       </g>
-      {chair(32, '#8C4E24')}
     </svg>
   )
 }

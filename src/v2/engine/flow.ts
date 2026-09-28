@@ -46,6 +46,7 @@ export function asQuestion(parent: Question, f: FollowUp, answers: Answers): Que
     template: f.template,
     question: f.question,
     instruction: f.instruction,
+    note: f.note,
     options: followUpOptions(parent, f, answers[parent.stores]),
     constraints: f.constraints,
     objectText: f.objectText,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  BREAKS, BLOCK_ORDER, ENDING, PLAY_ORDER, QUESTION, QUESTIONS, SCENE, WELCOME,
+  BREAKS, BLOCK_ORDER, CONTEXT_2031, ENDING, PLAY_ORDER, QUESTION, QUESTIONS, SCENE, WELCOME,
   followUpFor, followUpOptions, followUpsFor, forChannel, matches, questionsFor, screensFor,
   type Answer, type Channel, type FollowUp, type Question,
 } from './questions'
@@ -21,7 +21,7 @@ const BANNED = [
   'track', 'clip', 'anchor', 'stones', 'own feet', 'storm', 'plaque', 'door', 'slot', 'lane', 'tokens',
   // plan section 4: jargon
   'policy', 'dropped', 'unsure', 'once proven', 'LLM', 'avatar', 'hypothesis', 'ECM', 'product shelf',
-  'hunter', 'families',
+  'families', // 'hunter' allowed since 28 Sep: Haresh asked for "hunter's instinct" on 1.3
   // plan section 4: idioms
   'top shelf', 'gives back', 'gets in the way', 'make Advisor', 'comes with time', 'tweaks', 'held it back',
   'least ready for', 'closest', 'were guaranteed', 'classmate', 'go with your gut', 'same you', 'same effort',
@@ -91,10 +91,10 @@ describe('ids and play order', () => {
     for (const c of CHANNELS) expect(new Set(PLAY_ORDER[c]).size).toBe(PLAY_ORDER[c].length)
   })
 
-  it('phone has 19 questions, desktop all 26 (3.2a "today" added 28 Sep)', () => {
-    expect(QUESTIONS).toHaveLength(26)
-    expect(questionsFor('phone')).toHaveLength(19)
-    expect(questionsFor('desk')).toHaveLength(26)
+  it('phone has 18 questions, desktop all 25 (today and 2031 share one split screen, 3.2)', () => {
+    expect(QUESTIONS).toHaveLength(25)
+    expect(questionsFor('phone')).toHaveLength(18)
+    expect(questionsFor('desk')).toHaveLength(25)
   })
 
   it('the AI tools question (3.4) is on both channels', () => {
@@ -409,8 +409,8 @@ describe('art, welcome, breaks, scene, ending', () => {
   })
 
   it('the welcome states the honest length per channel', () => {
-    expect(WELCOME.lines.phone[0]).toBe('19 questions. Some have a few quick cards to sort. About 9 minutes.')
-    expect(WELCOME.lines.desk[0]).toMatch(/^26 questions\. Some have a few quick cards to sort\. About \d+ minutes\.$/)
+    expect(WELCOME.lines.phone[0]).toBe('18 questions. Some have a few quick cards to sort. About 8 minutes.')
+    expect(WELCOME.lines.desk[0]).toMatch(/^25 questions\. Some have a few quick cards to sort\. About \d+ minutes\.$/)
     expect(WELCOME.sections).toEqual(BLOCK_ORDER.map((b) => BLOCK_NAME[b]))
     expect(WELCOME.start).toBe('Start')
   })
@@ -460,6 +460,50 @@ describe('art, welcome, breaks, scene, ending', () => {
 
   it('4.2 has no off-topic option', () => {
     expect(QUESTION['q4.2'].options.map((o) => o.id)).not.toContain('role')
+  })
+})
+
+describe("Haresh's notes, 28 Sep evening", () => {
+  it('every 2031 question after the scene, and its follow-ups, carries the scene as its note; 2.1 does not', () => {
+    for (const id of ['q2.3', 'q2.4', 'q3.1', 'q3.2', 'q3.3', 'q3.4']) {
+      expect(QUESTION[id].note, id).toBe(CONTEXT_2031)
+      for (const f of QUESTION[id].followUps ?? []) expect(f.note, f.id).toBe(CONTEXT_2031)
+    }
+    expect(QUESTION['q2.1'].note).toBeUndefined() // before the scene: it would hand 2.1 its answer
+    for (const q of QUESTIONS) if (q.block === 'look-back') expect(q.note ?? '', q.id).not.toContain('2031')
+  })
+
+  it('2031 is a leaner team, not a bigger one, in the scene and in the context line', () => {
+    const all = JSON.stringify([SCENE, QUESTIONS, CONTEXT_2031])
+    expect(all).not.toMatch(/bigger team|a team helping/i)
+    expect(SCENE.lines[3]).toMatch(/leaner team/)
+    expect(CONTEXT_2031).toMatch(/^Imagine 2031: .*leaner team\.$/)
+  })
+
+  it('3.2 is one split screen: today and 2031 on each card, the same four answers in both rows', () => {
+    const q = QUESTION['q3.2']
+    expect(PLAY_ORDER.desk).not.toContain('q3.2a')
+    expect(q.constraints.first?.id).toBe('today')
+    expect(q.constraints.first?.options.map((o) => o.id)).toEqual(q.options.map((o) => o.id))
+    expect(q.options.find((o) => o.id === 'by-hand')?.cap).toBe(2) // the 2031 row's forced trade-off
+    expect(q.constraints.first?.options.some((o) => o.cap !== undefined)).toBe(false) // today is as it is
+    expect(q.objectText?.second).toBe('The Analyst of 2031')
+    // the why-by-hand follow-up reads the 2031 row (the card id), never the today row
+    expect(followUpsFor(q, { portfolio: 'by-hand', 'portfolio.today': 'ai-helps' }).map((f) => f.id)).toEqual(['q3.2.why.portfolio'])
+    expect(followUpsFor(q, { portfolio: 'ai-helps', 'portfolio.today': 'by-hand' })).toEqual([])
+  })
+
+  it('1.2 keeps classroom apart from role play; 1.3 names the hunter instinct; the bottle has no client book', () => {
+    const labels = QUESTION['q1.2'].options.map((o) => o.label)
+    expect(labels).toHaveLength(6)
+    expect(labels).toContain('Regular attendance at the morning meeting')
+    expect(labels).toContain('Classroom training')
+    expect(labels.filter((l) => /role play/i.test(l))).toEqual(['One-on-one coaching and role play with a senior Advisor'])
+    expect(QUESTION['q1.3'].constraints.cards?.find((c) => c.id === 'drive')?.label).toBe("Drive to win clients (hunter's instinct)")
+    expect(QUESTION['q3.3'].options.map((o) => o.id)).toEqual(['meetings', 'practice', 'coaching', 'product', 'new-clients'])
+    expect(JSON.stringify(QUESTION['q3.3'].options)).not.toMatch(/looking after/i)
+    // a phone jug is about 63px wide and clips a longer word ("conversations" did)
+    for (const o of QUESTION['q3.3'].options) for (const w of o.label.split(/\s+/)) expect(w.length, `${o.label}: ${w}`).toBeLessThanOrEqual(10)
   })
 })
 

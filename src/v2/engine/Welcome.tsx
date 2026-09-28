@@ -79,7 +79,7 @@ export default function Welcome(p: WelcomeProps) {
         )}
 
         {p.preview && (
-          <p className={`${UI} mx-5 mt-4 rounded-[3px] border border-dashed border-bronze/50 px-3 py-2 text-[13px] leading-[18px] text-bronze lg:mx-12`} data-preview-note>
+          <p className={`${UI} mx-5 mt-4 rounded-[3px] border border-dashed border-bronze/50 px-3 py-2 text-[13px] leading-[18px] text-bronze lg:mx-12 lg:mt-3 lg:py-1.5`} data-preview-note>
             Preview: you can skip any question.
           </p>
         )}
