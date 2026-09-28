@@ -91,10 +91,10 @@ describe('ids and play order', () => {
     for (const c of CHANNELS) expect(new Set(PLAY_ORDER[c]).size).toBe(PLAY_ORDER[c].length)
   })
 
-  it('phone has 18 questions (17 plus 3.4), desktop all 25', () => {
-    expect(QUESTIONS).toHaveLength(25)
-    expect(questionsFor('phone')).toHaveLength(18)
-    expect(questionsFor('desk')).toHaveLength(25)
+  it('phone has 19 questions, desktop all 26 (3.2a "today" added 28 Sep)', () => {
+    expect(QUESTIONS).toHaveLength(26)
+    expect(questionsFor('phone')).toHaveLength(19)
+    expect(questionsFor('desk')).toHaveLength(26)
   })
 
   it('the AI tools question (3.4) is on both channels', () => {
@@ -307,16 +307,17 @@ describe('follow-ups', () => {
     expect(followUpFor(q44, ['role-plays', 'examples'])).toBeUndefined()
 
     const q32 = QUESTION['q3.2']
-    const two = { portfolio: 'by-hand', outreach: 'ai-drafts', briefs: 'by-hand', onboarding: 'stop', crm: 'someone-else' }
+    const two = { portfolio: 'by-hand', outreach: 'ai-drafts', briefs: 'by-hand', onboarding: 'ai-helps', crm: 'someone-else' }
     expect(followUpsFor(q32, two).map((f) => f.id)).toEqual(['q3.2.why.portfolio'])
     expect(followUpFor(q32, two)?.question).toBe('Why should Analysts still do portfolio analysis by hand?')
 
-    expect(followUpFor(QUESTION['q1.1'], 'not-yet')).toBeUndefined()
+    expect(QUESTION['q1.1'].options.map((o) => o.id)).not.toContain('not-yet') // Adam, 28 Sep
+    expect(followUpFor(QUESTION['q1.1'], 'after')?.id).toBe('q1.1.what')
     expect(followUpFor(QUESTION['q1.1'], 'y2')?.id).toBe('q1.1.what')
     expect(followUpFor(QUESTION['q5.1'], 'on-time')).toBeUndefined()
     expect(followUpFor(QUESTION['q5.1'], 'months-before')?.id).toBe('q5.1.blocker')
-    expect(followUpFor(QUESTION['q3.4'], { meetings: 'day-one' })?.id).toBe('q3.4.first')
-    expect(followUpFor(QUESTION['q3.4'], { meetings: 'proven' })).toBeUndefined()
+    expect(followUpFor(QUESTION['q3.4'], { alone: 'slows' })?.id).toBe('q3.4.still') // asked whatever the tray
+    expect(followUpFor(QUESTION['q3.4'], { alone: 'helps' })?.id).toBe('q3.4.still')
     expect(followUpFor(QUESTION['q5.5'], { certify: 'yes' })?.id).toBe('q5.5.prove')
     expect(followUpFor(QUESTION['q5.5'], { certify: 'not-sure' })).toBeUndefined()
   })
@@ -324,8 +325,8 @@ describe('follow-ups', () => {
   it('every follow-up whose options depend on the answer resolves them', () => {
     const q23 = QUESTION['q2.3']
     const less = q23.followUps![0]
-    const shown = followUpOptions(q23, less, ['new-clients', 'decide', 'ai-tools']).map((o) => o.id)
-    expect(shown).toHaveLength(5)
+    const shown = followUpOptions(q23, less, ['new-clients', 'decide', 'lead-team']).map((o) => o.id)
+    expect(shown).toHaveLength(4)
     expect(shown).not.toContain('decide')
 
     const q31 = QUESTION['q3.1']
@@ -390,7 +391,8 @@ describe('the `when` mini-language', () => {
 
 describe('art, welcome, breaks, scene, ending', () => {
   it('every icon and art id is an existing 3D render, and none is retired art', () => {
-    const RETIRED = /^(gear-|brick-|zone-|card-|fu-|rucksack|tarp-out|bench-rerig|rope-clips|cairn|signpost|luggage-tag|trait-depth|trait-curiosity)/
+    // trait-depth (a block of layered rock) came back on 28 Sep for "Knowing products and markets"
+    const RETIRED = /^(gear-|brick-|zone-|card-|fu-|rucksack|tarp-out|bench-rerig|rope-clips|cairn|signpost|luggage-tag|trait-curiosity)/
     const ids = [
       ...QUESTIONS.flatMap((q) => [
         ...(q.art ?? []),
@@ -407,8 +409,8 @@ describe('art, welcome, breaks, scene, ending', () => {
   })
 
   it('the welcome states the honest length per channel', () => {
-    expect(WELCOME.lines.phone[0]).toBe('18 questions. Some have a few quick cards to sort. About 8 minutes.')
-    expect(WELCOME.lines.desk[0]).toMatch(/^25 questions\. Some have a few quick cards to sort\. About \d+ minutes\.$/)
+    expect(WELCOME.lines.phone[0]).toBe('19 questions. Some have a few quick cards to sort. About 9 minutes.')
+    expect(WELCOME.lines.desk[0]).toMatch(/^26 questions\. Some have a few quick cards to sort\. About \d+ minutes\.$/)
     expect(WELCOME.sections).toEqual(BLOCK_ORDER.map((b) => BLOCK_NAME[b]))
     expect(WELCOME.start).toBe('Start')
   })

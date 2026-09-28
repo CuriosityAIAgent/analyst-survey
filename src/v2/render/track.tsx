@@ -5,17 +5,17 @@
    ("I'd rather not say" on 1.4). Stores a stop id, or an opt-out id. Nothing is
    chosen until the first touch; the handle waits beside the line until then.
 
-   objectText.marker puts a fixed marker in the middle ("Where you are now") and
-   objectText.start / .end label the two ends (1.4). The fill runs from the middle
-   where the middle stop means "no difference" (1.4 About the same, 5.1 About when
-   I got it); otherwise from the start (C1: more change to the right). */
+   objectText.marker puts a fixed marker in the middle and objectText.start / .end
+   label the two ends (no question uses them now). The fill runs from the middle
+   where the middle stop means "no difference" (5.1 About when I got it); otherwise
+   from the start (1.4: further ahead to the right; C1: more change to the right). */
 import V2Frame from '../V2Frame'
 import Track from '../ui/templates/Track'
 import type { RenderProps } from './contract'
 import { asId, useFit } from './checklist'
 
 /** Scales whose middle stop is the neutral point, so the fill grows out from it. */
-const FROM_MIDDLE = new Set(['q1.4', 'q5.1'])
+const FROM_MIDDLE = new Set(['q5.1'])
 
 export default function TrackRender(p: RenderProps) {
   const { q } = p

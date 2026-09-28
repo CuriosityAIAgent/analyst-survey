@@ -19,9 +19,9 @@ function walk(channel: Channel, answers: Answers, preview: boolean): View[] {
 }
 
 describe('route', () => {
-  it('numbers questions 1..M (18 on phone, 25 on desk) and follow-ups keep the parent number', () => {
-    expect(totalFor('phone')).toBe(18)
-    expect(totalFor('desk')).toBe(25)
+  it('numbers questions 1..M (19 on phone, 26 on desk) and follow-ups keep the parent number', () => {
+    expect(totalFor('phone')).toBe(19)
+    expect(totalFor('desk')).toBe(26)
     for (const ch of ['phone', 'desk'] as Channel[]) {
       const vs = walk(ch, {}, true)
       const qs = vs.filter((v) => v.kind === 'question')
@@ -38,8 +38,8 @@ describe('route', () => {
   })
 
   it('welcome length line matches the numbering', () => {
-    expect(WELCOME_TEXT.lines.phone[0]).toMatch(/^18 questions/)
-    expect(WELCOME_TEXT.lines.desk[0]).toMatch(/^25 questions/)
+    expect(WELCOME_TEXT.lines.phone[0]).toMatch(/^19 questions/)
+    expect(WELCOME_TEXT.lines.desk[0]).toMatch(/^26 questions/)
   })
 
   it('preview shows every follow-up of every question, in order, after its parent', () => {
@@ -141,14 +141,14 @@ describe('follow-ups as questions', () => {
   it('2.3: the "less" follow-up leaves out the three picked', () => {
     const q = QUESTION['q2.3']
     const f = q.followUps![0]
-    expect(asQuestion(q, f, { 'skills.more': ['advice', 'decide', 'ai-tools'] }).options.map((o) => o.id))
-      .toEqual(['new-clients', 'meetings', 'across-firm', 'prioritising', 'service-team'])
+    expect(asQuestion(q, f, { 'skills.more': ['advice', 'decide', 'lead-team'] }).options.map((o) => o.id))
+      .toEqual(['new-clients', 'meetings', 'needs', 'explain'])
     expect(previewFill(q, f, {})).toBeNull()
   })
 
   it('followList: live follows the rules, preview lists all', () => {
     const q = QUESTION['q3.2']
-    expect(followList(q, { 'tasks.how': { portfolio: 'by-hand', crm: 'by-hand', briefs: 'stop' } }, false).map((f) => f.id))
+    expect(followList(q, { 'tasks.how': { portfolio: 'by-hand', crm: 'by-hand', briefs: 'someone-else' } }, false).map((f) => f.id))
       .toEqual(['q3.2.why.portfolio']) // no follow-up for CRM (portfolio only)
     expect(followList(q, {}, true)).toHaveLength(1)
   })
@@ -195,7 +195,7 @@ describe('answers', () => {
     expect(ex).not.toContain('aiClient.prepares')
     expect(ex).not.toContain('ready.blocker')
     expect(ex).toContain('scene.seen')
-    expect(ex).not.toContain('traits.improving') // 'always' needs 1.3 answered
-    expect(expectedStores('phone', { ...a, 'traits.origin': { reading: 'had' } })).toContain('traits.improving')
+    expect(ex).not.toContain('traits.matter') // 'always' needs 1.3 answered
+    expect(expectedStores('phone', { ...a, 'traits.origin': { reading: 'had' } })).toContain('traits.matter')
   })
 })

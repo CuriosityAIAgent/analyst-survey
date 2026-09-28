@@ -1,10 +1,10 @@
 'use client'
 /* The card-stack renderer: every 'cards' question and follow-up in questions.ts.
 
-   With constraints.cards (1.3, 3.2, 5.3): one card at a time, q.options as the
+   With constraints.cards (1.3, 3.2a, 3.2, 5.3): one card at a time, q.options as the
    buttons under it (piles either side when there are two). Stores card id ->
    answer id, e.g. { portfolio: 'by-hand' }. An option's `cap` limits how many
-   cards may take it (3.2 "Do it by hand": 2). Next says how many cards are left.
+   cards may take it (3.2 "Analyst does it by hand": 2). Next says how many cards are left.
 
    Without cards (the 3.2 "why by hand" follow-ups): the task card stays on screen
    and q.options sit under it as buttons; tap one. Stores the answer id. The card
