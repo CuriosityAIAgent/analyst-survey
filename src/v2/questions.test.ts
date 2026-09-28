@@ -316,8 +316,8 @@ describe('follow-ups', () => {
     expect(followUpFor(QUESTION['q1.1'], 'y2')?.id).toBe('q1.1.what')
     expect(followUpFor(QUESTION['q5.1'], 'on-time')).toBeUndefined()
     expect(followUpFor(QUESTION['q5.1'], 'months-before')?.id).toBe('q5.1.blocker')
-    expect(followUpFor(QUESTION['q3.4'], { alone: 'slower' })?.id).toBe('q3.4.still') // asked whatever the tray
-    expect(followUpFor(QUESTION['q3.4'], { alone: 'faster' })?.id).toBe('q3.4.still')
+    expect(followUpFor(QUESTION['q3.4'], { alone: 'slows' })?.id).toBe('q3.4.still') // asked whatever the tray
+    expect(followUpFor(QUESTION['q3.4'], { alone: 'helps' })?.id).toBe('q3.4.still')
     expect(followUpFor(QUESTION['q5.5'], { certify: 'yes' })?.id).toBe('q5.5.prove')
     expect(followUpFor(QUESTION['q5.5'], { certify: 'not-sure' })).toBeUndefined()
   })
@@ -325,8 +325,8 @@ describe('follow-ups', () => {
   it('every follow-up whose options depend on the answer resolves them', () => {
     const q23 = QUESTION['q2.3']
     const less = q23.followUps![0]
-    const shown = followUpOptions(q23, less, ['new-clients', 'decide', 'check-ai']).map((o) => o.id)
-    expect(shown).toHaveLength(5)
+    const shown = followUpOptions(q23, less, ['new-clients', 'decide', 'lead-team']).map((o) => o.id)
+    expect(shown).toHaveLength(4)
     expect(shown).not.toContain('decide')
 
     const q31 = QUESTION['q3.1']

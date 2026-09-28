@@ -67,7 +67,7 @@ const ROUTES = {
     prefer: {
       'q1.1': ['y2'], 'q4.4': ['classroom', 'ai-client'], 'q5.1': ['months-before'],
       'q3.2': { portfolio: 'by-hand', outreach: 'by-hand', '*': 'ai-drafts' },
-      'q3.4': { alone: 'slower', '*': 'faster' }, 'q5.5': { certify: 'yes' },
+      'q3.4': { alone: 'slows', '*': 'helps' }, 'q5.5': { certify: 'yes' },
     },
     notes: 'type',
     swapCheck: 'q3.1',
@@ -80,7 +80,7 @@ const ROUTES = {
     prefer: {
       'q1.1': ['y3'], 'q4.4': ['examples', 'seniors'], 'q5.1': ['on-time'],
       'q3.2': { '*': 'ai-drafts', portfolio: 'someone-else', crm: 'ai-helps' },
-      'q3.4': { '*': 'time' }, 'q5.5': { certify: 'no' },
+      'q3.4': { '*': 'no-difference' }, 'q5.5': { certify: 'no' },
     },
     notes: 'blank',
     backFrom: 'q1.3.matter', // Back to 1.3, check its answer is kept, then on again
@@ -94,7 +94,7 @@ const ROUTES = {
     prefer: {
       'q1.1': ['after'], 'q4.4': ['ai-client', 'role-plays'], 'q5.1': ['year-before'],
       'q3.2': { briefs: 'by-hand', onboarding: 'by-hand', '*': 'someone-else' },
-      'q3.4': { drafts: 'time', '*': 'faster' }, 'q5.5': { certify: 'yes' },
+      'q3.4': { drafts: 'no-difference', '*': 'helps' }, 'q5.5': { certify: 'yes' },
     },
     notes: 'type',
     expect: { 'lead.year': 'after' },
@@ -104,7 +104,7 @@ const ROUTES = {
     link: '?business=uspb&cohort=2025&r=walkD0004',
     prefer: {
       'q1.1': ['y1'], 'q4.4': ['classroom', 'self-paced'], 'q5.1': ['after'],
-      'q3.2': { crm: 'by-hand', '*': 'someone-else' }, 'q3.4': { '*': 'slower' }, 'q5.5': { certify: 'not-sure' },
+      'q3.2': { crm: 'by-hand', '*': 'someone-else' }, 'q3.4': { '*': 'slows' }, 'q5.5': { certify: 'not-sure' },
     },
     notes: 'type',
     expect: { 'lead.year': 'y1' },

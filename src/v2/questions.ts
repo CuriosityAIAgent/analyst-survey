@@ -34,10 +34,10 @@
 
    What is stored under `stores` (the answer shape):
      tap one                 an option id                      'y2'
-     pick N, top N           option ids in pick order          ['watching', 'setback']
+     pick N, top N           option ids in pick order          ['coaching', 'morning']
                              (podium: 1st first)
      cards, stamp, trays     card or tile id -> answer id      { portfolio: 'by-hand' }
-     track                   a stop id, or an opt-out id       'bit-ahead' | 'rather-not'
+     track                   a stop id, or an opt-out id       'year' | 'rather-not'
      months                  months, or the chip id            30 | 'when-ready'
      bottle                  jug id -> hours                   { coaching: 3, product: 5 }
      text                    note id -> text                   { keep: '...', change: '' }
@@ -49,7 +49,7 @@
    question are read together as one question band, so a follow-up question may
    lean on its bridge for its subject ("One more on classroom training. Should it
    be required?"). The rail adds a sub-dot, not a number. `when: 'always'` marks
-   a step 2 that always follows its parent in place (1.3, 2.3, 3.1). */
+   a step 2 that always follows its parent in place (1.1, 1.3, 2.3, 3.1, 3.4). */
 import { BLOCK_NAME, type Block } from './contract'
 
 export type Channel = 'phone' | 'desk'
@@ -67,7 +67,7 @@ export type Option = {
   icon?: string
   /** Stays last when the list is shuffled (Not sure, I'd rather not say, "Much as it is today"). */
   pinned?: boolean
-  /** Cards: at most this many cards may take this answer (3.2 "Do it by hand": 2). */
+  /** Cards: at most this many cards may take this answer (3.2 "Analyst does it by hand": 2). */
   cap?: number
   /** 5.5 stamp buttons: the icon that tells the piles apart (one stamp colour for all). */
   glyph?: 'cross' | 'query' | 'tick'
@@ -146,7 +146,7 @@ export type Scene = {
   id: 'scene'
   block: Block
   template: 'scene'
-  /** The heading ("Imagine that by 2031, Advisors have:"), then one line per row. */
+  /** The heading ("Imagine it's 2031 and you're an Advisor. You have:"), then one line per row. */
   lines: string[]
   /** Says plainly that the plan is not the respondent's answer. */
   assumption: string
@@ -179,13 +179,14 @@ const SKILLS: Option[] = [
   { id: 'decide', label: 'Getting a client to decide' },
 ]
 
-/** 2.3, the Advisor of 2031: the same six (so the gap against 2.2 reads skill by skill) plus the
-    two that only the 2031 job brings: leading the bigger team, and checking AI's work (AI makes a
-    wrong answer look convincing: Dell'Acqua et al. 2026). */
+/** 2.3, the Advisor of 2031: the same six (so the gap against 2.2 reads skill by skill) plus
+    leading the bigger team, which only the 2031 job brings (Adam: it matters from the firm's
+    side). Checking AI's work is left to 2.4 ("Spot a wrong AI answer"): the scene has just
+    shown AI doing the preparation, so here it would be the obvious pick. Compare 2.2 and 2.3 on
+    the six shared skills only. */
 const SKILLS_2031: Option[] = [
   ...SKILLS,
   { id: 'lead-team', label: 'Leading a team' },
-  { id: 'check-ai', label: "Checking AI's work" },
 ]
 
 /** The twelve activities for 3.1. One name each, everywhere (plan section 4, Activities).
@@ -218,12 +219,15 @@ const TASK_CARDS: Card[] = TASKS.map(({ id, label, icon }) => ({ id, label, icon
 /** The six strengths for 1.3: three EQ, three IQ (Adam, 28 Sep: "the IQ and the EQ component").
     Each side has one that people mostly bring (drive; good with numbers), one mixed (reading
     people; business judgement) and one mostly built on the job (handling a difficult
-    conversation; products and markets), so the answers can't confirm "EQ is innate" by design.
-    Report them as what graduates believe: people credit their successes to lasting qualities. */
+    situation; products and markets), so the answers can't confirm "EQ is innate" by design.
+    Evidence: personality is about 40% heritable, but EI and empathy training work (Mattingly and
+    Kraiger 2019); selling knowledge predicts sales most (Verbeke et al. 2011); drive is the
+    strongest trait-like predictor (Vinchur et al. 1998). Report the answers as what graduates
+    believe: people credit their successes to lasting qualities. */
 const TRAITS: Card[] = [
   { id: 'drive', label: 'Drive to win clients', icon: 'trait-hunter' },
   { id: 'reading', label: 'Reading people', icon: 'trait-reading' },
-  { id: 'difficult', label: 'Handling a difficult conversation', icon: 'trait-calm' },
+  { id: 'difficult', label: 'Handling a difficult situation', icon: 'trait-calm' },
   { id: 'numbers', label: 'Good with numbers', icon: 'trait-story' },
   { id: 'judgement', label: 'Business judgement', icon: 'trait-judgement' },
   { id: 'markets', label: 'Knowing products and markets', icon: 'trait-depth' },
@@ -231,13 +235,13 @@ const TRAITS: Card[] = [
 
 /** The five places the 8 hours can go (3.3). Ids match src/v2/hero/bottle/jugs.ts.
     Adam, 28 Sep: "their own clients" and "coaching" were unclear. Each label now says what the
-    Analyst does: joins, looks after (supervised), is coached, learns, helps. Two lines at most on
-    a laptop jug. */
+    Analyst does: joins, looks after (the words 5.4 uses), is coached, learns, helps. Two lines at
+    most on a laptop jug. */
 const JUGS: Option[] = [
   { id: 'meetings', label: 'Joining client meetings' },
-  { id: 'own-clients', label: 'A few clients, supervised' },
+  { id: 'own-clients', label: 'Looking after a few clients' },
   { id: 'coaching', label: 'Being coached' },
-  { id: 'product', label: 'Learning products' },
+  { id: 'product', label: 'Learning the products' },
   { id: 'new-clients', label: 'Helping win new clients' },
 ]
 
@@ -264,17 +268,18 @@ export const QUESTIONS: Question[] = [
     template: 'podium',
     question: 'In A2A, what helped you learn the job the most?',
     instruction: 'Pick your top 2, best first.',
-    // Adam, 28 Sep: six kinds of experience, not ten that overlap. The ten became these:
-    // his brief's list (morning meeting, meetings with a senior Advisor, watching, how the
-    // firm works, learning on your own, classroom and role plays), with one-on-one coaching
-    // from a senior Advisor as its own kind.
+    // Adam, 28 Sep: six kinds of experience, not ten that overlap. These are his brief's list
+    // (the morning meeting, going to meetings with a senior Advisor, how the firm works, learning
+    // on your own, classroom and role plays), with one-on-one coaching from a senior Advisor as
+    // its own kind. Not on it: doing the work itself, with feedback (the strongest source in the
+    // evidence); to raise with Adam.
     options: [
       { id: 'morning', label: 'The morning meeting' },
       { id: 'coaching', label: 'One-on-one coaching from a senior Advisor' },
       { id: 'client-meetings', label: 'Sitting in on client meetings' },
       { id: 'firm', label: 'Learning how J.P. Morgan works' },
       { id: 'training', label: 'Classroom training and role plays' },
-      { id: 'own-learning', label: 'Learning on my own' },
+      { id: 'own-learning', label: 'Studying on my own' },
     ],
     constraints: { pick: 2 },
     shuffle: true,
@@ -290,7 +295,7 @@ export const QUESTIONS: Question[] = [
     template: 'checklist',
     question: 'In which year of A2A did you first lead part of a client meeting?',
     instruction: 'Tap one.',
-    note: 'For example, you presented one part of it yourself.',
+    note: 'For example, you ran one part of it yourself.',
     // Adam, 28 Sep: Year 1, 2, 3 or after A2A, and no "Not yet": everyone answering has finished A2A.
     options: [
       { id: 'y1', label: 'Year 1' },
@@ -312,7 +317,7 @@ export const QUESTIONS: Question[] = [
         options: [
           { id: 'update', label: 'The market update' },
           { id: 'review', label: 'The portfolio review' },
-          { id: 'goals', label: "Asking about the client's goals" },
+          { id: 'goals', label: "The client's goals" },
           { id: 'recommendation', label: 'A recommendation' },
         ],
         constraints: { pick: 1 },
@@ -342,7 +347,7 @@ export const QUESTIONS: Question[] = [
         when: 'always',
         bridge: 'One more on these six strengths.',
         question: 'Which two matter most in a great Advisor?',
-        instruction: 'Pick two, best first.',
+        instruction: 'Pick two.',
         template: 'checklist',
         options: TRAITS,
         constraints: { pick: 2 },
@@ -376,11 +381,11 @@ export const QUESTIONS: Question[] = [
     // kept short so six fit a phone with the invite above them.
     options: [
       { id: 'advisors-busy', label: 'Advisors are too busy', hint: 'Always with clients.' },
-      { id: 'not-taught', label: "Advisors aren't taught to coach", hint: 'Never shown how.' },
+      { id: 'not-taught', label: "Advisors aren't taught to coach", hint: 'They just redo the work.' },
       { id: 'no-time-set', label: 'No regular time set', hint: 'Only after a mistake.' },
-      { id: 'dont-ask', label: "Analysts don't ask", hint: 'Afraid to look slow.' },
+      { id: 'dont-ask', label: "Analysts don't ask", hint: 'They wait to be offered it.' },
       { id: 'analysts-busy', label: 'Analysts are too busy', hint: 'Admin fills the day.' },
-      { id: 'works', label: 'It usually works', hint: 'No real problem.' },
+      { id: 'works', label: 'It usually works', hint: 'Most get good coaching.' },
     ],
     constraints: { pick: 1 },
     objectText: { header: 'Coaching: you and your Advisor, 30 min' },
@@ -540,14 +545,15 @@ export const QUESTIONS: Question[] = [
     id: 'q1.4',
     block: 'look-back',
     template: 'track',
-    // Adam, 28 Sep: not "a different Advisor" but "paired with the best Advisor". The scale is
-    // time ahead, so it reads the same to everyone; "I had one of the best" keeps those who did
-    // apart from those for whom the Advisor made no difference.
-    question: 'Paired with the best Advisor from day one, how far ahead would you be?',
+    // Adam, 28 Sep: not "a different Advisor" but "paired with the best Advisor" ("to learn from"
+    // says best at what). The scale is time ahead, so it reads the same to everyone. Someone who
+    // had the best answers "No further ahead": for them the luck cost nothing, which is what this
+    // measures. Report it as a perception.
+    question: 'Paired with the best Advisor to learn from, how far ahead would you be?',
     instruction: 'Tap one.',
-    note: 'Assume you worked just as hard.',
+    note: 'Ahead of where you are today. Assume you worked just as hard.',
     privacy: 'Only reported in groups of ten or more.',
-    options: [{ id: 'had-best', label: 'I had one of the best', pinned: true }, RATHER_NOT],
+    options: [RATHER_NOT],
     constraints: {
       stops: [
         { id: 'same', label: 'No further ahead' },
@@ -632,7 +638,7 @@ export const QUESTIONS: Question[] = [
     ],
     channels: DESK,
     stores: 'skills.more',
-    measures: 'Monday 2.3, HNW shift: which skills matter more, and less, with more, smaller clients. Gap against 2.2.',
+    measures: 'Monday 2.3, HNW shift: which skills matter more, and less, in the 2031 job (more clients, more AI, a bigger team). Gap against 2.2 on the six shared skills.',
   },
   {
     id: 'q2.4',
@@ -642,7 +648,7 @@ export const QUESTIONS: Question[] = [
     instruction: 'Pick two.',
     options: [
       { id: 'spot-wrong', label: 'Spot a wrong AI answer' },
-      { id: 'build', label: 'Build the analysis' },
+      { id: 'build', label: 'Build the portfolio analysis' },
       { id: 'brief', label: 'Brief AI and the team' },
       { id: 'hand-off', label: 'Decide what to hand off' },
       { id: 'explain', label: 'Explain a recommendation without notes' },
@@ -659,7 +665,7 @@ export const QUESTIONS: Question[] = [
     id: 'q3.1',
     block: 'analyst-time',
     template: 'trays',
-    question: 'In 2031, what should new Analysts do more of, differently, or less of?',
+    question: "How should a new Analyst's time change by 2031?",
     instruction: 'Place 7 of the 12. Leave the rest.',
     options: ACTIVITIES,
     constraints: {
@@ -695,12 +701,15 @@ export const QUESTIONS: Question[] = [
     // Adam, 28 Sep: split 3.2 into how each task is done today and how the Analyst of 2031 should
     // do it. The same five cards and the same answer words on both screens, so the shift reads
     // task by task. A follow-up can't hang off another follow-up, so "today" is its own screen.
-    question: 'Today, how do new Analysts do each of these tasks?',
+    // "On your team": graduates know how their own team works, not how every new Analyst does.
+    question: 'Today, on your team, how is each task mostly done?',
     instruction: 'Swipe or tap. 5 cards.',
-    // Each answer starts with who does the work, the same words as 3.2, so the shift reads across.
+    // The same four answers as 3.2, each starting with who does the work, so the shift reads
+    // task by task. Only 3.2 caps "by hand" at 2 (its forced trade-off): say so in the report.
     options: [
       { id: 'by-hand', label: 'Analyst does it by hand' },
       { id: 'ai-helps', label: 'Analyst does it, AI helps' },
+      { id: 'ai-drafts', label: 'AI does it, Analyst checks' },
       { id: 'someone-else', label: 'Someone else does it' },
     ],
     constraints: { cards: TASK_CARDS },
@@ -770,15 +779,17 @@ export const QUESTIONS: Question[] = [
     // it does to learning: AI that hands over answers lowered what learners could do alone, AI that
     // gave hints did not (Bastani et al. 2025), and AI that passes on how the best people work sped
     // novices up (Brynjolfsson, Li and Raymond 2025). This measures what graduates expect.
-    question: 'All new Analysts will get these. What will each do to their learning?',
+    // Worded as "imagine", like the scene: the rollout is not announced (and 5.5 still asks
+    // whether Analysts should run AI agents).
+    question: 'Imagine every new Analyst has these. What will each do to their learning?',
     instruction: 'Place all 4.',
     options: AI_TYPES,
     constraints: {
       pick: 4,
       trays: [
-        { id: 'faster', label: 'Helps them learn faster' },
-        { id: 'time', label: 'Only saves them time' },
-        { id: 'slower', label: 'Slows their learning' },
+        { id: 'helps', label: 'Helps them learn' },
+        { id: 'no-difference', label: 'Makes no difference' },
+        { id: 'slows', label: 'Slows their learning' },
       ],
     },
     followUps: [
@@ -788,14 +799,14 @@ export const QUESTIONS: Question[] = [
         id: 'q3.4.still',
         when: 'always',
         bridge: 'One more on AI doing whole tasks.',
-        question: 'If AI builds the whole meeting brief, what must a new Analyst still do?',
+        question: 'If AI builds the meeting brief, what matters most for the Analyst to do?',
         instruction: 'Tap one.',
         template: 'checklist',
         options: [
-          { id: 'brief-ai', label: 'Tell it what the client needs' },
-          { id: 'check', label: 'Check every number in it' },
+          { id: 'brief-ai', label: "Tell AI the client's needs" },
+          { id: 'check', label: "Check the brief's numbers" },
           { id: 'own-view', label: 'Form their own view first' },
-          { id: 'explain', label: 'Explain it to the Advisor' },
+          { id: 'explain', label: 'Explain the brief to their Advisor' },
         ],
         constraints: { pick: 1 },
         stores: 'aiTools.stillDo',
@@ -803,7 +814,7 @@ export const QUESTIONS: Question[] = [
     ],
     channels: BOTH,
     stores: 'aiTools.learning',
-    measures: "Monday 3.4, Goal 2: which types of AI graduates expect to speed up an Analyst's learning, only save time, or slow it; then what an Analyst must still do when AI works alone (Adam's managers of agents).",
+    measures: "Monday 3.4, Goal 2: which types of AI graduates expect to help an Analyst learn, make no difference, or slow their learning (an expectation, not an effect); then what matters most for an Analyst when AI works alone (Adam's managers of agents).",
   },
   {
     id: 'q4.3',
@@ -912,7 +923,7 @@ export const QUESTIONS: Question[] = [
           label: 'Analysts run their own AI agents by year two',
           // The plan says "a meeting pack"; "pack" is a banned word, and "meeting brief" is the
           // name used everywhere else.
-          hint: 'AI agents: AI that does tasks for you, such as preparing a meeting brief',
+          hint: 'AI agents: AI that works alone on a task, such as a meeting brief',
         },
         // TODO(Monday): 11 words, over the plan's 10-word card rule; new card (plan decision 6).
         { id: 'capacity', label: 'Let Advisors take on more clients with the time AI saves' },
@@ -1006,7 +1017,7 @@ export const SCENE: Scene = {
   calendar: { from: 2026, to: 2031 },
   channels: BOTH,
   stores: 'scene.seen',
-  measures: 'Monday "Setting the scene": logged as seen, not scored. Frames 2.3 onward on the HNW plan.',
+  measures: 'Monday "Setting the scene": logged as seen, not scored. Frames 2.3 onward on a desk, 3.1 onward on a phone.',
 }
 
 /* ------------------------------------------------------------ play order (plan section 5) */
@@ -1190,8 +1201,8 @@ export function followUpsFor(question: Question, answer: Answer | undefined | nu
   return (question.followUps ?? []).filter((f) => matches(f.when, answer))
 }
 
-/** The next follow-up this answer calls for, if any. 4.4 (two picks) and 3.2 (two by-hand
-    cards) can call for two: use followUpsFor to get them all. */
+/** The next follow-up this answer calls for, if any. 4.4 (two picks) can call for two: use
+    followUpsFor to get them all. */
 export function followUpFor(question: Question, answer: Answer | undefined | null): FollowUp | undefined {
   return followUpsFor(question, answer)[0]
 }

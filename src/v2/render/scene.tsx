@@ -3,7 +3,7 @@
    Not a question: it asks the respondent to imagine 2031 for what follows, and
    says plainly they don't have to agree. Every word comes from SCENE in questions.ts.
 
-   SCENE.lines[0] ("Imagine that by 2031, Advisors have:") is the heading and each
+   SCENE.lines[0] ("Imagine it's 2031 and you're an Advisor. You have:") is the heading and each
    later line is one row. A small desk calendar flips from 2026 to 2031 by
    itself; as it lands, each row's picture changes: thick client folders become a
    taller stack of thin ones, a laptop lights, two chairs slide in. Next is live at once.

@@ -141,8 +141,8 @@ describe('follow-ups as questions', () => {
   it('2.3: the "less" follow-up leaves out the three picked', () => {
     const q = QUESTION['q2.3']
     const f = q.followUps![0]
-    expect(asQuestion(q, f, { 'skills.more': ['advice', 'decide', 'check-ai'] }).options.map((o) => o.id))
-      .toEqual(['new-clients', 'meetings', 'needs', 'explain', 'lead-team'])
+    expect(asQuestion(q, f, { 'skills.more': ['advice', 'decide', 'lead-team'] }).options.map((o) => o.id))
+      .toEqual(['new-clients', 'meetings', 'needs', 'explain'])
     expect(previewFill(q, f, {})).toBeNull()
   })
 
