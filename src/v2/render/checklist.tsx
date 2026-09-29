@@ -10,8 +10,10 @@
                  experience chip or "Something else…" with a short text field;
                  stores { verb, pick } or { verb, text }
 
-   "Not sure" and "I'd rather not say" sit under the list as small chips, so the
-   real answers keep the rows. A few questions get a light skin from their
+   "Not sure" and "I'd rather not say" sit under the list as small chips, so the real
+   answers keep the rows. On a pick-one-or-two list a chip is the whole answer (stored as
+   its id); tapping a row clears it, and tapping it clears the rows. A pinned row on such a
+   list (4.1 "It usually works") is exclusive in the same way, but keeps its row. A few questions get a light skin from their
    objectText: an invite (4.1, 4.4 classroom) and a welcome letter (4.3).
 
    Fit: a phone must never scroll. useFit steps the list down (rows, tighter rows,
@@ -149,32 +151,36 @@ function ListRender(p: RenderProps) {
   const min = c.pick ?? c.min ?? 0
   const numbered = !one && /best first/i.test(q.instruction)
 
-  const optOuts = one ? shown.filter((o) => o.pinned && OPT_OUT_IDS.has(o.id)) : []
+  const optOuts = shown.filter((o) => o.pinned && OPT_OUT_IDS.has(o.id))
   const rows = shown.filter((o) => !optOuts.includes(o))
-  const ids = new Set(q.options.map((o) => o.id))
+  const ids = new Set(rows.map((o) => o.id))
 
-  const optedOut = one ? optOuts.find((o) => o.id === asId(p.value))?.id : undefined
+  const optedOut = optOuts.find((o) => o.id === asId(p.value))?.id
   const picked = one
     ? (asId(p.value) && ids.has(asId(p.value)!) && !optedOut ? [asId(p.value)!] : [])
     : asIds(p.value).filter((x) => ids.has(x))
 
+  const exclusive = new Set(rows.filter((o) => o.pinned).map((o) => o.id))
   const change = (next: string[]) => {
     if (one) {
       if (next[0]) p.set(next[0]) // a radio: tapping the chosen row again keeps it
       return
     }
-    p.set(next)
+    // an exclusive row ("It usually works") is the whole answer: it clears the others, and they clear it
+    const added = next.find((x) => !picked.includes(x))
+    if (added && exclusive.has(added)) p.set([added])
+    else p.set(next.filter((x) => !exclusive.has(x)))
   }
 
   const n = picked.length
-  const complete = one ? !!(n || optedOut) : c.pick ? n >= c.pick : n >= min
+  const complete = one ? !!(n || optedOut) : !!optedOut || (c.pick ? n >= c.pick : n >= min)
   let missing: string | undefined
   if (!complete && !p.preview) {
     if (one) missing = 'Tap one'
     else if (c.pick) missing = pickMissing(n, c.pick)
     else missing = n === 0 ? (min === 1 ? 'Pick at least 1' : `Pick at least ${min}`) : `Pick ${min - n} more`
   }
-  const skip = !one && min === 0 && n === 0
+  const skip = !one && min === 0 && n === 0 && !optedOut
   const next = () => {
     if (p.value === undefined && skip) p.set([])
     p.onNext()
@@ -202,7 +208,7 @@ function ListRender(p: RenderProps) {
         {invite && <Invite q={q} header={invite} picked={optedOut ?? picked[0]} small={level >= 1} />}
         {letter && <Letter lead={letter} answer={chosenLabel} small={level >= 1} />}
         <div className={skinned ? (level >= 1 ? 'mt-2.5' : 'mt-4') : ''}>
-          <Checklist key={q.id} options={rows} picked={picked} onChange={change} max={max}
+          <Checklist key={q.id} options={rows} picked={picked} onChange={change} max={max} exclusive={one ? [] : [...exclusive]}
             mode={one ? 'one' : 'pick'} numbered={numbered} peek={peek}
             compact={level >= 1} layout={layout} dense={level >= 3} label={q.question}
             rowRef={(o, el) => { rowEls.current.set(o, el) }} />
