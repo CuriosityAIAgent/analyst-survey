@@ -392,7 +392,8 @@ export const QUESTIONS: Question[] = [
     block: 'look-back',
     template: 'checklist',
     question: 'What most often stops Analysts getting good coaching from their Advisor?',
-    instruction: 'Tap one.',
+    // Haresh, 29 Sep: keep every reason and let people give one or two, rather than cut the list.
+    instruction: 'Pick one or two.',
     // Adam, 28 Sep: bring each answer to life. The grey line is what it looks like day to day;
     // kept short so six fit a phone with the invite above them.
     options: [
@@ -401,9 +402,10 @@ export const QUESTIONS: Question[] = [
       { id: 'no-time-set', label: 'No regular time set', hint: 'Only after a mistake.' },
       { id: 'dont-ask', label: "Analysts don't ask", hint: 'They wait to be offered it.' },
       { id: 'analysts-busy', label: 'Analysts are too busy', hint: 'Admin fills the day.' },
-      { id: 'works', label: 'It usually works', hint: 'Most get good coaching.' },
+      // pinned on a pick-one-or-two list: exclusive, the whole answer (checklist.tsx)
+      { id: 'works', label: 'It usually works', hint: 'Most get good coaching.', pinned: true },
     ],
-    constraints: { pick: 1 },
+    constraints: { min: 1, max: 2 },
     objectText: { header: 'Coaching: you and your Advisor, 30 min' },
     channels: BOTH,
     stores: 'coaching.blocker',
@@ -509,7 +511,7 @@ export const QUESTIONS: Question[] = [
         when: 'is:year-before|months-before',
         bridge: 'One more on getting your own client work.', // TODO(Monday): the plan gives no bridge here
         question: 'What stopped you getting it sooner?',
-        instruction: 'Tap one.',
+        instruction: 'Pick one or two.',
         template: 'checklist',
         options: [
           { id: 'no-chance', label: 'No chance on my team' },
@@ -519,7 +521,7 @@ export const QUESTIONS: Question[] = [
           { id: 'workload', label: 'Too much other work' },
           RATHER_NOT,
         ],
-        constraints: { pick: 1 },
+        constraints: { min: 1, max: 2 },
         stores: 'ready.blocker',
       },
     ],
@@ -568,7 +570,7 @@ export const QUESTIONS: Question[] = [
     question: 'Paired with the best Advisor to learn from, how far ahead would you be?',
     instruction: 'Tap one.',
     note: 'Ahead of where you are today. Assume you worked just as hard.',
-    privacy: 'Only reported in groups of ten or more.',
+    privacy: 'No one will see your answer on its own.',
     options: [RATHER_NOT],
     constraints: {
       stops: [
@@ -587,8 +589,9 @@ export const QUESTIONS: Question[] = [
     block: 'look-back',
     template: 'checklist',
     question: 'What most often stops good Analysts from becoming Advisors?',
-    instruction: 'Tap one.',
-    privacy: 'Only reported in groups of ten or more.',
+    // Haresh, 29 Sep: often more than one reason; give the option of two.
+    instruction: 'Pick one or two.',
+    privacy: 'No one will see your answer on its own.',
     options: [
       { id: 'team', label: 'Not the right team' },
       { id: 'coaching', label: 'No coaching from their Advisor' },
@@ -600,7 +603,7 @@ export const QUESTIONS: Question[] = [
       NOT_SURE,
       RATHER_NOT,
     ],
-    constraints: { pick: 1 },
+    constraints: { min: 1, max: 2 },
     channels: DESK,
     stores: 'path.blocker',
     measures: 'Monday 1.5, Goal 1: whether we lose good Analysts to placement or to talent. Groups of ten or more.',
@@ -1068,7 +1071,8 @@ export const BLOCK_ORDER: Block[] = ['look-back', 'job-ahead', 'analyst-time', '
 
 /* ------------------------------------------------------------ welcome, breaks, ending */
 
-export const PRIVACY = 'Your answers are held under a code, not your name. We only report groups of ten or more.'
+// Haresh, 29 Sep: "only reported in groups of ten or more" wasn't clear; the same promise in plain words.
+export const PRIVACY = 'Your answers are held under a code, not your name, and are only ever shown as totals across ten or more people.'
 
 // TODO(Monday): set after the timed run with five Associates. Phone now carries 3.4 as well.
 // 28 Sep: today and 2031 share one split screen (3.2), so the count is back to 18 and 25.

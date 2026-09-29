@@ -32,13 +32,16 @@ export type ChecklistProps = {
   layout?: 'rows' | 'grid'
   dense?: boolean
   label?: string
+  /** Pick mode: rows that are a whole answer on their own ("It usually works"). Tapping one
+      replaces the picks, even when the list is full; tapping another row replaces it. */
+  exclusive?: string[]
 }
 
 const WORDS = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight']
 
 export const toOption = (o: string | ChecklistOption): ChecklistOption => (typeof o === 'string' ? { id: o, label: o } : o)
 
-export default function Checklist({ options, picked, onChange, max, mode = 'pick', numbered, peek, fullNote, rowRef, compact, layout = 'rows', dense, label }: ChecklistProps) {
+export default function Checklist({ options, picked, onChange, max, mode = 'pick', numbered, peek, fullNote, rowRef, compact, layout = 'rows', dense, label, exclusive = [] }: ChecklistProps) {
   const [refused, setRefused] = useState<{ opt: string; n: number } | null>(null)
   const timer = useRef(0)
   const opts = options.map(toOption)
@@ -47,6 +50,8 @@ export default function Checklist({ options, picked, onChange, max, mode = 'pick
   const tap = (opt: string) => {
     if (mode === 'one') return onChange(picked[0] === opt ? [] : [opt])
     if (picked.includes(opt)) return onChange(picked.filter((x) => x !== opt))
+    if (exclusive.includes(opt)) return onChange([opt])
+    if (picked.some((x) => exclusive.includes(x))) return onChange([opt])
     if (picked.length >= max) {
       window.clearTimeout(timer.current)
       setRefused((r) => ({ opt, n: (r?.n ?? 0) + 1 }))

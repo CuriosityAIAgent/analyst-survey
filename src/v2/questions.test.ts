@@ -185,6 +185,7 @@ describe('wording rules', () => {
       const i = q.instruction
       const k = q.constraints
       let m: RegExpMatchArray | null
+      if (/^Pick one or two\./.test(i)) { expect([k.min, k.max], q.id).toEqual([1, 2]); continue }
       if ((m = i.match(/^(?:Tap|Pick) (one|two|three)\b/)) && !k.stops) expect(k.pick, q.id).toBe(NUM[m[1]])
       if ((m = i.match(/^Pick your top (\d+)/))) expect(k.pick, q.id).toBe(Number(m[1]))
       if ((m = i.match(/(\d+) cards\.$/))) expect(k.cards?.length, q.id).toBe(Number(m[1]))
@@ -227,7 +228,7 @@ describe('wording rules', () => {
   it('1.4 and 1.5 carry a privacy line; the welcome carries the full one', () => {
     expect(QUESTION['q1.4'].privacy).toBeTruthy()
     expect(QUESTION['q1.5'].privacy).toBeTruthy()
-    expect(WELCOME.privacy).toBe('Your answers are held under a code, not your name. We only report groups of ten or more.')
+    expect(WELCOME.privacy).toBe('Your answers are held under a code, not your name, and are only ever shown as totals across ten or more people.')
   })
 })
 
@@ -447,7 +448,7 @@ describe('art, welcome, breaks, scene, ending', () => {
   })
 
   it('the sensitive screens promise what is true (a code, groups of ten), never "Anonymous"', () => {
-    for (const id of ['q1.4', 'q1.5']) expect(QUESTION[id].privacy).toBe('Only reported in groups of ten or more.')
+    for (const id of ['q1.4', 'q1.5']) expect(QUESTION[id].privacy).toBe('No one will see your answer on its own.')
     const all = JSON.stringify([QUESTIONS, SCENE, WELCOME, BREAKS, ENDING])
     expect(all).not.toMatch(/anonymous/i)
   })
@@ -514,6 +515,27 @@ describe("Haresh's notes, 29 Sep", () => {
     const cards = QUESTION['q5.3'].constraints.cards ?? []
     expect(cards).toHaveLength(7)
     for (const c of cards) expect(c.icon, c.id).toBeTruthy()
+  })
+})
+
+describe("reasons: keep every option, let people give one or two (Haresh, 29 Sep)", () => {
+  it('1.5, 4.1 and the 5.1 follow-up take one or two answers; opt-outs stay whole answers', () => {
+    const lists = [QUESTION['q1.5'], QUESTION['q4.1'], QUESTION['q5.1'].followUps![0]]
+    for (const l of lists) {
+      expect(l.instruction, l.question).toBe('Pick one or two.')
+      expect([l.constraints.min, l.constraints.max, l.constraints.pick], l.question).toEqual([1, 2, undefined])
+    }
+    expect(QUESTION['q1.5'].options).toHaveLength(8) // six reasons, Not sure, I'd rather not say: nothing cut
+    expect(QUESTION['q4.1'].options.find((o) => o.id === 'works')?.pinned).toBe(true) // exclusive: the whole answer
+  })
+
+  it('no answer list is longer than six (not counting opt-out chips), except 2.3 (seven, pick three)', () => {
+    const CHIPS = new Set(['not-sure', 'rather-not', 'works', 'other'])
+    const lists = [
+      ...QUESTIONS.filter((q) => q.template === 'checklist').map((q) => ({ id: q.id, options: q.options })),
+      ...followUps.filter(({ f }) => f.template === 'checklist' && !f.optionsFrom).map(({ f }) => ({ id: f.id, options: f.options })),
+    ]
+    for (const l of lists) if (!l.id.startsWith('q2.3')) expect(l.options.filter((o) => !CHIPS.has(o.id)).length, l.id).toBeLessThanOrEqual(6)
   })
 })
 
