@@ -72,9 +72,11 @@ export default function SceneRender(p: RenderProps) {
       onNext={p.onNext} onBack={p.onBack}>
       <div className="flex flex-1 flex-col items-center justify-center gap-4 pb-1 lg:gap-9 lg:pb-4" data-q={SCENE.id}>
         <Calendar year={year} from={from} to={to} />
-        <ul className="grid w-full gap-2 lg:grid-cols-3 lg:gap-5" aria-label={`By ${to}`}>
+        {/* Haresh, 29 Sep: pictures with words, not boxes: boxes looked like something to tap.
+            No border, fill or shadow; on a laptop, thin rules between the three. */}
+        <ul className="grid w-full gap-1 lg:grid-cols-3 lg:gap-0" aria-label={`By ${to}`}>
           {parts.map((t, i) => (
-            <li key={t} className="flex items-center gap-4 rounded-[4px] border border-rule-soft bg-white px-3 py-1.5 shadow-[0_1px_0_#E7E3DB] lg:flex-col lg:items-center lg:gap-3 lg:px-4 lg:pb-5 lg:pt-4 lg:text-center">
+            <li key={t} className={`flex cursor-default items-center gap-4 px-1 py-1 lg:flex-col lg:items-center lg:gap-3 lg:px-6 lg:py-1 lg:text-center ${i > 0 ? 'lg:border-l lg:border-rule-soft' : ''}`}>
               <span className="block h-[46px] w-[64px] shrink-0 lg:h-[92px] lg:w-[128px]" aria-hidden>
                 {i === 0 && <Folders on={landed} />}
                 {i === 1 && <Laptop on={landed} />}

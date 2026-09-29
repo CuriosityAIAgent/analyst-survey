@@ -485,8 +485,10 @@ describe("Haresh's notes, 28 Sep evening", () => {
     expect(PLAY_ORDER.desk).not.toContain('q3.2a')
     expect(q.constraints.first?.id).toBe('today')
     expect(q.constraints.first?.options.map((o) => o.id)).toEqual(q.options.map((o) => o.id))
-    expect(q.options.find((o) => o.id === 'by-hand')?.cap).toBe(2) // the 2031 row's forced trade-off
-    expect(q.constraints.first?.options.some((o) => o.cap !== undefined)).toBe(false) // today is as it is
+    // no cap in either row (Haresh, 29 Sep: "1 of 2 used" confused and isn't needed)
+    expect(q.options.some((o) => o.cap !== undefined)).toBe(false)
+    expect(q.constraints.first?.options.some((o) => o.cap !== undefined)).toBe(false)
+    expect(q.options.map((o) => o.hint)).toEqual(q.constraints.first?.options.map((o) => o.hint)) // the rows read the same
     expect(q.objectText?.second).toBe('The Analyst of 2031')
     // the why-by-hand follow-up reads the 2031 row (the card id), never the today row
     expect(followUpsFor(q, { portfolio: 'by-hand', 'portfolio.today': 'ai-helps' }).map((f) => f.id)).toEqual(['q3.2.why.portfolio'])
@@ -504,6 +506,14 @@ describe("Haresh's notes, 28 Sep evening", () => {
     expect(JSON.stringify(QUESTION['q3.3'].options)).not.toMatch(/looking after/i)
     // a phone jug is about 63px wide and clips a longer word ("conversations" did)
     for (const o of QUESTION['q3.3'].options) for (const w of o.label.split(/\s+/)) expect(w.length, `${o.label}: ${w}`).toBeLessThanOrEqual(10)
+  })
+})
+
+describe("Haresh's notes, 29 Sep", () => {
+  it('5.3: every card has a small picture', () => {
+    const cards = QUESTION['q5.3'].constraints.cards ?? []
+    expect(cards).toHaveLength(7)
+    for (const c of cards) expect(c.icon, c.id).toBeTruthy()
   })
 })
 

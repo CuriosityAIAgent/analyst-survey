@@ -728,10 +728,10 @@ export const QUESTIONS: Question[] = [
     // Four answers (Adam: four, or pictures). "Stop doing it" went: 3.1's "Do less" asks it.
     // "AI helps" (the Analyst frames and decides) and "AI does it" (the Analyst reviews) are the
     // two ways juniors used AI in the field studies, and only the first built skill (Randazzo 2025).
-    // Short labels, because four sit in a row; the grey line says who does the work. Only the
-    // 2031 row caps "By hand" at 2 (its forced trade-off): say so in the report.
+    // Short labels, because four sit in a row; the grey line says who does the work. No cap on
+    // "By hand" (Haresh, 29 Sep: "1 of 2 used" confused and isn't needed); both rows are free.
     options: [
-      { id: 'by-hand', label: 'By hand', hint: 'Up to 2 cards', cap: 2 },
+      { id: 'by-hand', label: 'By hand', hint: 'Analyst alone' },
       { id: 'ai-helps', label: 'AI helps', hint: 'Analyst leads' },
       { id: 'ai-drafts', label: 'AI does it', hint: 'Analyst checks' },
       { id: 'someone-else', label: 'Someone else', hint: 'Not the Analyst' },
@@ -889,13 +889,15 @@ export const QUESTIONS: Question[] = [
     ],
     constraints: {
       cards: [
-        { id: 'product', label: 'Product knowledge' },
-        { id: 'firm', label: 'How the firm works' },
-        { id: 'trust', label: 'Earning trust' },
-        { id: 'reading', label: 'Reading what a client needs' },
-        { id: 'cycle', label: 'Judgement through a market cycle' },
-        { id: 'confidence', label: 'Confidence leading a meeting' },
-        { id: 'network', label: 'A network across the firm' },
+        // Haresh, 29 Sep: a small picture on each card, from the renders we have. The same
+        // picture as 1.3 where it is the same idea (reading, judgement, products, composure).
+        { id: 'product', label: 'Product knowledge', icon: 'trait-depth' },
+        { id: 'firm', label: 'How the firm works', icon: 'onboard' },
+        { id: 'trust', label: 'Earning trust', icon: 'origin-seed' },
+        { id: 'reading', label: 'Reading what a client needs', icon: 'trait-reading' },
+        { id: 'cycle', label: 'Judgement through a market cycle', icon: 'trait-judgement' },
+        { id: 'confidence', label: 'Confidence leading a meeting', icon: 'trait-calm' },
+        { id: 'network', label: 'A network across the firm', icon: 'clientmail' },
       ],
     },
     channels: BOTH,

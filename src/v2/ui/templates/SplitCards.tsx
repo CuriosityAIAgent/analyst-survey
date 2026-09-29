@@ -10,8 +10,10 @@
    card moves on still counts (it corrects that card). An answer can have a cap in its
    row ("Up to 2 cards"): once full, it says so and shakes if tapped.
 
-   Keyboard: when a card moves on, focus goes to the new card's first answer (or to Next
-   once every card is answered), and a polite live region says which card is showing.
+   Keyboard: when a card answered with the keyboard moves on, focus goes to the new card's
+   first answer (or to Next once every card is answered). After a tap or click, focus is let
+   go instead, so no answer on the next card wears a focus ring and looks already chosen.
+   A polite live region says which card is showing.
 
    Test hooks: data-option on the card (its id), data-row="first" | "main" on each row,
    data-choice on every answer button (aria-disabled once its cap is full). */
@@ -51,7 +53,8 @@ export default function SplitCards({ cards, rows, onPick, onRefuse, onShow, done
   const timer = useRef(0)
   const refuseTimer = useRef(0)
   const root = useRef<HTMLDivElement>(null)
-  const moved = useRef(false)
+  const moved = useRef<'keyboard' | 'pointer' | null>(null)
+  const via = useRef<'keyboard' | 'pointer'>('pointer')
   useEffect(() => () => { window.clearTimeout(timer.current); window.clearTimeout(refuseTimer.current) }, [])
 
   const firstOpen = cards.find((c) => !complete(c.id))?.id ?? null
@@ -62,12 +65,15 @@ export default function SplitCards({ cards, rows, onPick, onRefuse, onShow, done
   // the page re-fits when the card on screen changes (a two-line title is taller)
   useEffect(() => { onShow?.(currentId) }, [currentId, onShow])
 
-  // after a card moves on by itself, keep keyboard focus in the game
+  // after a card moves on by itself: keyboard focus stays in the game; a tap lets focus go
   useEffect(() => {
-    if (!moved.current) return
-    moved.current = false
-    const inside = root.current?.contains(document.activeElement) || document.activeElement === document.body
+    const how = moved.current
+    if (!how) return
+    moved.current = null
+    const active = document.activeElement
+    const inside = root.current?.contains(active) || active === document.body
     if (!inside) return
+    if (how === 'pointer') { if (active instanceof HTMLElement && active !== document.body) active.blur(); return }
     const target = currentId
       ? root.current?.querySelector<HTMLElement>('[data-row="first"] [data-choice]')
       : document.querySelector<HTMLElement>('[data-next]')
@@ -80,7 +86,7 @@ export default function SplitCards({ cards, rows, onPick, onRefuse, onShow, done
   const moveOn = (id: string) => {
     setHold(id)
     window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => { moved.current = true; setHold(null); setFocus(null) }, NEXT_MS)
+    timer.current = window.setTimeout(() => { moved.current = via.current; setHold(null); setFocus(null) }, NEXT_MS)
   }
 
   const pick = (row: SplitRow, ch: SplitChoice) => {
@@ -170,7 +176,7 @@ export default function SplitCards({ cards, rows, onPick, onRefuse, onShow, done
                       <button key={ch.id} type="button" role="radio" aria-checked={on} data-choice={ch.id}
                         aria-disabled={isFull || undefined}
                         aria-label={isFull ? `${ch.label}: full, ${ch.cap} of ${ch.cap} cards` : `${ch.label}${ch.hint ? `, ${ch.hint}` : ''}`}
-                        onClick={() => pick(row, ch)}
+                        onClick={(e) => { via.current = e.detail === 0 ? 'keyboard' : 'pointer'; pick(row, ch) }}
                         className={`${UI} flex flex-col items-center justify-center rounded-[6px] border-2 px-1 py-1 text-center transition-colors ${chipH}
                           ${on ? `${border} ${fill} text-white` : isFull ? 'border-rule-soft bg-paper text-muted' : `${border} bg-ground ${ink} hover:bg-[#EEF1F5]`}`}>
                         <span key={no ? `no-${refused?.n}` : 'ok'} className={`text-[14px] font-semibold leading-[17px] sm:text-[15px] ${no ? 'v2-shake' : ''}`}>{ch.label}</span>
